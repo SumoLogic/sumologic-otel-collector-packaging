@@ -1,0 +1,1 @@
+# sumologic-otel-collector-packaging
