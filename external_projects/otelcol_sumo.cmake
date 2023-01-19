@@ -13,7 +13,6 @@ function(create_otelcol_sumo_target goos goarch fips)
   require_variables(
     "OTC_VERSION"
     "OTC_SUMO_VERSION"
-    "OTC_TAG"
   )
 
   set(project_name "otelcol-sumo")
@@ -26,7 +25,9 @@ function(create_otelcol_sumo_target goos goarch fips)
 
   set(project_name "${project_name}-${goos}-${goarch}")
   set(file_name "${file_name}-${goos}_${goarch}")
-  set(file_url "${OTC_BASE_URL}/releases/download/${OTC_TAG}/${file_name}")
+  set(base_url "https://github.com/SumoLogic/sumologic-otel-collector")
+  set(tag "v${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
+  set(file_url "${base_url}/releases/download/${tag}/${file_name}")
   set(download_dir "${CMAKE_BINARY_DIR}/external_projects/${project_name}")
   set(download_name "otelcol-sumo")
 

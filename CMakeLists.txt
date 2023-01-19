@@ -29,12 +29,7 @@ project(otelcol-sumo
   VERSION "${OTC_VERSION}"
   LANGUAGES NONE)
 
-set(OTC_BASE_URL "https://github.com/SumoLogic/sumologic-otel-collector")
-set(OTC_TAG "v${PROJECT_VERSION}-sumo-${OTC_SUMO_VERSION}")
-
 # Create targets for downloading otelcol-sumo binaries
-create_otelcol_sumo_target("darwin" "amd64" false)
-create_otelcol_sumo_target("darwin" "arm64" false)
 create_otelcol_sumo_target("linux" "amd64" false)
 create_otelcol_sumo_target("linux" "amd64" true)
 create_otelcol_sumo_target("linux" "arm64" false)
