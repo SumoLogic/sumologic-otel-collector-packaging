@@ -209,12 +209,12 @@ endmacro()
 # e.g. /etc/otelcol-sumo/sumologic.yaml
 macro(install_otc_sumologic_yaml)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_CONFIG_DIR"
     "OTC_SUMOLOGIC_CONFIG"
   )
   install(
-    FILES "${ASSETS_DIR}/sumologic.yaml"
+    FILES "${OTC_ASSETS_DIR}/sumologic.yaml"
     DESTINATION "${OTC_CONFIG_DIR}"
     PERMISSIONS
       OWNER_READ
@@ -299,7 +299,7 @@ macro(install_otc_service_systemd)
     "OTC_SYSTEMD_DIR"
   )
   install(
-    FILES "${ASSETS_DIR}/services/systemd/otelcol-sumo.service"
+    FILES "${OTC_ASSETS_DIR}/systemd/otelcol-sumo.service"
     DESTINATION "${OTC_SYSTEMD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE

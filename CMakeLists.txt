@@ -17,6 +17,7 @@ set(TARGETS_DIR "${CMAKE_SOURCE_DIR}/targets")
 set(TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates")
 set(TEMPLATES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/templates_output")
 set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
+set(OTC_ASSETS_DIR "${ASSETS_DIR}/otc")
 
 # Include CMake files
 include("${CMAKE_SOURCE_DIR}/utils.cmake")

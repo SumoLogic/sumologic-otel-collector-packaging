@@ -1,5 +1,8 @@
 macro(set_otc_settings)
   require_variables(
+    "ARTIFACTS_DIR"
+    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_VERSION"
     "OTC_SUMO_VERSION"
     "goos"
@@ -85,7 +88,7 @@ macro(set_otc_settings)
   set(CPACK_PACKAGE_NAME "otelcol-sumo")
   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${package_arch}")
   set(CPACK_RESOURCE_FILE_LICENSE "${ASSETS_DIR}/LICENSE")
-  set(CPACK_PACKAGE_DESCRIPTION_FILE "${ASSETS_DIR}/description")
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${OTC_ASSETS_DIR}/description")
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An agent to send logs, metrics and traces to Sumo Logic")
 
   # Set target dependencies of the cpack target for this package. The

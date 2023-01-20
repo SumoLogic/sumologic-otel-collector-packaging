@@ -1,0 +1,20 @@
+FROM rockylinux:9
+MAINTAINER Sumo Logic <collection@sumologic.com>
+
+RUN dnf install -y \
+    which \
+    make \
+    rpm-build \
+    selinux-policy \
+    selinux-policy-devel \
+    git \
+    systemd
+
+RUN ln -s /usr/bin/sh /bin/sh
+
+RUN curl -Lo cmake.sh https://github.com/Kitware/CMake/releases/download/v3.24.3/cmake-3.24.3-linux-x86_64.sh
+RUN chmod +x cmake.sh
+RUN ./cmake.sh --skip-license --prefix=/usr
+RUN rm cmake.sh
+
+WORKDIR /src/build
