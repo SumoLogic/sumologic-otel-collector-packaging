@@ -11,5 +11,8 @@ function(package_otc_linux_amd64_rpm)
   set_common_rpm_settings()
   set_otc_rpm_settings()
 
+  default_otc_linux_install()
+  install_otc_service_systemd()
+
   build_rpm_cpack_config()
 endfunction()

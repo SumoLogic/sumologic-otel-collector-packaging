@@ -1,6 +1,7 @@
 macro(set_otc_settings)
   require_variables(
     "otc_component"
+    "package_arch"
   )
 
   # Directory paths
@@ -21,15 +22,12 @@ macro(set_otc_settings)
   set(PACKAGE_SHORT_NAME "otelcol-sumo")
 
   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${package_arch}")
-  # set(CPACK_COMPONENTS_ALL ${CPACK_COMPONENTS_ALL} binary)
   set(CPACK_COMPONENTS_ALL "${otc_component}")
   set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_BINARY_DIR};otelcol-sumo;${CPACK_COMPONENTS_ALL};/")
 
   set(CPACK_RESOURCE_FILE_LICENSE "${ASSETS_DIR}/LICENSE")
   set(CPACK_PACKAGE_DESCRIPTION_FILE "${ASSETS_DIR}/description")
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An agent to send logs, metrics and traces to Sumo Logic")
-  # set(CPACK_COMPONENTS_GROUPING "ONE_PER_GROUP")
-  # set(CPACK_COMPONENT_BINARY_GROUP "runtime")
 
   set(otelcol_sumo_target "otelcol-sumo")
   if(FIPS)

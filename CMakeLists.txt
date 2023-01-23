@@ -19,6 +19,9 @@ include("${CMAKE_SOURCE_DIR}/external_projects.cmake")
 include("${CMAKE_SOURCE_DIR}/packages.cmake")
 include("${CMAKE_SOURCE_DIR}/settings.cmake")
 
+# Prevent In-Source builds
+validate_build_dir()
+
 # Set version information
 set(OTC_VERSION "0.69.0")
 set(OTC_SUMO_VERSION 0) # specifies the X in -sumo-X

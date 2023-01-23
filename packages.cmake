@@ -15,7 +15,7 @@ function(create_deb_packages_target)
 endfunction()
 
 function(create_rpm_packages_target)
-  get_property(target_dependencies GLOBAL PROPERTY all__package_targets)
+  get_property(target_dependencies GLOBAL PROPERTY all_rpm_package_targets)
   add_custom_target("rpm-packages" DEPENDS ${target_dependencies})
 endfunction()
 
