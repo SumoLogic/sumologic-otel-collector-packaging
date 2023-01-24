@@ -1,0 +1,19 @@
+#!/bin/sh
+
+@otc_linux_functions@
+
+case "$1" in
+    configure)
+    set_file_ownership
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

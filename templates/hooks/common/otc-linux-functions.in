@@ -1,0 +1,8 @@
+set_file_ownership()
+{
+    chown -R @SERVICE_USER@:@SERVICE_GROUP@ \
+          @SERVICE_USER_HOME@ \
+          @OTC_SUMOLOGIC_CONFIG_PATH@ \
+          @OTC_USER_ENV_DIR@ \
+          @OTC_CONFIG_FRAGMENTS_DIR@
+}

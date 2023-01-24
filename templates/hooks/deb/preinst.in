@@ -1,0 +1,25 @@
+#!/bin/sh
+
+@common_linux_functions@
+
+case "$1" in
+    install)
+        create_group_if_missing
+        create_user_if_missing
+    ;;
+
+    upgrade)
+        create_group_if_missing
+        create_user_if_missing
+    ;;
+
+    abort-upgrade)
+    ;;
+
+    *)
+    echo "preinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

@@ -10,12 +10,15 @@ set(COMPONENTS_DIR "${CMAKE_SOURCE_DIR}/components")
 set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/external_projects")
 set(PACKAGES_DIR "${CMAKE_SOURCE_DIR}/packages")
 set(SETTINGS_DIR "${CMAKE_SOURCE_DIR}/settings")
+set(TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates")
+set(TEMPLATES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/templates_output")
 set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
 
 # Include CMake files
 include("${CMAKE_SOURCE_DIR}/utils.cmake")
 include("${CMAKE_SOURCE_DIR}/components.cmake")
 include("${CMAKE_SOURCE_DIR}/external_projects.cmake")
+include("${CMAKE_SOURCE_DIR}/templates.cmake")
 include("${CMAKE_SOURCE_DIR}/packages.cmake")
 include("${CMAKE_SOURCE_DIR}/settings.cmake")
 

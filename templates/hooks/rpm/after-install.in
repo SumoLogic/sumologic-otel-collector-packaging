@@ -1,0 +1,14 @@
+#!/bin/sh
+
+@otc_linux_functions@
+
+case "$1" in
+    1) # initial install
+    set_file_ownership
+    ;;
+    2) # upgrade
+    ;;
+
+esac
+
+# Done for both installs and upgrades.

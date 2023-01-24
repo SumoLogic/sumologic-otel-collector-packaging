@@ -1,4 +1,11 @@
 macro(set_otc_rpm_settings)
+  require_variables(
+    "RPM_HOOK_TEMPLATES_OUTPUT_DIR"
+  )
+
+  # Render rpm hook templates
+  render_rpm_hook_templates()
+
   set(CPACK_RPM_USER_FILELIST
     # Mark sumologic.yaml as a config file to prevent package upgrades from
     # replacing the file by default
@@ -16,4 +23,9 @@ macro(set_otc_rpm_settings)
     "/var"
     "/var/lib"
   )
+
+  set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/before-install")
+  set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/after-install")
+  set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/before-remove")
+  set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/after-remove")
 endmacro()

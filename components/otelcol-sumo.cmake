@@ -1,6 +1,7 @@
 macro(default_otc_linux_install)
   install_otc_config_directory()
   install_otc_config_fragment_directory()
+  install_otc_user_env_directory()
   install_otc_state_directory()
   install_otc_filestorage_state_directory()
   install_otc_sumologic_yaml()
@@ -19,6 +20,7 @@ macro(install_otc_config_directory)
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
       GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
     COMPONENT "${otc_component}"
   )
 endmacro()
@@ -32,6 +34,22 @@ macro(install_otc_config_fragment_directory)
   install(
     DIRECTORY
     DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
+    DIRECTORY_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
+    COMPONENT "${otc_component}"
+  )
+endmacro()
+
+# e.g. /etc/otelcol-sumo/env
+macro(install_otc_user_env_directory)
+  require_variables(
+    "OTC_USER_ENV_DIR"
+    "otc_component"
+  )
+  install(
+    DIRECTORY
+    DESTINATION "${OTC_USER_ENV_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
       GROUP_READ GROUP_WRITE GROUP_EXECUTE
@@ -125,7 +143,7 @@ macro(install_otc_service_systemd)
     "otc_component"
   )
   install(
-    FILES "${ASSETS_DIR}/systemd/otelcol-sumo.service"
+    FILES "${ASSETS_DIR}/services/systemd/otelcol-sumo.service"
     DESTINATION "${OTC_SYSTEMD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE

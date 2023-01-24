@@ -1,0 +1,47 @@
+# -*- mode: sh -*-
+
+# user_missing will return 0 if the user exists, non-zero if it does not
+user_missing()
+{
+    set +e
+    getent passwd @SERVICE_USER@ > /dev/null
+    missing=$?
+    set -e
+    echo $missing
+}
+
+# group_missing will return 0 if the group exists, non-zero if it does not
+group_missing()
+{
+    set +e
+    getent group @SERVICE_GROUP@ > /dev/null
+    missing=$?
+    set -e
+    echo $missing
+}
+
+create_user()
+{
+    useradd -r -g @SERVICE_GROUP@ -d @SERVICE_USER_HOME@ -s /bin/false @SERVICE_USER@
+}
+
+create_group()
+{
+    groupadd -r @SERVICE_GROUP@
+}
+
+create_user_if_missing()
+{
+    missing=`user_missing`
+    if [ $missing != "0" ]; then
+        create_user
+    fi
+}
+
+create_group_if_missing()
+{
+    missing=`group_missing`
+    if [ $missing != "0" ]; then
+        create_group
+    fi
+}

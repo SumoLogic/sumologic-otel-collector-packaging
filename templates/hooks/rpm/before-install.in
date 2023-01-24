@@ -1,0 +1,14 @@
+#!/bin/sh
+
+@common_linux_functions@
+
+case "$1" in
+    1) # initial install
+    create_group_if_missing
+    create_user_if_missing
+    ;;
+    2) # upgrade
+    create_group_if_missing
+    create_user_if_missing
+    ;;
+esac
