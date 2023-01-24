@@ -1,5 +1,6 @@
 function(package_otc_linux_amd64_rpm)
   set(target_name "package-otelcol-sumo-linux-amd64-rpm")
+  set(package_name "otelcol-sumo")
   set(package_os "linux")
   set(package_arch "x86_64")
   set(goos "linux")

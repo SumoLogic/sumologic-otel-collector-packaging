@@ -11,4 +11,6 @@ RUN apk add --no-cache \
     rpm \
     rpm-dev
 
-WORKDIR /src/build
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

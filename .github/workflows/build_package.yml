@@ -1,0 +1,43 @@
+on:
+  workflow_call:
+    inputs:
+      otc_version:
+        required: true
+        type: string
+      otc_sumo_version:
+        required: true
+        type: string
+      otc_build_number:
+        required: false
+        type: string
+      make_target:
+        required: true
+        type: string
+
+jobs:
+  build_package:
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build Makefile
+        id: build-makefile
+        uses: ./github-actions/cmake
+        with:
+          otc_version: ${{ inputs.otc_version }}
+          otc_sumo_version: ${{ inputs.otc_sumo_version }}
+          otc_build_number: ${{ inputs.otc_build_number }}
+
+      - name: Build package
+        uses: ./github-actions/make
+        with:
+          target: ${{ inputs.make_target }}
+
+      - name: Store package as action artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.build-makefile.outputs[format('{0}', inputs.make_target)] }}
+          path: ./build/${{ steps.build-makefile.outputs[format('{0}', inputs.make_target)] }}
+          if-no-files-found: error

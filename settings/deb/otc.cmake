@@ -12,7 +12,7 @@ macro(set_otc_deb_settings)
 
   # Add the list of config files to prevent package upgrades from replacing
   # config files by default
-  list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${ASSETS_DIR}/conffiles")
+  list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${ASSETS_DIR}/deb/conffiles")
 
   # Add the package hook scripts
   list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA

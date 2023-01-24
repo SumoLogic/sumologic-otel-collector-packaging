@@ -1,0 +1,13 @@
+name: 'Run make'
+
+inputs:
+  target:
+    required: true
+    type: string
+
+runs:
+  using: 'docker'
+  image: '../../Dockerfile'
+  args:
+    - make
+    - ${{ inputs.target }}

@@ -54,6 +54,8 @@ macro(build_cpack_config)
     "target_name"
   )
 
+  append_github_output()
+
   set(CPACK_OUTPUT_CONFIG_FILE "${CMAKE_BINARY_DIR}/${target_name}-CPackConfig.cmake")
 
   # Build CPackConfig and store it on disk at path in CPACK_OUTPUT_CONFIG_FILE
@@ -71,6 +73,39 @@ macro(build_cpack_config)
 
   # Append the package target to the list of all package targets
   append_global_property(all_package_targets "${target_name}")
+endmacro()
+
+# Appends an output to the file defined by the GITHUB_OUTPUT environment
+# variable. The output name is the name of the target and the value is the
+# filename of the package that will be built. This is how we can notify
+# GitHub Actions of the package filename so that it can be uploaded as an
+# artifact.
+macro(append_github_output)
+  # Append the target name & package filename to the GITHUB_OUTPUT environment
+  # variable if it is defined
+  if(DEFINED ENV{GITHUB_OUTPUT})
+    message(STATUS
+      "The GITHUB_OUTPUT environment variable was detected; setting output: ${target_name}"
+    )
+
+    # Return an error if the value of GITHUB_OUTPUT is not a file
+    if(NOT EXISTS "$ENV{GITHUB_OUTPUT}")
+      message(FATAL_ERROR
+        "The GITHUB_OUTPUT environment variable does not contain a path to an existing file"
+      )
+    endif()
+
+    require_variables(
+      CPACK_PACKAGE_FILE_NAME
+      PACKAGE_FILE_EXTENSION
+      target_name
+    )
+
+    file(APPEND
+      "$ENV{GITHUB_OUTPUT}"
+      "${target_name}=${CPACK_PACKAGE_FILE_NAME}.${PACKAGE_FILE_EXTENSION}\n"
+    )
+  endif()
 endmacro()
 
 # Build CPackConfig & targets for deb

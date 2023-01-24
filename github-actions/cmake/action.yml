@@ -1,0 +1,19 @@
+name: 'Run CMake'
+
+inputs:
+  otc_version:
+    required: true
+    type: string
+  otc_sumo_version:
+    required: true
+    type: string
+  otc_build_number:
+    required: false
+    type: string
+
+runs:
+  using: 'docker'
+  image: '../../Dockerfile'
+  args:
+    - cmake
+    - ../
