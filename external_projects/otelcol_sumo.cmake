@@ -47,5 +47,8 @@ function(create_otelcol_sumo_target goos goarch fips)
     TEST_COMMAND ""
   )
 
+  message(STATUS "The ${file_name} binary will be fetched from:")
+  message(STATUS "\t${file_url}")
+
   append_global_property(all_otelcol_sumo_external_project_targets "${project_name}")
 endfunction()

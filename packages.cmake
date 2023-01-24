@@ -1,19 +1,37 @@
 # Global properties containing lists of packaging targets which are used to
 # create targets to build groups of packages at a time
 set_property(GLOBAL PROPERTY all_package_targets)
+set_property(GLOBAL PROPERTY all_linux_package_targets)
 set_property(GLOBAL PROPERTY all_deb_package_targets)
 set_property(GLOBAL PROPERTY all_rpm_package_targets)
 
+# Creates targets for all packages targets
+function(create_packages_targets)
+  create_packages_target()
+  create_linux_packages_target()
+  create_deb_packages_target()
+  create_rpm_packages_target()
+endfunction()
+
+# Creates a target for building all packages
 function(create_packages_target)
   get_property(target_dependencies GLOBAL PROPERTY all_package_targets)
   add_custom_target("packages" DEPENDS ${target_dependencies})
 endfunction()
 
+# Creates a target for building all linux packages (e.g. deb & rpm)
+function(create_linux_packages_target)
+  get_property(target_dependencies GLOBAL PROPERTY all_linux_package_targets)
+  add_custom_target("linux-packages" DEPENDS ${target_dependencies})
+endfunction()
+
+# Creates a target for building all deb packages
 function(create_deb_packages_target)
   get_property(target_dependencies GLOBAL PROPERTY all_deb_package_targets)
   add_custom_target("deb-packages" DEPENDS ${target_dependencies})
 endfunction()
 
+# Creates a target for building all rpm packages
 function(create_rpm_packages_target)
   get_property(target_dependencies GLOBAL PROPERTY all_rpm_package_targets)
   add_custom_target("rpm-packages" DEPENDS ${target_dependencies})
@@ -58,6 +76,7 @@ endmacro()
 # Build CPackConfig & targets for deb
 macro(build_deb_cpack_config)
   build_cpack_config()
+  append_global_property(all_linux_package_targets "${target_name}")
   append_global_property(all_deb_package_targets "${target_name}")
   reset_cpack_state()
 endmacro()
@@ -65,6 +84,7 @@ endmacro()
 # Build CPackConfig & targets for rpm
 macro(build_rpm_cpack_config)
   build_cpack_config()
+  append_global_property(all_linux_package_targets "${target_name}")
   append_global_property(all_rpm_package_targets "${target_name}")
   reset_cpack_state()
 endmacro()

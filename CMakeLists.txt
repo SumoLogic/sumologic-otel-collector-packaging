@@ -1,6 +1,9 @@
 # Require CMake >= 3.24.1
 cmake_minimum_required(VERSION 3.24.1 FATAL_ERROR)
 
+# Set version information
+include("${CMAKE_SOURCE_DIR}/version.cmake")
+
 # Include CMake modules
 include(ExternalProject)
 
@@ -24,10 +27,6 @@ include("${CMAKE_SOURCE_DIR}/settings.cmake")
 
 # Prevent In-Source builds
 validate_build_dir()
-
-# Set version information
-set(OTC_VERSION "0.69.0")
-set(OTC_SUMO_VERSION 0) # specifies the X in -sumo-X
 
 # Set project name, version, & set language to none to prevent the requirement
 # of a compiler
@@ -53,7 +52,5 @@ package_otc_linux_amd64_deb()
 # Build rpm package configs & targets
 package_otc_linux_amd64_rpm()
 
-# Create target for all packages & package types
-create_packages_target()
-create_deb_packages_target()
-create_rpm_packages_target()
+# Create targets for all packages & groups of packages
+create_packages_targets()
