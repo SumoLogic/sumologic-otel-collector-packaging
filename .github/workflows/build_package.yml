@@ -24,20 +24,26 @@ jobs:
 
       - name: Build Makefile
         id: build-makefile
-        uses: ./github-actions/cmake
+        uses: ./ci/github-actions/cmake
         with:
           otc_version: ${{ inputs.otc_version }}
           otc_sumo_version: ${{ inputs.otc_sumo_version }}
           otc_build_number: ${{ inputs.otc_build_number }}
 
       - name: Build package
-        uses: ./github-actions/make
+        uses: ./ci/github-actions/make
         with:
           target: ${{ inputs.make_target }}
 
       - name: Store package as action artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.build-makefile.outputs[format('{0}', inputs.make_target)] }}
-          path: ./build/${{ steps.build-makefile.outputs[format('{0}', inputs.make_target)] }}
+          name: >
+            ${{
+            steps.build-makefile.outputs[format('{0}', inputs.make_target)]
+            }}
+          path: >
+            ./build/${{
+            steps.build-makefile.outputs[format('{0}', inputs.make_target)]
+            }}
           if-no-files-found: error

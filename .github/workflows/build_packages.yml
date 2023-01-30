@@ -1,0 +1,64 @@
+# We use a single workflow to build all packages because github.run_number is
+# specific to each workflow. This ensures that each package has an
+# OTC_BUILD_NUMBER that is greater than previous runs which allows package
+# upgrades from one build to the next.
+name: 'Build packages'
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      otc_version:
+        required: true
+        type: string
+      otc_sumo_version:
+        required: true
+        type: string
+
+jobs:
+  determine_version:
+    runs-on: ubuntu-latest
+    name: Determine version
+    if: >
+      github.event.inputs.otc_version == '' &&
+      github.event.inputs.otc_sumo_version == ''
+    outputs:
+      otc_version: ${{ steps.determine-version.outputs.otc_version }}
+      otc_sumo_version: ${{ steps.determine-version.outputs.otc_sumo_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Determine latest release version
+        id: determine-version
+        run: |
+          VERSION="$(./ci/get_latest_release_version.sh otc_version)"
+          SUMO_VERSION="$(./ci/get_latest_release_version.sh otc_sumo_version)"
+          echo "otc_version=${VERSION}"
+          echo "otc_sumo_version=${SUMO_VERSION}"
+          echo "otc_version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "otc_sumo_version=${SUMO_VERSION}" >> $GITHUB_OUTPUT
+
+  build_package:
+    name: ${{ matrix.target }}
+    uses: ./.github/workflows/build_package.yml
+    needs: determine_version
+    if: always()
+    with:
+      otc_version: >
+        ${{
+        github.events.inputs.otc_version ||
+        needs.determine_version.outputs.otc_version
+        }}
+      otc_sumo_version: >
+        ${{
+        github.events.inputs.otc_sumo_version ||
+        needs.determine_version.outputs.otc_sumo_version
+        }}
+      otc_build_number: ${{ github.run_number }}
+      make_target: ${{ matrix.target }}
+    strategy:
+      matrix:
+        target:
+          - package-otelcol-sumo-linux-amd64-deb
+          - package-otelcol-sumo-linux-amd64-rpm
