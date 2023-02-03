@@ -13,6 +13,12 @@ on:
       make_target:
         required: true
         type: string
+      workflow_id:
+        required: false
+        type: string
+    secrets:
+      gh_artifacts_token:
+        required: true
 
 jobs:
   build_package:
@@ -22,13 +28,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Workflow URL for sumologic-otel-collector
+        if: inputs.workflow_id != ''
+        run: |
+          org="SumoLogic"
+          repo="sumologic-otel-collector"
+          workflow_id="${{ inputs.workflow_id }}"
+          echo "https://github.com/${org}/${repo}/actions/runs/${workflow_id}"
+
       - name: Build Makefile
-        id: build-makefile
+        id: cmake
         uses: ./ci/github-actions/cmake
         with:
           otc_version: ${{ inputs.otc_version }}
           otc_sumo_version: ${{ inputs.otc_sumo_version }}
           otc_build_number: ${{ inputs.otc_build_number }}
+          workflow_id: ${{ inputs.workflow_id }}
+
+      - name: Set simple package outputs
+        id: package
+        run: >
+          echo path=${{ steps.cmake.outputs[format('{0}-pkg',
+          inputs.make_target)] }} >> $GITHUB_OUTPUT
+
+      - name: Set simple otc-bin outputs
+        id: otc-bin
+        if: inputs.workflow_id != ''
+        run: >
+          echo path=${{ steps.cmake.outputs[format('{0}-otc-bin',
+          inputs.make_target)] }} >> $GITHUB_OUTPUT
+
+      # Download the artifacts required to build the package target. If
+      # use_github_artifacts is false then this will be skipped and CMake will
+      # attempt to fetch the artifacts from a GitHub Release matching
+      # otc_version and otc_sumo_version.
+      - name: Download artifacts from sumologic-otel-collector
+        uses: dawidd6/action-download-artifact@v2.24.3
+        if: inputs.workflow_id != ''
+        with:
+          github_token: ${{ secrets.gh_artifacts_token }}
+          repo: SumoLogic/sumologic-otel-collector
+          run_id: ${{ inputs.workflow_id }}
+          name: ${{ steps.otc-bin.outputs.path }}
+          path: ./build/gh-artifacts
+          if_no_artifact_found: fail
 
       - name: Build package
         uses: ./ci/github-actions/make
@@ -38,12 +81,6 @@ jobs:
       - name: Store package as action artifact
         uses: actions/upload-artifact@v3
         with:
-          name: >
-            ${{
-            steps.build-makefile.outputs[format('{0}', inputs.make_target)]
-            }}
-          path: >
-            ./build/${{
-            steps.build-makefile.outputs[format('{0}', inputs.make_target)]
-            }}
+          name: ${{ steps.package.outputs.path }}
+          path: ./build/${{ steps.package.outputs.path }}
           if-no-files-found: error

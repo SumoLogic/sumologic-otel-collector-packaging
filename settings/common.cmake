@@ -6,4 +6,7 @@ macro(set_common_settings)
   set(CPACK_PACKAGE_CONTACT "Sumo Logic Support <support@sumologic.com>")
   set(CPACK_PACKAGE_VENDOR "Sumo Logic")
   set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+
+  set(ARTIFACTS_DIR "${CMAKE_BINARY_DIR}/artifacts")
+  set(GH_ARTIFACTS_DIR "${CMAKE_BINARY_DIR}/gh-artifacts")
 endmacro()

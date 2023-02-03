@@ -8,7 +8,7 @@ endif()
 
 set(OTC_VERSION "$ENV{OTC_VERSION}")
 
-if(NOT ${OTC_VERSION} MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+if(NOT "${OTC_VERSION}" MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR
       "OTC_VERSION contains an invalid version: ${OTC_VERSION}\n"
       "Must be in the form X.Y.Z"
@@ -28,7 +28,7 @@ endif()
 
 set(OTC_SUMO_VERSION "$ENV{OTC_SUMO_VERSION}")
 
-if(NOT ${OTC_SUMO_VERSION} MATCHES "^([0-9]+)$")
+if(NOT "${OTC_SUMO_VERSION}" MATCHES "^[0-9]+$")
     message(FATAL_ERROR
       "OTC_SUMO_VERSION contains an invalid version: ${OTC_SUMO_VERSION}\n"
       "Must be an unsigned integer"
@@ -48,7 +48,7 @@ else()
   set(BUILD_NUMBER "${OTC_SUMO_VERSION}")
 endif()
 
-if(NOT ${BUILD_NUMBER} MATCHES "^([0-9]+)$")
+if(NOT "${BUILD_NUMBER}" MATCHES "^[0-9]+$")
     message(FATAL_ERROR
       "OTC_BUILD_NUMBER contains an invalid version: ${BUILD_NUMBER}\n"
       "Must be an unsigned integer"

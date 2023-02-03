@@ -10,6 +10,9 @@ inputs:
   otc_build_number:
     required: false
     type: string
+  workflow_id:
+    required: false
+    type: string
 
 runs:
   using: 'docker'

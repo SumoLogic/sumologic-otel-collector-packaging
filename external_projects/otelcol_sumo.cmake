@@ -8,35 +8,18 @@ function(create_otelcol_sumos_target)
   add_custom_target("otelcol-sumos" DEPENDS ${target_dependencies})
 endfunction()
 
-# An external project to download the otelcol-sumo binary
-function(create_otelcol_sumo_target goos goarch fips)
-  require_variables(
-    "OTC_VERSION"
-    "OTC_SUMO_VERSION"
-  )
-
-  set(project_name "otelcol-sumo")
-  set(file_name "otelcol-sumo-${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
-
-  if(fips)
-    set(project_name "${project_name}-fips")
-    set(file_name "${file_name}-fips")
-  endif()
-
-  set(project_name "${project_name}-${goos}-${goarch}")
-  set(file_name "${file_name}-${goos}_${goarch}")
+# An external project to download a remote artifact from a GitHub Release.
+#   src:  name of the remote artifact
+#   dest: destination file name which src will be renamed to
+#   tag:  name of tag for the GitHub Release used to download artifacts from
+function(create_otelcol_sumo_target src dest tag download_dir)
   set(base_url "https://github.com/SumoLogic/sumologic-otel-collector")
-  set(tag "v${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
-  set(file_url "${base_url}/releases/download/${tag}/${file_name}")
-  set(download_dir "${CMAKE_BINARY_DIR}/external_projects/${project_name}")
-  set(download_name "otelcol-sumo")
+  set(file_url "${base_url}/releases/download/${tag}/${src}")
 
-  set(OTELCOL_SUMO_DOWNLOAD_DIR "${download_dir}" PARENT_SCOPE)
-
-  ExternalProject_Add("${project_name}"
+  ExternalProject_Add("${src}"
     URL "${file_url}"
     DOWNLOAD_DIR "${download_dir}"
-    DOWNLOAD_NAME "${download_name}"
+    DOWNLOAD_NAME "${dest}"
     DOWNLOAD_NO_EXTRACT true
     # We only care about downloading; disable all other commands
     CONFIGURE_COMMAND ""
@@ -47,8 +30,8 @@ function(create_otelcol_sumo_target goos goarch fips)
     TEST_COMMAND ""
   )
 
-  message(STATUS "The ${file_name} binary will be fetched from:")
+  message(STATUS "The ${src} artifact will be fetched from:")
   message(STATUS "\t${file_url}")
 
-  append_global_property(all_otelcol_sumo_external_project_targets "${project_name}")
+  append_global_property(all_otelcol_sumo_external_project_targets "${src}")
 endfunction()

@@ -1,10 +1,31 @@
 macro(set_otc_settings)
   require_variables(
+    "OTC_VERSION"
+    "OTC_SUMO_VERSION"
+    "goos"
+    "goarch"
     "otc_component"
     "package_arch"
   )
 
-  # Directory paths
+  # OTC_GIT_TAG is used to determine which GitHub Release to fetch artifacts
+  # from. If ENV{OTC_ARTIFACTS_SOURCE} is set as then OTC_GIT_TAG will be
+  # ignored and the artifacts will be fetched from another source.
+  set(OTC_GIT_TAG "v${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
+
+  ##
+  # Destination file & directory names & paths
+  #
+  # Specifies the names & paths of files & directories which the packages will
+  # create or install.
+  ##
+
+  # File names
+  set(OTC_BINARY "otelcol-sumo")
+  set(OTC_SUMOLOGIC_CONFIG "sumologic.yaml")
+  set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
+
+  # Directories
   set(OTC_BIN_DIR "usr/local/bin")
   set(OTC_CONFIG_DIR "etc/otelcol-sumo")
   set(OTC_CONFIG_FRAGMENTS_DIR "${OTC_CONFIG_DIR}/conf.d")
@@ -13,13 +34,36 @@ macro(set_otc_settings)
   set(OTC_FILESTORAGE_STATE_DIR "${OTC_STATE_DIR}/file_storage")
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
 
-  # File names
-  set(OTC_BINARY "otelcol-sumo")
-  set(OTC_SUMOLOGIC_CONFIG "sumologic.yaml")
-  set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
-
   # File paths
   set(OTC_SUMOLOGIC_CONFIG_PATH "${OTC_CONFIG_DIR}/${OTC_SUMOLOGIC_CONFIG}")
+
+  ##
+  # Source file & directory names & paths
+  #
+  # Specifies the names & paths of local & remote files required to build the
+  # packages.
+  ##
+
+  # File names
+  set(SOURCE_OTC_BINARY "otelcol-sumo-${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
+  set(GH_OUTPUT_OTC_BIN "otelcol-sumo")
+  if(fips)
+    set(SOURCE_OTC_BINARY "${SOURCE_OTC_BINARY}-fips")
+    set(GH_OUTPUT_OTC_BIN "${GH_OUTPUT_OTC_BIN}-fips")
+  endif()
+  set(SOURCE_OTC_BINARY "${SOURCE_OTC_BINARY}-${goos}_${goarch}")
+  set(GH_OUTPUT_OTC_BIN "${GH_OUTPUT_OTC_BIN}-${goos}_${goarch}")
+
+  # Directories
+  set(SOURCE_OTC_BINARY_DIR "${ARTIFACTS_DIR}/${SOURCE_OTC_BINARY}")
+
+  # File paths
+  set(SOURCE_OTC_BINARY_PATH "${SOURCE_OTC_BINARY_DIR}/${OTC_BINARY}")
+  set(GH_ARTIFACT_OTC_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_BIN}")
+
+  ##
+  # Other
+  ##
 
   # Service & User/Group
   set(SERVICE_NAME "otelcol-sumo")
@@ -39,16 +83,10 @@ macro(set_otc_settings)
   set(CPACK_PACKAGE_DESCRIPTION_FILE "${ASSETS_DIR}/description")
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An agent to send logs, metrics and traces to Sumo Logic")
 
-  set(otelcol_sumo_target "otelcol-sumo")
-  if(FIPS)
-    set(otelcol_sumo_target "${otelcol_sumo_target}-fips")
-  endif()
-  set(otelcol_sumo_target "${otelcol_sumo_target}-${goos}-${goarch}")
-
   # Set target dependencies of the cpack target for this package. The
   # otelcol-sumo binary matching the GOOS, GOARCH and FIPS flag are required for
   # OTC packages.
   set(target_dependencies
-    "${otelcol_sumo_target}"
+    "${SOURCE_OTC_BINARY}"
   )
 endmacro()

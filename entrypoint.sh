@@ -13,6 +13,10 @@ if [ "${INPUT_OTC_BUILD_NUMBER}" != "" ]; then
     export OTC_BUILD_NUMBER="$(echo $INPUT_OTC_BUILD_NUMBER | xargs)"
 fi
 
+if [ "${INPUT_WORKFLOW_ID}" != "" ]; then
+    export OTC_ARTIFACTS_SOURCE="github-artifacts"
+fi
+
 mkdir -p build
 cd build || exit
 $@

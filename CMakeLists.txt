@@ -34,14 +34,6 @@ project(otelcol-sumo
   VERSION "${OTC_VERSION}"
   LANGUAGES NONE)
 
-# Create targets for downloading otelcol-sumo binaries
-create_otelcol_sumo_target("linux" "amd64" false)
-create_otelcol_sumo_target("linux" "amd64" true)
-create_otelcol_sumo_target("linux" "arm64" false)
-
-# Create target for downloading all otelcol-sumo binaries
-create_otelcol_sumos_target()
-
 # Include package functions
 include("${PACKAGES_DIR}/otc_linux_amd64_deb.cmake")
 include("${PACKAGES_DIR}/otc_linux_amd64_rpm.cmake")
@@ -51,6 +43,9 @@ package_otc_linux_amd64_deb()
 
 # Build rpm package configs & targets
 package_otc_linux_amd64_rpm()
+
+# Create target for downloading all otelcol-sumo binaries
+create_otelcol_sumos_target()
 
 # Create targets for all packages & groups of packages
 create_packages_targets()

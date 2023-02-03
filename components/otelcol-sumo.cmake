@@ -93,21 +93,14 @@ endmacro()
 macro(install_otc_binary)
   require_variables(
     "OTC_BIN_DIR"
+    "SOURCE_OTC_BINARY_PATH"
     "goos"
     "goarch"
     "otc_component"
   )
 
-  # TODO: retrieve this from the external project somehow or create a helper to
-  # DRY this up a bit
-  set(otc_binary_dir "${CMAKE_BINARY_DIR}/external_projects/otelcol-sumo")
-  if(FIPS_ENABLED)
-    set(otc_binary_dir "${otc_binary_dir}-fips")
-  endif()
-  set(otc_binary_dir "${otc_binary_dir}-${goos}-${goarch}")
-
   install(
-    FILES "${otc_binary_dir}/otelcol-sumo"
+    FILES "${SOURCE_OTC_BINARY_PATH}"
     DESTINATION "${OTC_BIN_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_EXECUTE

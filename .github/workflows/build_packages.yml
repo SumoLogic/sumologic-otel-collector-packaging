@@ -4,18 +4,49 @@
 # upgrades from one build to the next.
 name: 'Build packages'
 
+# Sets the name of the CI run based on whether the run was triggered by a push
+# or remotely with or without workflow_run_id set. The name used for push events
+# is the full commit message as I have not been able to find a way to only show
+# the commit title (first 72 characters of commit message) - Justin K.
+run-name: >
+  ${{
+  github.event.inputs.workflow_id != '' &&
+  format('Build for Remote Workflow: {0}', github.event.inputs.workflow_id)
+  ||
+  github.event.inputs.otc_version != '' &&
+  github.event.inputs.otc_sumo_version != '' &&
+  format('Build for GitHub Release: {0}-sumo-{1}',
+  github.event.inputs.otc_version, github.event.inputs.otc_sumo_version)
+  ||
+  github.event.head_commit.message
+  }}
+
 on:
   push:
   workflow_dispatch:
     inputs:
+      workflow_id:
+        description: |
+          The Workflow Run ID to download artifacts from. The artifacts for the
+          specified workflow must contain an otelcol-sumo binary for each
+          platform that packages are being built for.
+        required: false
+        type: string
       otc_version:
-        required: true
+        description: |
+          The version of OTC to package in A.B.C format.
+        required: false
         type: string
       otc_sumo_version:
-        required: true
+        description: |
+          The Sumo version of OTC to package. E.g. the X in A.B.C-sumo-X.
+        required: false
         type: string
 
 jobs:
+  # Determines the latest version which will be used to fetch artifacts from a
+  # GitHub Release and as the version of the packages being built. This is
+  # skipped if the otc_version and otc_sumo_version inputs have been set.
   determine_version:
     runs-on: ubuntu-latest
     name: Determine version
@@ -39,24 +70,30 @@ jobs:
           echo "otc_version=${VERSION}" >> $GITHUB_OUTPUT
           echo "otc_sumo_version=${SUMO_VERSION}" >> $GITHUB_OUTPUT
 
-  build_package:
+  # Builds a package for each make target in the matrix. The make target must be
+  # an existing target in the Makefile which CMake generates.
+  build_packages:
     name: ${{ matrix.target }}
     uses: ./.github/workflows/build_package.yml
-    needs: determine_version
+    needs:
+      - determine_version
     if: always()
     with:
       otc_version: >
         ${{
-        github.events.inputs.otc_version ||
+        github.event.inputs.otc_version ||
         needs.determine_version.outputs.otc_version
         }}
       otc_sumo_version: >
         ${{
-        github.events.inputs.otc_sumo_version ||
+        github.event.inputs.otc_sumo_version ||
         needs.determine_version.outputs.otc_sumo_version
         }}
       otc_build_number: ${{ github.run_number }}
       make_target: ${{ matrix.target }}
+      workflow_id: ${{ github.event.inputs.workflow_id }}
+    secrets:
+      gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
     strategy:
       matrix:
         target:
