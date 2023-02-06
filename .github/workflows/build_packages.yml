@@ -74,7 +74,7 @@ jobs:
   # an existing target in the Makefile which CMake generates.
   build_packages:
     name: ${{ matrix.target }}
-    uses: ./.github/workflows/build_package.yml
+    uses: ./.github/workflows/_reusable_build_package.yml
     needs:
       - determine_version
     if: always()
