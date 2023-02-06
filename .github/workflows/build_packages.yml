@@ -54,21 +54,25 @@ jobs:
       github.event.inputs.otc_version == '' &&
       github.event.inputs.otc_sumo_version == ''
     outputs:
-      otc_version: ${{ steps.determine-version.outputs.otc_version }}
-      otc_sumo_version: ${{ steps.determine-version.outputs.otc_sumo_version }}
+      otc_version: ${{ steps.version-core.outputs.version }}
+      otc_sumo_version: ${{ steps.sumo-version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Determine latest release version
-        id: determine-version
-        run: |
-          VERSION="$(./ci/get_latest_release_version.sh otc_version)"
-          SUMO_VERSION="$(./ci/get_latest_release_version.sh otc_sumo_version)"
-          echo "otc_version=${VERSION}"
-          echo "otc_sumo_version=${SUMO_VERSION}"
-          echo "otc_version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "otc_sumo_version=${SUMO_VERSION}" >> $GITHUB_OUTPUT
+      - name: Determine latest release version core
+        id: version-core
+        run: |-
+          ./ci/get_latest_release_version.sh otc_version > /tmp/otc_version &&
+          cat /tmp/otc_version &&
+          echo "version=$(cat /tmp/otc_version)" >> $GITHUB_OUTPUT
+
+      - name: Determine latest release sumo version
+        id: sumo-version
+        run: >
+          ./ci/get_latest_release_version.sh otc_sumo_version >
+          /tmp/otc_sumo_version && cat /tmp/otc_sumo_version &&
+          echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
 
   # Builds a package for each make target in the matrix. The make target must be
   # an existing target in the Makefile which CMake generates.
