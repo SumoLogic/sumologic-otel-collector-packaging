@@ -32,12 +32,19 @@ case "$1" in
         usage ;;
 esac
 
-REPO_ORG="${REPO_ORG:-SumoLogic}"
-REPO_PROJECT="${REPO_PROJECT:-sumologic-otel-collector}"
+# If VERSION_TAG environment variable isn't set then attempt to fetch the latest
+# tag from GitHub Releases
+if [ -z "$VERSION_TAG" ]; then
+    REPO_ORG="${REPO_ORG:-SumoLogic}"
+    REPO_PROJECT="${REPO_PROJECT:-sumologic-otel-collector}"
 
-api_url="https://api.github.com/repos/${REPO_ORG}/${REPO_PROJECT}/releases/latest"
+    api_url="https://api.github.com/repos/${REPO_ORG}/${REPO_PROJECT}/releases/latest"
 
-version_tag="$(curl -sLo- "${api_url}" | jq -r '.name' )"
+    version_tag="$(curl -sLo- "${api_url}" | jq -r '.name' )"
+else
+    version_tag="$VERSION_TAG"
+fi
+
 version_regex="^v([0-9]+).([0-9]+).([0-9]+)((-(alpha|beta|rc|sumo)[-.]([0-9]+))(-(alpha|beta|rc).([0-9])+)?)?$"
 
 if [[ $version_tag =~ $version_regex ]]; then

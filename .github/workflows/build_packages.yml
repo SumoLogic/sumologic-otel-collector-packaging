@@ -60,18 +60,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Determine latest release version core
+      - name: Determine latest release
+        id: release
+        uses: ./ci/github-actions/get-latest-release
+        with:
+          token: ${{ github.token }}
+          owner: SumoLogic
+          repository: sumologic-otel-collector
+
+      - name: Determine version core from release
         id: version-core
-        run: |-
-          ./ci/get_latest_release_version.sh otc_version > /tmp/otc_version &&
+        env:
+          VERSION_TAG: ${{ steps.release.outputs.tag_name }}
+        run: >
+          ./ci/get_version.sh otc_version > /tmp/otc_version &&
           cat /tmp/otc_version &&
           echo "version=$(cat /tmp/otc_version)" >> $GITHUB_OUTPUT
 
-      - name: Determine latest release sumo version
+      - name: Determine sumo version from release
         id: sumo-version
+        env:
+          VERSION_TAG: ${{ steps.release.outputs.tag_name }}
         run: >
-          ./ci/get_latest_release_version.sh otc_sumo_version >
-          /tmp/otc_sumo_version && cat /tmp/otc_sumo_version &&
+          ./ci/get_version.sh otc_sumo_version > /tmp/otc_sumo_version &&
+          cat /tmp/otc_sumo_version &&
           echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
 
   # Builds a package for each make target in the matrix. The make target must be

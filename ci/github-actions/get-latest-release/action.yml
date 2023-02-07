@@ -1,0 +1,34 @@
+name: 'get-latest-release'
+
+description: >
+  Fetches information about the latest GitHub Release for a specified GitHub
+  repository.
+
+inputs:
+  token:
+    description: 'GitHub token to use for API requests'
+    required: true
+  owner:
+    description: 'Owner of the GitHub repository'
+    required: true
+  repository:
+    description: 'Name of the GitHub repository'
+    required: true
+
+outputs:
+  id:
+    description: 'The id of the latest release'
+  tag_name:
+    description: 'The tag name of the latest release'
+  name:
+    description: 'The name of the latest release'
+  body:
+    description: 'The body of the latest release'
+  created_at:
+    description: 'The timestamp of the creation of the latest release'
+  published_at:
+    description: 'The timestamp of the publishing of the latest release'
+
+runs:
+  using: 'node16'
+  main: 'index.js'
