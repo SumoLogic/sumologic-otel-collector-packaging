@@ -54,8 +54,10 @@ export OTC_BUILD_NUMBER=1234
   -e OTC_VERSION="$OTC_VERSION" \
   -e OTC_SUMO_VERSION="$OTC_SUMO_VERSION" \
   -e OTC_BUILD_NUMBER="$OTC_BUILD_NUMBER" \
-  -v $(pwd):/src otelcol-sumo/cmake \
-  cmake ../
+  -v $(pwd):/src \
+  -v $(pwd)/build:/build \
+  otelcol-sumo/cmake \
+  cmake /src
   ```
 
 #### Linux packages
@@ -63,7 +65,7 @@ export OTC_BUILD_NUMBER=1234
 1. Build all Linux packages:
 
   ```sh
-  docker run -v $(pwd):/src otelcol-sumo/cmake make linux-packages
+  docker run -v $(pwd):/src -v $(pwd)/build:/build otelcol-sumo/cmake make linux-packages
   ```
 
 #### Single package
@@ -71,7 +73,7 @@ export OTC_BUILD_NUMBER=1234
 1. Find the `target_name` of the desired package from the list of make targets:
 
   ```sh
-  docker run -v $(pwd):/src otelcol-sumosh -c 'make help | grep -e "^... package-"''
+  docker run -v $(pwd):/src otelcol-sumo sh -c 'make help | grep -e "^... package-"''
   ```
 
 1. Build the package:
