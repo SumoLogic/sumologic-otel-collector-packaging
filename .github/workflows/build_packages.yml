@@ -76,6 +76,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Output Remote Workflow URL
+        if: github.event.inputs.workflow_id != ''
+        run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ github.event.inputs.workflow_id }}
+
       - name: Determine latest release
         id: release
         uses: ./ci/github-actions/get-latest-release
