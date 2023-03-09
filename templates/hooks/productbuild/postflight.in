@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# $0 - path to this script
+# $1 - path to the package
+# $2 - target path that the package is installing to
+# $3 - target volume that the package is installing to
+
+@otc_darwin_functions@
+
+set_file_ownership
+load_otc_service
+
+exit 0

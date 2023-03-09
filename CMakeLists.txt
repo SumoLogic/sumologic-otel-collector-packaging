@@ -6,13 +6,14 @@ include("${CMAKE_SOURCE_DIR}/version.cmake")
 
 # Include CMake modules
 include(ExternalProject)
+include(CPackComponent)
 
 # Set directory variables
 set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 set(COMPONENTS_DIR "${CMAKE_SOURCE_DIR}/components")
 set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/external_projects")
-set(PACKAGES_DIR "${CMAKE_SOURCE_DIR}/packages")
 set(SETTINGS_DIR "${CMAKE_SOURCE_DIR}/settings")
+set(TARGETS_DIR "${CMAKE_SOURCE_DIR}/targets")
 set(TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates")
 set(TEMPLATES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/templates_output")
 set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
@@ -25,6 +26,9 @@ include("${CMAKE_SOURCE_DIR}/templates.cmake")
 include("${CMAKE_SOURCE_DIR}/packages.cmake")
 include("${CMAKE_SOURCE_DIR}/settings.cmake")
 
+# Add module paths
+list(APPEND CMAKE_MODULE_PATH "${ASSETS_DIR}/productbuild")
+
 # Prevent In-Source builds
 validate_build_dir()
 
@@ -34,18 +38,24 @@ project(otelcol-sumo
   VERSION "${OTC_VERSION}"
   LANGUAGES NONE)
 
-# Include package functions
-include("${PACKAGES_DIR}/otc_linux_amd64_deb.cmake")
-include("${PACKAGES_DIR}/otc_linux_amd64_rpm.cmake")
+set(TARGET "$ENV{TARGET}")
 
-# Build deb package configs & targets
-package_otc_linux_amd64_deb()
+if("${TARGET}" STREQUAL "")
+  message(WARNING "TARGET variable was not set, skipping build...")
+  return()
+endif()
 
-# Build rpm package configs & targets
-package_otc_linux_amd64_rpm()
+get_target_names(TARGET_NAMES)
 
-# Create target for downloading all otelcol-sumo binaries
-create_otelcol_sumos_target()
+if(NOT "${TARGET}" IN_LIST TARGET_NAMES)
+  message(STATUS "Available targets:")
+  foreach(TARGET_NAME ${TARGET_NAMES})
+    message(STATUS "  * ${TARGET_NAME}")
+  endforeach()
+  message(FATAL_ERROR "Target does not exist: ${TARGET}")
+endif()
 
-# Create targets for all packages & groups of packages
-create_packages_targets()
+message(STATUS "Target is set to: ${TARGET}")
+
+# Include target file
+include("${TARGETS_DIR}/${TARGET}.cmake")

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# $0 - path to this script
+# $1 - path to the package
+# $2 - target path that the package is installing to
+# $3 - target volume that the package is installing to
+
+@common_darwin_functions@
+
+create_user_and_group_if_missing "@SERVICE_USER@" "@SERVICE_GROUP@"
+
+exit 0

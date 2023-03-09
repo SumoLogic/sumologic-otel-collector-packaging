@@ -17,7 +17,9 @@ function(render_common_hook_templates)
   )
 
   set(file_names
+    "darwin-functions"
     "linux-functions"
+    "otc-darwin-functions"
     "otc-linux-functions"
   )
 

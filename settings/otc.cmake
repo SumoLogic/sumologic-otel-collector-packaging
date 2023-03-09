@@ -4,7 +4,6 @@ macro(set_otc_settings)
     "OTC_SUMO_VERSION"
     "goos"
     "goarch"
-    "otc_component"
     "package_arch"
   )
 
@@ -32,6 +31,7 @@ macro(set_otc_settings)
   set(OTC_USER_ENV_DIR "${OTC_CONFIG_DIR}/env")
   set(OTC_STATE_DIR "var/lib/otelcol-sumo")
   set(OTC_FILESTORAGE_STATE_DIR "${OTC_STATE_DIR}/file_storage")
+  set(OTC_LAUNCHD_DIR "Library/LaunchDaemons")
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
 
   # File paths
@@ -71,14 +71,17 @@ macro(set_otc_settings)
   set(SERVICE_GROUP "otelcol-sumo")
   set(SERVICE_USER_HOME "/${OTC_STATE_DIR}")
 
+  if("${goos}" STREQUAL "darwin")
+    set(SERVICE_USER "_${SERVICE_USER}")
+    set(SERVICE_GROUP "_${SERVICE_GROUP}")
+  endif()
+
   # Render common hook templates
   render_common_hook_templates()
 
   # CPack configuration
   set(CPACK_PACKAGE_NAME "otelcol-sumo")
   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${package_arch}")
-  set(CPACK_COMPONENTS_ALL "${otc_component}")
-  set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_BINARY_DIR};otelcol-sumo;${CPACK_COMPONENTS_ALL};/")
   set(CPACK_RESOURCE_FILE_LICENSE "${ASSETS_DIR}/LICENSE")
   set(CPACK_PACKAGE_DESCRIPTION_FILE "${ASSETS_DIR}/description")
   set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An agent to send logs, metrics and traces to Sumo Logic")
