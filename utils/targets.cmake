@@ -15,3 +15,10 @@ function(get_target_names varName)
   # Set the value of varName to TARGET_NAMES
   set(${varName} ${TARGET_NAMES} PARENT_SCOPE)
 endfunction()
+
+function(print_available_targets)
+  message(STATUS "Available targets:")
+  foreach(TARGET_NAME ${TARGET_NAMES})
+    message(STATUS "  * ${TARGET_NAME}")
+  endforeach()
+endfunction()

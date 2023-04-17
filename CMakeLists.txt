@@ -40,18 +40,16 @@ project(otelcol-sumo
 
 set(TARGET "$ENV{TARGET}")
 
+get_target_names(TARGET_NAMES)
+
 if("${TARGET}" STREQUAL "")
-  message(WARNING "TARGET variable was not set, skipping build...")
+  print_available_targets()
+  message(FATAL_ERROR "TARGET environment variable must be set")
   return()
 endif()
 
-get_target_names(TARGET_NAMES)
-
 if(NOT "${TARGET}" IN_LIST TARGET_NAMES)
-  message(STATUS "Available targets:")
-  foreach(TARGET_NAME ${TARGET_NAMES})
-    message(STATUS "  * ${TARGET_NAME}")
-  endforeach()
+  print_available_targets()
   message(FATAL_ERROR "Target does not exist: ${TARGET}")
 endif()
 
