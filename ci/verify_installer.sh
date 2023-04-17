@@ -217,12 +217,14 @@ done < <(find . ! -name '.' -print0)
 collector_files=()
 
 for f in "${all_collector_files[@]}"; do
-  collector_file="$(echo $f | cut -d/ -f2-)"
+  collector_file="$(echo "$f" | cut -d/ -f2-)"
 
+  # shellcheck disable=SC2076
   if [[ " ${system_files[*]} " =~ " ${collector_file} " ]]; then
     continue
   fi
 
+  # shellcheck disable=SC2076
   if [[ ! " ${expected_collector_files[*]} " =~ " ${collector_file} " ]]; then
     echo "error: unexpected file installed by collector sub-package: ${collector_file}"
     exit 1
@@ -235,7 +237,7 @@ cd "$expanded_dir" || exit
 
 # get a list of files installed by the hostmetrics sub-package excluding both
 # system files and collector files
-hostmetrics_pkg_name="$(echo $hostmetrics_pkg | cut -d/ -f2-)"
+hostmetrics_pkg_name="$(echo "${hostmetrics_pkg[0]}" | cut -d/ -f2-)"
 cd "${hostmetrics_pkg_name}/Payload" || exit
 all_hostmetrics_files=()
 while IFS=  read -r -d $'\0'; do
@@ -245,16 +247,19 @@ done < <(find . ! -name '.' -print0)
 hostmetrics_files=()
 
 for f in "${all_hostmetrics_files[@]}"; do
-  hostmetrics_file="$(echo $f | cut -d/ -f2-)"
+  hostmetrics_file="$(echo "$f" | cut -d/ -f2-)"
 
+  # shellcheck disable=SC2076
   if [[ " ${system_files[*]} " =~ " ${hostmetrics_file} " ]]; then
     continue
   fi
 
+  # shellcheck disable=SC2076
   if [[ " ${collector_files[*]} " =~ " ${hostmetrics_file} " ]]; then
     continue
   fi
 
+  # shellcheck disable=SC2076
   if [[ ! " ${expected_collector_files[*]} " =~ " ${collector_file} " ]]; then
     echo "error: unexpected file installed by hostmetrics sub-package: ${hostmetrics_file}"
     exit 1

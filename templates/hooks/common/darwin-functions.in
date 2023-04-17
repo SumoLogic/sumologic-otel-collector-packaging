@@ -1,4 +1,4 @@
-# -*- mode: sh -*-
+# shellcheck disable=SC2148
 
 # get_uid will print a user's id if found or nothing if not found
 get_uid()
@@ -84,12 +84,9 @@ add_user_to_group_if_missing()
 {
     local group="$1"
     local user="$2"
-    local user_groups="$(id -Gn "$user")"
-    local found=""
 
     for user_group in $(id -Gn "$user"); do
         if [ "$user_group" == "$group" ]; then
-            found="true"
             return
         fi
     done
@@ -100,7 +97,8 @@ add_user_to_group_if_missing()
 create_user_if_missing()
 {
     local user="$1"
-    local uid="$(get_uid "$user")"
+    local uid
+    uid="$(get_uid "$user")"
 
     if [ "$uid" == "" ]; then
         echo 'User was not found'
@@ -111,7 +109,8 @@ create_user_if_missing()
 create_group_if_missing()
 {
     local group="$1"
-    local gid="$(get_gid "$group")"
+    local gid
+    gid="$(get_gid "$group")"
 
     if [ "$gid" == "" ]; then
         echo 'Group was not found'
@@ -127,8 +126,10 @@ create_user_and_group_if_missing()
     local group="$2"
     local uid=""
     local gid=""
-    local existing_uid="$(get_uid "$user")"
-    local existing_gid="$(get_gid "$group")"
+    local existing_uid
+    local existing_gid
+    existing_uid="$(get_uid "$user")"
+    existing_gid="$(get_gid "$group")"
 
     # Do nothing if the user and group already exist otherwise determine the uid
     # and/or gid to use for user/group creation
@@ -156,7 +157,8 @@ create_user_and_group_if_missing()
         fi
     else
         echo 'User and group do not exist'
-        local id="$(next_available_id)"
+        local id
+        id="$(next_available_id)"
         echo "Next available ID: ${id}"
         uid="$id"
         gid="$id"
