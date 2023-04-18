@@ -24,16 +24,13 @@ endmacro()
 macro(create_otc_components)
   cpack_add_component_group("otelcol-sumo-group"
     DISPLAY_NAME "OpenTelemetry Collector"
-    #DESCRIPTION "example group description"
     EXPANDED
   )
 
   cpack_add_component("otelcol-sumo"
     DISPLAY_NAME "Application Files"
-    #DESCRIPTION "Example description"
     REQUIRED
     GROUP "otelcol-sumo-group"
-    #[PLIST filename]
   )
 
   cpack_add_component("otelcol-sumo-hostmetrics"

@@ -14,20 +14,6 @@ macro(set_common_productbuild_settings)
 
   set(CPACK_PRODUCTBUILD_IDENTIFIER "com.sumologic")
 
-  #
-  # CPACK_PRODUCTBUILD_IDENTITY_NAME
-  #   Adds a digital signature to the resulting package.
-  #
-  # CPACK_PRODUCTBUILD_KEYCHAIN_PATH
-  #   Specify a specific keychain to search for the signing identity.
-  #
-  # CPACK_PKGBUILD_IDENTITY_NAME
-  #   Adds a digital signature to the resulting package.
-  #
-  # CPACK_PKGBUILD_KEYCHAIN_PATH
-  #   Specify a specific keychain to search for the signing identity.
-  #
-
   # These options currently have no affect on the produced Distribution file as
   # we are using our own CPack.distribution.dist.in template. This should be
   # uncommented once the default template supports the features we need such as
