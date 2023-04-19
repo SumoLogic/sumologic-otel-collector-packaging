@@ -8,4 +8,5 @@ set(HOOK_TEMPLATES_OUTPUT_DIR "${TEMPLATES_OUTPUT_DIR}/hooks")
 
 include("${HOOK_TEMPLATES_DIR}/common.cmake")
 include("${HOOK_TEMPLATES_DIR}/deb.cmake")
+include("${HOOK_TEMPLATES_DIR}/productbuild.cmake")
 include("${HOOK_TEMPLATES_DIR}/rpm.cmake")

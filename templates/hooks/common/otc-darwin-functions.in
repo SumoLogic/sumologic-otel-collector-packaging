@@ -1,0 +1,22 @@
+# shellcheck disable=SC2148
+# $0 - path to this script
+# $1 - path to the package
+# $2 - target path that the package is installing to
+# $3 - target volume that the package is installing to
+
+otc_sumologic_config_path="${3}@OTC_SUMOLOGIC_CONFIG_PATH@"
+otc_config_fragments_dir="${3}@OTC_CONFIG_FRAGMENTS_DIR@"
+otc_launchdaemon_dir="${3}@OTC_LAUNCHD_DIR@"
+
+set_file_ownership()
+{
+    chown -R @SERVICE_USER@:@SERVICE_GROUP@ \
+          @SERVICE_USER_HOME@ \
+          "$otc_sumologic_config_path" \
+          "$otc_config_fragments_dir"
+}
+
+load_otc_service()
+{
+    launchctl load "${otc_launchdaemon_dir}/com.sumologic.otelcol-sumo.plist"
+}

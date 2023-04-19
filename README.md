@@ -6,6 +6,18 @@ Packages can be built using the provided Dockerfile or locally.
 
 ### Required environment variables
 
+#### TARGET
+
+Represents the target package to build. The value must be the name of a file in
+the `targets` directory without the file extension.
+(e.g. `otc_darwin_arm64_productbuild`)
+
+Show the list of targets by running:
+
+``` sh
+find targets -name '*.cmake' -exec basename -s .cmake {} \;
+```
+
 #### OTC_VERSION
 
 Represents the base version of otelcol-sumo. This value is used to fetch
@@ -27,9 +39,11 @@ to 0 when building packages for testing without upgrades.
 
 #### Example
 
-When packaging a GitHub release with the tag `v0.69.0-sumo-0`:
+When packaging a GitHub release with the tag `v0.69.0-sumo-0` for macOS on an
+arm64 processor:
 
 ```sh
+export TARGET=otc_darwin_arm64_productbuild
 export OTC_VERSION=0.69.0
 export OTC_SUMO_VERSION=0
 export OTC_BUILD_NUMBER=1234
@@ -51,6 +65,7 @@ export OTC_BUILD_NUMBER=1234
 
   ```sh
   docker run \
+  -e TARGET="$TARGET" \
   -e OTC_VERSION="$OTC_VERSION" \
   -e OTC_SUMO_VERSION="$OTC_SUMO_VERSION" \
   -e OTC_BUILD_NUMBER="$OTC_BUILD_NUMBER" \
@@ -60,26 +75,10 @@ export OTC_BUILD_NUMBER=1234
   cmake /src
   ```
 
-#### Linux packages
-
-1. Build all Linux packages:
-
-  ```sh
-  docker run -v $(pwd):/src -v $(pwd)/build:/build otelcol-sumo/cmake make linux-packages
-  ```
-
-#### Single package
-
-1. Find the `target_name` of the desired package from the list of make targets:
-
-  ```sh
-  docker run -v $(pwd):/src otelcol-sumo sh -c 'make help | grep -e "^... package-"''
-  ```
-
 1. Build the package:
 
   ``` sh
-  docker run -v $(pwd):/src otelcol-sumo/cmake make <target_name>
+  docker run -v $(pwd):/src otelcol-sumo/cmake make package
   ```
 
 ---
@@ -96,38 +95,10 @@ get started.
 cd build && cmake ../
 ```
 
-#### Linux packages
-
-1. Build all Linux packages:
-
-  ``` sh
-  make linux-packages
-  ```
-
-#### DEB packages
-
-1. Build all DEB packages:
-
-  ``` sh
-  make deb-packages
-  ```
-
-#### RPM packages
-
-1. Build all RPM packages:
-
-  ``` sh
-  make rpm-packages
-  ```
-
-#### Single package
-
-1. Find the `target_name` of the desired package from the packages directory.
-
 1. Build the package:
 
-  ``` sh
-  make <target_name>
-  ```
+``` sh
+make package
+```
 
 [cmake]: https://cmake.org/download/

@@ -12,11 +12,14 @@ on:
       otc_build_number:
         required: false
         type: string
-      make_target:
+      cmake_target:
         required: true
         type: string
       workflow_id:
         required: false
+        type: string
+      runs_on:
+        required: true
         type: string
     secrets:
       gh_artifacts_token:
@@ -24,8 +27,10 @@ on:
 
 jobs:
   build_package:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     name: Build
+    outputs:
+      package_path: ${{ steps.package.outputs.path }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -38,27 +43,54 @@ jobs:
           workflow_id="${{ inputs.workflow_id }}"
           echo "https://github.com/${org}/${repo}/actions/runs/${workflow_id}"
 
+      - name: Make build directory
+        if: runner.os != 'Linux'
+        run: mkdir build
+
       - name: Build Makefile
-        id: cmake
+        id: cmake-linux
+        if: runner.os == 'Linux'
         uses: ./ci/github-actions/cmake
         with:
           otc_version: ${{ inputs.otc_version }}
           otc_sumo_version: ${{ inputs.otc_sumo_version }}
           otc_build_number: ${{ inputs.otc_build_number }}
+          target: ${{ inputs.cmake_target }}
           workflow_id: ${{ inputs.workflow_id }}
+
+      - name: Build Makefile
+        id: cmake-other
+        if: runner.os != 'Linux'
+        env:
+          OTC_VERSION: ${{ inputs.otc_version }}
+          OTC_SUMO_VERSION: ${{ inputs.otc_sumo_version }}
+          OTC_BUILD_NUMBER: ${{ inputs.otc_build_number }}
+          TARGET: ${{ inputs.cmake_target }}
+        working-directory: build
+        run: cmake ../
 
       - name: Set simple package outputs
         id: package
+        env:
+          PACKAGE_NAME: >-
+            ${{
+            steps.cmake-linux.outputs.package_name ||
+            steps.cmake-other.outputs.package_name
+            }}
         run: >
-          echo path=${{ steps.cmake.outputs[format('{0}-pkg',
-          inputs.make_target)] }} >> $GITHUB_OUTPUT
+          echo path="$PACKAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Set simple otc-bin outputs
         id: otc-bin
         if: inputs.workflow_id != ''
+        env:
+          OTC_BIN: >-
+            ${{
+            steps.cmake-linux.outputs.otc-bin ||
+            steps.cmake-other.outputs.otc-bin
+            }}
         run: >
-          echo path=${{ steps.cmake.outputs[format('{0}-otc-bin',
-          inputs.make_target)] }} >> $GITHUB_OUTPUT
+          echo path="$OTC_BIN" >> $GITHUB_OUTPUT
 
       # Download the artifacts required to build the package target. If
       # use_github_artifacts is false then this will be skipped and CMake will
@@ -76,9 +108,15 @@ jobs:
           if_no_artifact_found: fail
 
       - name: Build package
+        if: runner.os == 'Linux'
         uses: ./ci/github-actions/make
         with:
-          target: ${{ inputs.make_target }}
+          target: package
+
+      - name: Build package
+        if: runner.os != 'Linux'
+        working-directory: build
+        run: make package
 
       - name: Store package as action artifact
         uses: actions/upload-artifact@v3
@@ -86,3 +124,21 @@ jobs:
           name: ${{ steps.package.outputs.path }}
           path: ./build/${{ steps.package.outputs.path }}
           if-no-files-found: error
+
+  test_package:
+    runs-on: ${{ inputs.runs_on }}
+    name: Test
+    needs: build_package
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download macOS package
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ needs.build_package.outputs.package_path }}
+          path: artifacts/
+
+      - name: Verify installer
+        if: inputs.cmake_target == 'otc_darwin_amd64_productbuild'
+        run: sudo ./ci/verify_installer.sh "artifacts/${{ needs.build_package.outputs.package_path }}"

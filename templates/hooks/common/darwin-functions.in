@@ -1,0 +1,181 @@
+# shellcheck disable=SC2148
+
+# get_uid will print a user's id if found or nothing if not found
+get_uid()
+{
+    dscl . -read /Users/"$1" UniqueID 2>/dev/null | awk '{print $2}' | grep -e '^\d\+$'
+}
+
+# get_gid will print a group's id if found or nothing if not found
+get_gid()
+{
+    dscl . -read /Groups/"$1" PrimaryGroupID 2>/dev/null | awk '{print $2}' | grep -e '^\d\+$'
+}
+
+# next_available_uid finds the next available uid
+next_available_uid()
+{
+    local uid="200"
+
+    while dscl . -list /Users UniqueID | awk '{print $2}' | grep -e "^${uid}$"; do
+        uid="$((uid + 1))"
+    done
+
+    echo "$uid"
+}
+
+# next_available_gid finds the next available gid
+next_available_gid()
+{
+    local gid="200"
+
+    while dscl . -list /Groups UniqueID | awk '{print $2}' | grep -e "^${uid}$"; do
+        gid="$((gid + 1))"
+    done
+
+    echo "$gid"
+}
+
+# next_available_id finds the next available id to use for both a uid and gid
+next_available_id()
+{
+    local id="200"
+
+    while dscl . -list /Groups PrimaryGroupID | awk '{print $2}' | grep -e "^${id}$" >/dev/null || dscl . -list /Users UniqueID | awk '{print $2}' | grep -e "^${id}$" >/dev/null; do
+        id="$((id + 1))"
+    done
+
+    echo "$id"
+}
+
+# create_user creates a user for a given username and uid
+create_user()
+{
+    local user="$1"
+    local uid="$2"
+
+    echo 'Creating user'
+    dscl . -create /Users/"$user" UniqueID "$uid"
+    dscl . -create /Users/"$user" PrimaryGroupID "$uid"
+    dscl . -create /Users/"$user" Home /var/empty
+    dscl . -create /Users/"$user" UserShell /usr/bin/false
+}
+
+# create_group creates a group for a given group name and gid
+create_group()
+{
+    local group="$1"
+    local gid="$2"
+
+    echo 'Creating group'
+    dscl . -create /Groups/"$group" PrimaryGroupID "$gid"
+}
+
+add_user_to_group()
+{
+    local group="$1"
+    local user="$2"
+
+    echo 'Adding user to group'
+    dscl . -append /Groups/"$group" GroupMembership "$user"
+}
+
+add_user_to_group_if_missing()
+{
+    local group="$1"
+    local user="$2"
+
+    for user_group in $(id -Gn "$user"); do
+        if [ "$user_group" == "$group" ]; then
+            return
+        fi
+    done
+
+    add_user_to_group "$group" "$user"
+}
+
+create_user_if_missing()
+{
+    local user="$1"
+    local uid
+    uid="$(get_uid "$user")"
+
+    if [ "$uid" == "" ]; then
+        echo 'User was not found'
+        create_user "$user" "$(next_available_uid)"
+    fi
+}
+
+create_group_if_missing()
+{
+    local group="$1"
+    local gid
+    gid="$(get_gid "$group")"
+
+    if [ "$gid" == "" ]; then
+        echo 'Group was not found'
+        create_group "$group" "$(next_available_gid)"
+        add_user_to_group "$group" "$user"
+    fi
+}
+
+# Creates a user/group if they do not exist
+create_user_and_group_if_missing()
+{
+    local user="$1"
+    local group="$2"
+    local uid=""
+    local gid=""
+    local existing_uid
+    local existing_gid
+    existing_uid="$(get_uid "$user")"
+    existing_gid="$(get_gid "$group")"
+
+    # Do nothing if the user and group already exist otherwise determine the uid
+    # and/or gid to use for user/group creation
+    if [ "$existing_uid" != "" ] && [ "$existing_gid" != "" ]; then
+        echo 'User and group already exist'
+    elif [ "$existing_gid" != "" ]; then
+        echo 'Group already exists'
+
+        # Find a uid to use for user creation
+        if dscl . -list /Users UniqueID | awk '{print $2}' | grep -e "^${existing_gid}$"; then
+            # A uid matching the gid exists; find the next available uid >= 200
+            uid="$(next_available_uid)"
+        else
+            uid="$existing_gid"
+        fi
+    elif [ "$existing_uid" != "" ]; then
+        echo 'User already exists'
+
+        # Find a gid to use for group creation
+        if dscl . -list /Groups PrimaryGroupID | awk '{print $2}' | grep -e "^${existing_uid}$"; then
+            # A gid matching the uid exists; find the next available gid >= 200
+            gid="$(next_available_gid)"
+        else
+            gid="$existing_uid"
+        fi
+    else
+        echo 'User and group do not exist'
+        local id
+        id="$(next_available_id)"
+        echo "Next available ID: ${id}"
+        uid="$id"
+        gid="$id"
+    fi
+
+    # If group was not found, create group
+    if [ "$existing_gid" == "" ]; then
+        echo "Group not found, creating ${group} with gid: ${gid}"
+        create_group "$group" "$gid"
+    fi
+
+    # If user was not found, create user
+    if [ "$existing_uid" == "" ]; then
+        echo "User not found, creating ${user} with uid: ${uid}"
+        create_user "$user" "$uid"
+    fi
+
+    # Add user to group if the user is not a member
+    add_user_to_group_if_missing "$group" "$user"
+}

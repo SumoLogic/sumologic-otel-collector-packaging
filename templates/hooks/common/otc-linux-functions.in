@@ -1,3 +1,5 @@
+# shellcheck disable=SC2148
+
 set_file_ownership()
 {
     chown -R @SERVICE_USER@:@SERVICE_GROUP@ \

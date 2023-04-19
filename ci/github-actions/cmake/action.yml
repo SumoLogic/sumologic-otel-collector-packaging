@@ -10,6 +10,9 @@ inputs:
   otc_build_number:
     required: false
     type: string
+  target:
+    required: true
+    type: string
   workflow_id:
     required: false
     type: string
@@ -17,6 +20,8 @@ inputs:
 runs:
   using: 'docker'
   image: '../../../Dockerfile'
+  env:
+    TARGET: ${{ inputs.target }}
   args:
     - cmake
     - ../

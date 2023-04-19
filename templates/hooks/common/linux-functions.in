@@ -1,4 +1,4 @@
-# -*- mode: sh -*-
+# shellcheck disable=SC2148
 
 # user_missing will return 0 if the user exists, non-zero if it does not
 user_missing()
@@ -32,16 +32,16 @@ create_group()
 
 create_user_if_missing()
 {
-    missing=`user_missing`
-    if [ $missing != "0" ]; then
+    missing="$(user_missing)"
+    if [ "$missing" != "0" ]; then
         create_user
     fi
 }
 
 create_group_if_missing()
 {
-    missing=`group_missing`
-    if [ $missing != "0" ]; then
+    missing="$(group_missing)"
+    if [ "$missing" != "0" ]; then
         create_group
     fi
 }

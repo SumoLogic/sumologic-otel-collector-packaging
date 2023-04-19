@@ -121,8 +121,8 @@ jobs:
       - name: Debug 2
         run: cat $GITHUB_OUTPUT
 
-  # Builds a package for each make target in the matrix. The make target must be
-  # an existing target in the Makefile which CMake generates.
+  # Builds a package for each cmake target in the matrix. The target must be an
+  # existing file name (without extension) in the targets directory.
   build_packages:
     name: ${{ matrix.target }}
     uses: ./.github/workflows/_reusable_build_package.yml
@@ -132,15 +132,22 @@ jobs:
       otc_version: ${{ needs.determine_version.outputs.otc_version }}
       otc_sumo_version: ${{ needs.determine_version.outputs.otc_sumo_version }}
       otc_build_number: ${{ github.run_number }}
-      make_target: ${{ matrix.target }}
+      cmake_target: ${{ matrix.target }}
       workflow_id: ${{ github.event.inputs.workflow_id }}
+      runs_on: ${{ matrix.runs_on }}
     secrets:
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
     strategy:
       matrix:
-        target:
-          - package-otelcol-sumo-linux-amd64-deb
-          - package-otelcol-sumo-linux-amd64-rpm
+        include:
+          - target: otc_linux_amd64_deb
+            runs_on: ubuntu-latest
+          - target: otc_linux_amd64_rpm
+            runs_on: ubuntu-latest
+          - target: otc_darwin_amd64_productbuild
+            runs_on: macos-latest
+          - target: otc_darwin_arm64_productbuild
+            runs_on: macos-latest
 
   publish_release:
     runs-on: ubuntu-latest
