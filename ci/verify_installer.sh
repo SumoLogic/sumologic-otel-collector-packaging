@@ -39,6 +39,7 @@ system_files=(
   "usr/local/bin"
   "var"
   "var/lib"
+  "var/log"
 )
 
 # a list of files that the collector package should install
