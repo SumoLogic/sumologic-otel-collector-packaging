@@ -52,6 +52,7 @@ expected_collector_files=(
   "usr/local/bin/otelcol-sumo"
   "var/lib/otelcol-sumo"
   "var/lib/otelcol-sumo/file_storage"
+  "var/log/otelcol-sumo"
 )
 
 # a list of files that the hostmetrics package should install
