@@ -43,6 +43,7 @@ collector_files=(
   "/usr/local/bin/otelcol-sumo"
   "/var/lib/otelcol-sumo/file_storage"
   "/var/lib/otelcol-sumo"
+  "/var/log/otelcol-sumo"
 )
 
 # A list of files & directories to remove for hostmetrics

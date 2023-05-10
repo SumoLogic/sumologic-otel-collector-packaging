@@ -33,6 +33,7 @@ macro(set_otc_settings)
   set(OTC_FILESTORAGE_STATE_DIR "${OTC_STATE_DIR}/file_storage")
   set(OTC_LAUNCHD_DIR "Library/LaunchDaemons")
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
+  set(OTC_LOG_DIR "var/log/otelcol-sumo")
 
   # File paths
   set(OTC_SUMOLOGIC_CONFIG_PATH "${OTC_CONFIG_DIR}/${OTC_SUMOLOGIC_CONFIG}")
