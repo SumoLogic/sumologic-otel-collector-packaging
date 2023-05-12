@@ -51,6 +51,7 @@ macro(build_cpack_config)
       message(STATUS "Creating target: ${SOURCE_OTC_BINARY}")
       file(MAKE_DIRECTORY "${SOURCE_OTC_BINARY_DIR}")
       add_custom_target("${SOURCE_OTC_BINARY}"
+        ALL
         COMMAND ${CMAKE_COMMAND} -E copy ${GH_ARTIFACT_OTC_BINARY_PATH} ${SOURCE_OTC_BINARY_PATH}
         VERBATIM
       )
