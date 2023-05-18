@@ -1,0 +1,34 @@
+receivers:
+  filelog/cassandra/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/cassandra/system.log
+processors:
+  resource/cassandra_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: cassandra
+        action: insert
+      - key: sumo.datasource
+        value: cassandra
+        action: insert
+      - key: db.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/cassandra/localhost:
+      receivers:
+        - filelog/cassandra/localhost
+      processors:
+        - memory_limiter
+        - resource/cassandra_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+      exporters:
+        - sumologic

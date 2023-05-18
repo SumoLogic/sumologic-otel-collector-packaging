@@ -1,0 +1,34 @@
+receivers:
+  filelog/memcached/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/memcached/memcached.log
+processors:
+  resource/memcached_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: memcached
+        action: insert
+      - key: sumo.datasource
+        value: memcached
+        action: insert
+      - key: db.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/memcached/localhost:
+      receivers:
+        - filelog/memcached/localhost
+      processors:
+        - memory_limiter
+        - resource/memcached_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+      exporters:
+        - sumologic
