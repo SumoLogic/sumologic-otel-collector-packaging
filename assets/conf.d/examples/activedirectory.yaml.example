@@ -1,0 +1,27 @@
+receivers:
+  windowseventlog/activedirectory/application/localhost:
+    channel: Application
+  windowseventlog/activedirectory/security/localhost:
+    channel: Security
+  windowseventlog/activedirectory/system/localhost:
+    channel: System
+processors:
+  resource/activedirectory_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: activeDirectory
+        action: insert
+service:
+  pipelines:
+    logs/activedirectory/localhost:
+      receivers:
+        - windowseventlog/activedirectory/application/localhost
+        - windowseventlog/activedirectory/system/localhost
+        - windowseventlog/activedirectory/security/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/activedirectory_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic

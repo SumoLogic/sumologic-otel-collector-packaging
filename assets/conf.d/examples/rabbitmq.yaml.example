@@ -1,0 +1,31 @@
+receivers:
+  filelog/rabbitmq/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/rabbitmq/rabbitmq.log
+processors:
+  resource/rabbitmq_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: rabbitmq
+        action: insert
+      - key: messaging.cluster
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/rabbitmq/localhost:
+      receivers:
+        - filelog/rabbitmq/localhost
+      processors:
+        - memory_limiter
+        - resource/rabbitmq_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+      exporters:
+        - sumologic
