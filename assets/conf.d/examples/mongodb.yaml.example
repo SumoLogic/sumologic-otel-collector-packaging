@@ -1,0 +1,34 @@
+receivers:
+  filelog/mongodb/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/mongodb/mongodb.log
+processors:
+  resource/mongodb_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: mongodb
+        action: insert
+      - key: sumo.datasource
+        value: mongodb
+        action: insert
+      - key: db.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/mongodb/localhost:
+      receivers:
+        - filelog/mongodb/localhost
+      processors:
+        - memory_limiter
+        - resource/mongodb_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+      exporters:
+        - sumologic

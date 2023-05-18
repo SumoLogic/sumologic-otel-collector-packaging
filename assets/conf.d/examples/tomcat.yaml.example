@@ -1,0 +1,54 @@
+receivers:
+  filelog/tomcat/access/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /usr/share/tomcat/logs/access.log
+  filelog/tomcat/catalina/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /usr/share/tomcat/logs/catalina.log
+  filelog/tomcat/gc/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /usr/share/tomcat/logs/gc.log
+processors:
+  resource/tomcat_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: tomcat
+        action: insert
+      - key: webengine.system
+        value: tomcat
+        action: insert
+      - key: webengine.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/tomcat/localhost:
+      receivers:
+        - filelog/tomcat/access/localhost
+        - filelog/tomcat/catalina/localhost
+        - filelog/tomcat/gc/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/tomcat_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic

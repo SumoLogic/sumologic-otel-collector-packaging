@@ -1,0 +1,48 @@
+receivers:
+  filelog/puppet/serverlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/puppetlabs/puppetserver/puppetserver.log
+  filelog/puppet/serveraccesslogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/puppetlabs/puppetserver/puppetserver-access.log
+  filelog/puppet/reportlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/puppet/reportlogs/report.log
+processors:
+  resource/puppet_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: puppet
+        action: insert
+service:
+  pipelines:
+    logs/puppet/localhost:
+      receivers:
+        - filelog/puppet/serverlogs/localhost
+        - filelog/puppet/serveraccesslogs/localhost
+        - filelog/puppet/reportlogs/localhost
+      processors:
+        - memory_limiter
+        - resource/puppet_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+      exporters:
+        - sumologic
