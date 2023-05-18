@@ -1,0 +1,64 @@
+receivers:
+  filelog/couchbase/audit/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /opt/couchbase/var/lib/couchbase/logs/audit.log
+  filelog/couchbase/error/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /opt/couchbase/var/lib/couchbase/logs/error.log
+  filelog/couchbase/access/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /opt/couchbase/var/lib/couchbase/logs/http_access.log
+  filelog/couchbase/query/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /opt/couchbase/var/lib/couchbase/logs/query.log
+processors:
+  resource/couchbase_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: couchbase
+        action: insert
+      - key: sumo.datasource
+        value: couchbase
+        action: insert
+      - key: db.cluster.name
+        value: couchbaseOtelCluster
+        action: insert
+service:
+  pipelines:
+    logs/couchbase/localhost:
+      receivers:
+        - filelog/couchbase/audit/localhost
+        - filelog/couchbase/error/localhost
+        - filelog/couchbase/access/localhost
+        - filelog/couchbase/query/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/couchbase_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
