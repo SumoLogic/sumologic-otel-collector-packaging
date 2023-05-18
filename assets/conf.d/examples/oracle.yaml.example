@@ -1,0 +1,54 @@
+receivers:
+  filelog/oracle/alertlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/oracle/alertlogs/oracle*.log
+  filelog/oracle/listenerlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/oracle/listernerlogs/oracle*.log
+  filelog/oracle/auditlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/oracle/auditlogs/oracle*.log
+processors:
+  resource/oracle_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: oracle
+        action: insert
+      - key: sumo.datasource
+        value: oracle
+        action: insert
+      - key: db.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/oracle/localhost:
+      receivers:
+        - filelog/oracle/alertlogs/localhost
+        - filelog/oracle/listenerlogs/localhost
+        - filelog/oracle/auditlogs/localhost
+      processors:
+        - memory_limiter
+        - resource/oracle_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+      exporters:
+        - sumologic
