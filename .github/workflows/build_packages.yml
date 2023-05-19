@@ -115,12 +115,6 @@ jobs:
           cat /tmp/otc_sumo_version &&
           echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
 
-      - name: Debug 1
-        run: env
-
-      - name: Debug 2
-        run: cat $GITHUB_OUTPUT
-
   # Builds a package for each cmake target in the matrix. The target must be an
   # existing file name (without extension) in the targets directory.
   build_packages:
@@ -134,6 +128,9 @@ jobs:
       otc_build_number: ${{ github.run_number }}
       cmake_target: ${{ matrix.target }}
       workflow_id: ${{ github.event.inputs.workflow_id }}
+      apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
+      apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+      productbuild_identity_name: ${{ env.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       runs_on: ${{ matrix.runs_on }}
     secrets:
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
@@ -162,9 +159,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: artifacts/
-
-      - name: Debug
-        run: env
 
       - uses: ncipollo/release-action@v1
         with:

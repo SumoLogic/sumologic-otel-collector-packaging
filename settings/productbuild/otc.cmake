@@ -22,4 +22,8 @@ macro(set_otc_productbuild_settings)
 
   set(SOURCE_OTC_UNINSTALL_SCRIPT_PATH "${ASSETS_DIR}/productbuild/uninstall.sh")
   set(OTC_APP_SUPPORT_DIR "Library/Application Support/otelcol-sumo")
+
+  if(DEFINED ENV{PRODUCTBUILD_IDENTITY_NAME})
+    set(CPACK_PRODUCTBUILD_IDENTITY_NAME $ENV{PRODUCTBUILD_IDENTITY_NAME})
+  endif()
 endmacro()
