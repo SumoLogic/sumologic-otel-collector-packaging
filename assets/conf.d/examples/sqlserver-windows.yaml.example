@@ -1,0 +1,50 @@
+receivers:
+  sqlserver/localhost:
+    collection_interval: 10s
+  filelog/sqlserver/windows/localhost:
+    encoding: utf-16le
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - C:\Program Files\Microsoft SQL Server\:MSSQL_folder_name:\MSSQL\Log\ERRORLOG*
+processors:
+  resource/sqlserver_windows_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: sqlserver
+        action: insert
+      - key: sumo.datasource
+        value: sqlserver
+        action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
+      - key: db.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    metrics/sqlserver/localhost:
+      receivers:
+        - sqlserver/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/sqlserver_windows_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/sqlserver/localhost:
+      receivers:
+        - filelog/sqlserver/windows/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/sqlserver_windows_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
