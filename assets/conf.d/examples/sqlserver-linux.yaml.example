@@ -1,0 +1,35 @@
+receivers:
+  filelog/sqlserver/linux/localhost:
+    encoding: utf-16le
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/opt/mssql/log/errorlog
+processors:
+  resource/sqlserver_linux_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: sqlserver
+        action: insert
+      - key: sumo.datasource
+        value: sqlserver
+        action: insert
+      - key: db.cluster.name
+        value: test
+        action: insert
+service:
+  pipelines:
+    logs/sqlserver/linux/localhost:
+      receivers:
+        - filelog/sqlserver/linux/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/sqlserver_linux_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
