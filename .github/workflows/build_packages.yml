@@ -128,11 +128,11 @@ jobs:
       otc_build_number: ${{ github.run_number }}
       cmake_target: ${{ matrix.target }}
       workflow_id: ${{ github.event.inputs.workflow_id }}
-      apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
-      apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
-      productbuild_identity_name: ${{ env.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       runs_on: ${{ matrix.runs_on }}
     secrets:
+      apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
+      apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+      productbuild_identity_name: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
     strategy:
       matrix:
