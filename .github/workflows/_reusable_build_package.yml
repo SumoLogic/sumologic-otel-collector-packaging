@@ -24,6 +24,12 @@ on:
     secrets:
       gh_artifacts_token:
         required: true
+      apple_developer_certificate_p12_base64:
+        required: false
+      apple_developer_certificate_password:
+        required: false
+      productbuild_identity_name:
+        required: false
 
 jobs:
   build_package:
@@ -47,6 +53,15 @@ jobs:
         if: runner.os != 'Linux'
         run: mkdir build
 
+      - name: Import macOS Code-Signing Certificates
+        if: runner.os == 'macOS'
+        uses: Apple-Actions/import-codesign-certs@v2
+        with:
+          # The certificates in a PKCS12 file encoded as a base64 string
+          p12-file-base64: ${{ secrets.apple_developer_certificate_p12_base64 }}
+          # The password used to import the PKCS12 file.
+          p12-password: ${{ secrets.apple_developer_certificate_password }}
+
       - name: Build Makefile
         id: cmake-linux
         if: runner.os == 'Linux'
@@ -66,6 +81,7 @@ jobs:
           OTC_SUMO_VERSION: ${{ inputs.otc_sumo_version }}
           OTC_BUILD_NUMBER: ${{ inputs.otc_build_number }}
           TARGET: ${{ inputs.cmake_target }}
+          PRODUCTBUILD_IDENTITY_NAME: ${{ inputs.productbuild_identity_name }}
         working-directory: build
         run: cmake ../
 
