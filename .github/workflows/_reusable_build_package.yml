@@ -81,7 +81,7 @@ jobs:
           OTC_SUMO_VERSION: ${{ inputs.otc_sumo_version }}
           OTC_BUILD_NUMBER: ${{ inputs.otc_build_number }}
           TARGET: ${{ inputs.cmake_target }}
-          PRODUCTBUILD_IDENTITY_NAME: ${{ inputs.productbuild_identity_name }}
+          PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
         working-directory: build
         run: cmake ../
 
