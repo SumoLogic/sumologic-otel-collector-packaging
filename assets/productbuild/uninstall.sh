@@ -34,6 +34,9 @@ fi
 # such as config and state, from being removed. Then implement a purge option or
 # similar to enable recursive directory removal.
 
+# Collector service plist file
+service_plist_file="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
+
 # A list of files & directories to remove for the collector
 collector_files=(
   "/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
@@ -81,6 +84,14 @@ function remove_file() {
   fi
 }
 
+function stop_service() {
+  plist_file="$1"
+
+  echo "Stopping service: ${plist_file}"
+
+  launchctl unload $plist_file
+}
+
 function uninstall_package() {
   package_id="$1"
   package_files=("$@")
@@ -99,6 +110,7 @@ function uninstall_package() {
   pkgutil --forget "${package_id}"
 }
 
+stop_service "${service_plist_file}"
 uninstall_package "com.sumologic.otelcol-sumo" "${collector_files[@]}"
 uninstall_package "com.sumologic.otelcol-sumo-hostmetrics" "${hostmetrics_files[@]}"
 
