@@ -89,7 +89,7 @@ function stop_service() {
 
   echo "Stopping service: ${plist_file}"
 
-  launchctl unload $plist_file
+  launchctl unload "${plist_file}"
 }
 
 function uninstall_package() {
