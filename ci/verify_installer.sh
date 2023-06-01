@@ -46,6 +46,7 @@ system_files=(
 expected_collector_files=(
   "etc/otelcol-sumo"
   "etc/otelcol-sumo/conf.d"
+  "etc/otelcol-sumo/conf.d/examples"
   "etc/otelcol-sumo/sumologic.yaml"
   "Library/Application Support/otelcol-sumo"
   "Library/Application Support/otelcol-sumo/uninstall.sh"
@@ -223,6 +224,10 @@ for f in "${all_collector_files[@]}"; do
 
   # shellcheck disable=SC2076
   if [[ " ${system_files[*]} " =~ " ${collector_file} " ]]; then
+    continue
+  fi
+
+  if [[ " $(dirname "${collector_file}") " == " etc/otelcol-sumo/conf.d/examples " ]]; then
     continue
   fi
 
