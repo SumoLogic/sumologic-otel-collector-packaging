@@ -10,7 +10,7 @@ Packages can be built using the provided Dockerfile or locally.
 
 Represents the target package to build. The value must be the name of a file in
 the `targets` directory without the file extension.
-(e.g. `otc_darwin_arm64_productbuild`)
+(e.g. `otc_linux_arm64_deb`)
 
 Show the list of targets by running:
 
@@ -43,7 +43,7 @@ When packaging a GitHub release with the tag `v0.69.0-sumo-0` for macOS on an
 arm64 processor:
 
 ```sh
-export TARGET=otc_darwin_arm64_productbuild
+export TARGET=otc_linux_arm64_deb
 export OTC_VERSION=0.69.0
 export OTC_SUMO_VERSION=0
 export OTC_BUILD_NUMBER=1234
@@ -78,7 +78,11 @@ export OTC_BUILD_NUMBER=1234
 1. Build the package:
 
   ``` sh
-  docker run -v $(pwd):/src otelcol-sumo/cmake make package
+  docker run \
+  -v $(pwd):/src \
+  -v $(pwd)/build:/build \
+  otelcol-sumo/cmake \
+  make package
   ```
 
 ---
