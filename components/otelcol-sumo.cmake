@@ -94,8 +94,8 @@ macro(install_otc_config_examples)
 
   foreach(example ${examples})
     install(
-      FILES "${ASSETS_DIR}/conf.d/examples/${example}"
-      DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}/examples/${example}"
+      FILES "${example}"
+      DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}/examples"
       PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE
         GROUP_READ GROUP_WRITE GROUP_EXECUTE
