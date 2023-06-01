@@ -2,6 +2,7 @@ macro(default_otc_linux_install)
   create_otc_components()
   install_otc_config_directory()
   install_otc_config_fragment_directory()
+  install_otc_config_examples()
   install_otc_user_env_directory()
   install_otc_state_directory()
   install_otc_filestorage_state_directory()
@@ -13,6 +14,7 @@ macro(default_otc_darwin_install)
   create_otc_components()
   install_otc_config_directory()
   install_otc_config_fragment_directory()
+  install_otc_config_examples()
   install_otc_state_directory()
   install_otc_filestorage_state_directory()
   install_otc_log_directory()
@@ -70,6 +72,36 @@ macro(install_otc_config_fragment_directory)
       GROUP_READ GROUP_WRITE GROUP_EXECUTE
     COMPONENT otelcol-sumo
   )
+endmacro()
+
+# e.g. /etc/otelcol-sumo/conf.d/examples
+macro(install_otc_config_examples)
+  require_variables(
+    "OTC_CONFIG_FRAGMENTS_DIR"
+    "ASSETS_DIR"
+  )
+
+  install(
+    DIRECTORY
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}/examples"
+    DIRECTORY_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
+    COMPONENT otelcol-sumo
+  )
+
+  file(GLOB_RECURSE examples CONFIGURE_DEPENDS "${ASSETS_DIR}/conf.d/examples/*.yaml.example")
+
+  foreach(example ${examples})
+    install(
+      FILES "${example}"
+      DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}/examples"
+      PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_WRITE GROUP_EXECUTE
+      COMPONENT otelcol-sumo
+    )
+  endforeach(example)
 endmacro()
 
 # e.g. /etc/otelcol-sumo/env
