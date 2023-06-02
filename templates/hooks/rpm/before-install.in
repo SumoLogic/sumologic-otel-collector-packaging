@@ -2,8 +2,28 @@
 
 @common_linux_functions@
 
+function cleanup_script_install() {
+    echo "Cleaning up previous Otelcol installation ..."
+
+    # disable systemd service
+    if [[ -f "/etc/systemd/system/otelcol-sumo.service" ]]; then
+        systemctl stop otelcol-sumo || true
+        systemctl disable otelcol-sumo || true
+        rm -f /etc/systemd/system/otelcol-sumo.service
+    fi
+
+    # remove binary
+    rm -f /usr/local/bin/otelcol-sumo
+
+    # remove configuration and data
+    rm -rf /etc/otelcol-sumo /var/lib/otelcol-sumo
+
+    echo "Cleanup completed"
+}
+
 case "$1" in
     1) # initial install
+    cleanup_script_install
     create_group_if_missing
     create_user_if_missing
     ;;
