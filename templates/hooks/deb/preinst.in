@@ -2,23 +2,34 @@
 
 @common_linux_functions@
 
-function cleanup_script_install() {
-    echo "Cleaning up previous Otelcol installation ..."
+cleanup_script_install() {
+    echo "Cleaning up existing Sumo Otelcol installations (migration to native packaging) ..."
 
-    # disable systemd service
-    if [[ -f "/etc/systemd/system/otelcol-sumo.service" ]]; then
+    # stop and disable systemd service
+    if [ -f "/etc/systemd/system/otelcol-sumo.service" ]; then
+        echo "Stopping and disabling existing Sumo Otelcol service ..."
         systemctl stop otelcol-sumo || true
         systemctl disable otelcol-sumo || true
         rm -f /etc/systemd/system/otelcol-sumo.service
     fi
 
     # remove binary
-    rm -f /usr/local/bin/otelcol-sumo
+    if [ -f "/usr/local/bin/otelcol-sumo" ]; then
+        echo "Removing existing Sumo Otelcol binary ..."
+        rm -f /usr/local/bin/otelcol-sumo
+    fi
 
-    # remove configuration and data
-    rm -rf /etc/otelcol-sumo /var/lib/otelcol-sumo
+    # remove configuration
+    if [ -d "/etc/otelcol-sumo" ]; then
+        echo "Removing existing Sumo Otelcol configuration directory (/etc/otelcol-sumo) ..."
+        rm -rf /etc/otelcol-sumo
+    fi
 
-    echo "Cleanup completed"
+    # remove data
+    if [ -d "/var/lib/otelcol-sumo" ]; then
+        echo "Removing existing Sumo Otelcol data directory (/var/lib/otelcol-sumo) ..."
+        rm -rf /var/lib/otelcol-sumo
+    fi
 }
 
 case "$1" in
