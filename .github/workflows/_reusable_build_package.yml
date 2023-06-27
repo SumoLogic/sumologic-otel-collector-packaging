@@ -21,6 +21,15 @@ on:
       runs_on:
         required: true
         type: string
+      goarch:
+        required: false
+        type: string
+      package_arch:
+        required: false
+        type: string
+      build_tool:
+        required: true
+        type: string
     secrets:
       gh_artifacts_token:
         required: true
@@ -31,10 +40,15 @@ on:
       productbuild_identity_name:
         required: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build_package:
     runs-on: ${{ inputs.runs_on }}
-    name: Build
+    name: Build (CMake)
+    if: inputs.build_tool == 'cmake'
     outputs:
       package_path: ${{ steps.package.outputs.path }}
     steps:
@@ -113,7 +127,7 @@ jobs:
           echo path="$OTC_BIN" >> $GITHUB_OUTPUT
 
       # Download the artifacts required to build the package target. If
-      # use_github_artifacts is false then this will be skipped and CMake will
+      # inputs.workflow_id is empty then this will be skipped and CMake will
       # attempt to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
       - name: Download artifacts from sumologic-otel-collector
@@ -147,7 +161,8 @@ jobs:
 
   test_package:
     runs-on: ${{ inputs.runs_on }}
-    name: Test
+    name: Test (CMake)
+    if: inputs.build_tool == 'cmake'
     needs: build_package
     steps:
       - name: Checkout
@@ -162,3 +177,111 @@ jobs:
       - name: Verify installer
         if: inputs.cmake_target == 'otc_darwin_amd64_productbuild'
         run: sudo ./ci/verify_installer.sh "artifacts/${{ needs.build_package.outputs.package_path }}"
+
+  build_wix_package:
+    runs-on: ${{ inputs.runs_on }}
+    name: Build (WiX)
+    if: inputs.build_tool == 'wix'
+    outputs:
+      package_path: ${{ steps.package.outputs.path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Workflow URL for sumologic-otel-collector
+        if: inputs.workflow_id != ''
+        run: |
+          org="SumoLogic"
+          repo="sumologic-otel-collector"
+          workflow_id="${{ inputs.workflow_id }}"
+          echo "https://github.com/${org}/${repo}/actions/runs/${workflow_id}"
+
+      - name: Make build directory
+        run: mkdir build
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Use GitHub Artifacts for binaries
+        if: inputs.workflow_id != ''
+        run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
+
+      # Download the artifacts required to build the package target. If
+      # inputs.workflow_id is empty then this will be skipped and an attempt
+      # will be made to fetch the artifacts from a GitHub Release matching
+      # otc_version and otc_sumo_version.
+      - name: Download artifacts from sumologic-otel-collector
+        uses: dawidd6/action-download-artifact@v2.24.3
+        if: inputs.workflow_id != ''
+        with:
+          github_token: ${{ secrets.gh_artifacts_token }}
+          repo: SumoLogic/sumologic-otel-collector
+          run_id: ${{ inputs.workflow_id }}
+          name: otelcol-sumo-windows_${{ inputs.goarch }}
+          path: ./build/artifacts
+          if_no_artifact_found: fail
+
+      # Download the artifacts, required to build the package target, from a
+      # GitHub Release.
+      - name: Download artifact from GitHub Release
+        uses: robinraju/release-downloader@v1.8
+        if: inputs.workflow_id == ''
+        with:
+          repository: SumoLogic/sumologic-otel-collector
+          tag: v${{ inputs.otc_version }}-sumo-${{ inputs.otc_sumo_version }}
+          fileName: >-
+            otelcol-sumo-${{ inputs.otc_version }}-sumo-${{
+            inputs.otc_sumo_version }}-windows_${{ inputs.goarch }}.exe
+          out-file-path: build/artifacts
+
+      - name: Rename GitHub Release artifact
+        if: inputs.workflow_id == ''
+        working-directory: ./build/artifacts
+        env:
+          MV_FROM: >-
+            otelcol-sumo-${{ inputs.otc_version }}-sumo-${{
+            inputs.otc_sumo_version }}-windows_${{ inputs.goarch }}.exe
+          MV_TO: otelcol-sumo-windows_${{ inputs.goarch }}.exe
+        run: mv "$MV_FROM" "$MV_TO"
+
+      - name: Build MSI
+        working-directory: ./msi/wix
+        env:
+          PLATFORM: ${{ inputs.package_arch }}
+          PRODUCT_VERSION: >-
+            ${{ inputs.otc_version }}.${{ inputs.otc_build_number }}
+        run: >-
+          msbuild.exe -p:Configuration=Release
+          -p:Platform=$PLATFORM
+          -p:ProductVersion=$PRODUCT_VERSION
+          -Restore
+
+      - name: Store MSI as action artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows_${{ inputs.goarch }}_msi
+          path: ./msi/wix/bin/${{ inputs.package_arch }}/en-US/*.msi
+          if-no-files-found: error
+
+  test_wixext:
+    name: Test (SumoLogic.wixext)
+    if: inputs.build_tool == 'wix'
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Restore NuGet packages
+        working-directory: ./msi/SumoLogic.wixext/SumoLogicTests
+        run: nuget.exe restore -PackagesDirectory ../packages
+
+      - name: Build unit tests
+        working-directory: ./msi/SumoLogic.wixext/SumoLogicTests
+        run: msbuild.exe -p:Configuration=Release -p:Platform=AnyCPU -Restore
+
+      - name: Run unit tests
+        working-directory: ./msi/SumoLogic.wixext/SumoLogicTests/bin/Release
+        run: dotnet test -v:n ./SumoLogicTests.dll

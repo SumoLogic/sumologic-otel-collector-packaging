@@ -115,8 +115,9 @@ jobs:
           cat /tmp/otc_sumo_version &&
           echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
 
-  # Builds a package for each cmake target in the matrix. The target must be an
-  # existing file name (without extension) in the targets directory.
+  # Builds a package for each target in the matrix. The target must be an
+  # existing file name (without extension) in the targets directory when
+  # build_tool is cmake.
   build_packages:
     name: ${{ matrix.target }}
     uses: ./.github/workflows/_reusable_build_package.yml
@@ -129,6 +130,9 @@ jobs:
       cmake_target: ${{ matrix.target }}
       workflow_id: ${{ github.event.inputs.workflow_id }}
       runs_on: ${{ matrix.runs_on }}
+      goarch: ${{ matrix.goarch }}
+      package_arch: ${{ matrix.package_arch }}
+      build_tool: ${{ matrix.build_tool }}
     secrets:
       apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
       apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
@@ -139,18 +143,30 @@ jobs:
         include:
           - target: otc_linux_amd64_deb
             runs_on: ubuntu-latest
+            build_tool: cmake
           - target: otc_linux_amd64_rpm
             runs_on: ubuntu-latest
+            build_tool: cmake
           - target: otc_linux_arm64_deb
             runs_on: ubuntu-latest
+            build_tool: cmake
           - target: otc_linux_arm64_rpm
             runs_on: ubuntu-latest
+            build_tool: cmake
           - target: otc_darwin_amd64_productbuild
             runs_on: macos-latest
+            build_tool: cmake
           - target: otc_darwin_arm64_productbuild
             runs_on: macos-latest
+            build_tool: cmake
+          - target: otc_windows_amd64_wix
+            runs_on: windows-2019
+            goarch: amd64
+            package_arch: x64
+            build_tool: wix
 
   publish_release:
+    name: Publish Release
     runs-on: ubuntu-latest
     needs:
       - build_packages

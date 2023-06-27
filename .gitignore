@@ -3,3 +3,17 @@
 *.log
 tmp/
 build/
+
+# WiX toolset
+*.msi
+*.wixpdb
+*.wixobj
+*.cab
+.vs/
+bin/
+obj/
+Backup*/
+UpgradeLog*.htm
+wix/packages
+msi/wix/packages
+msi/SumoLogic.wixext/packages
