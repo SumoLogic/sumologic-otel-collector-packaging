@@ -46,6 +46,7 @@ system_files=(
 expected_collector_files=(
   "etc/otelcol-sumo"
   "etc/otelcol-sumo/conf.d"
+  "etc/otelcol-sumo/conf.d/common.yaml"
   "etc/otelcol-sumo/conf.d/examples"
   "etc/otelcol-sumo/sumologic.yaml"
   "Library/Application Support/otelcol-sumo"
