@@ -141,6 +141,10 @@ jobs:
             runs_on: ubuntu-latest
           - target: otc_linux_amd64_rpm
             runs_on: ubuntu-latest
+          - target: otc_linux_arm64_deb
+            runs_on: ubuntu-latest
+          - target: otc_linux_arm64_rpm
+            runs_on: ubuntu-latest
           - target: otc_darwin_amd64_productbuild
             runs_on: macos-latest
           - target: otc_darwin_arm64_productbuild
