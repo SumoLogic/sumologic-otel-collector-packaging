@@ -1,0 +1,53 @@
+---
+##
+# Template Syntax: 
+#   Using handlebarsjs syntax 
+#   see testingdata directory for more info on template validation
+# Expected Common Template Variables
+#   pipeline_name  -> Needed to support multiple databases
+#   user_attributes -> array of user defined key value attributes to add
+# Expected App Specific Template Variables:
+#   linux_include_paths -> log file path array
+receivers:
+  filelog/PCILinux/logs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+    include:
+      - /var/log/auth.log
+      - /var/log/syslog
+      - /var/log/daemon.log
+      - /var/log/dpkg.log
+      - /var/log/kern.log
+      - /var/log/audit/audit.log
+      - /var/log/secure
+      - /var/log/messages
+      - /var/log/yum.log
+      - /var/log/dnf.log
+processors:
+  resource/PCILinux_resource_attributes/localhost:
+    attributes:
+      # Required static valued resource attributes
+      - key: sumo.datasource
+        value: linux
+        action: insert
+      # user_attributes will hold requires attribute values provided by UI
+      # Required resource attributes fallback, that should be exposed as user inputs in UI and be in user_attributes json object
+      - key: _sourceCategory
+        value: otel/linux
+        action: insert
+service:
+  pipelines:
+    logs/PCILinux/localhost:
+      receivers:
+        - filelog/PCILinux/logs/localhost
+      processors:
+        - memory_limiter
+        - resource/PCILinux_resource_attributes/localhost
+        - resourcedetection/system
+        - batch
+      exporters:
+        - sumologic
