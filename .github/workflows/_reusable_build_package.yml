@@ -217,7 +217,7 @@ jobs:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
           run_id: ${{ inputs.workflow_id }}
-          name: otelcol-sumo-windows_${{ inputs.goarch }}
+          name: otelcol-sumo-windows_${{ inputs.goarch }}.exe
           path: ./build/artifacts
           if_no_artifact_found: fail
 
