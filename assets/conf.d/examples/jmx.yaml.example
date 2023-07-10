@@ -1,0 +1,33 @@
+receivers:
+  jmx/jvmmetrics/localhost:
+    jar_path: /opt/opentelemetry-jmx-metrics.jar
+    endpoint: localhost:11099
+    target_system: jvm
+    collection_interval: 60s
+    username: monitorRole
+    password: password
+    log_level: info
+processors:
+  resource/jmx_resource_attributes/localhost:
+    attributes:
+      - key: jmx.endpoint
+        value: localhost:11099
+        action: insert
+      - key: sumo.datasource
+        value: jmx
+        action: insert
+      - key: _sourceCategory
+        value: otel/jmx
+        action: insert
+service:
+  pipelines:
+    metrics/jvmmetrics/localhost:
+      receivers:
+        - jmx/jvmmetrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/jmx_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic

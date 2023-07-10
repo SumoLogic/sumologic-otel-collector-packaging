@@ -1,5 +1,10 @@
 receivers:
-  kafka/localhost:
+  kafkametrics/localhost:
+    protocol_version: 2.0.0
+    scrapers:
+      - brokers
+      - topics
+      - consumers
     brokers: localhost:9092
   filelog/kafka/serverLogs/localhost:
     include_file_name: false
@@ -40,7 +45,7 @@ service:
   pipelines:
     metrics/kafka/localhost:
       receivers:
-        - kafka/localhost
+        - kafkametrics/localhost
       processors:
         - memory_limiter
         - resourcedetection/system
