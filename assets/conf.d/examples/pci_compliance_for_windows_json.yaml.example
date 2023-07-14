@@ -1,0 +1,24 @@
+receivers:
+  windowseventlog/security/localhost:
+    channel: Security
+  windowseventlog/system/localhost:
+    channel: System
+processors:
+  resource/windows_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: windows
+        action: insert
+service:
+  pipelines:
+    logs/windows/PCI/localhost:
+      receivers:
+        - windowseventlog/system/localhost
+        - windowseventlog/security/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/windows_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
