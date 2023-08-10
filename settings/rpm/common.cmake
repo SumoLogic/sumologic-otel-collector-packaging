@@ -10,6 +10,7 @@ macro(set_common_rpm_settings)
   set(CPACK_RPM_PACKAGE_ARCHITECTURE "${package_arch}")
   set(CPACK_RPM_PACKAGE_LICENSE "Apache-2.0")
   set(PACKAGE_FILE_EXTENSION "rpm")
+  set(CPACK_RPM_PACKAGE_RELEASE "${BUILD_NUMBER}")
 
   set(CPACK_PACKAGE_FILE_NAME "${package_name}-${PROJECT_VERSION}-${BUILD_NUMBER}.${package_arch}")
   if (DEFINED goarm)

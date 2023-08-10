@@ -1,2 +1,3 @@
 /etc/otelcol-sumo/sumologic.yaml
 /etc/otelcol-sumo/conf.d/common.yaml
+/etc/otelcol-sumo/env/token.env

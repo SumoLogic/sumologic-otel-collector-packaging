@@ -7,9 +7,11 @@ macro(set_otc_rpm_settings)
   render_rpm_hook_templates()
 
   set(CPACK_RPM_USER_FILELIST
-    # Mark sumologic.yaml as a config file to prevent package upgrades from
-    # replacing the file by default
+    # Mark config files to prevent package upgrades from replacing the file by
+    # default
     "%config(noreplace) /etc/otelcol-sumo/sumologic.yaml"
+    "%config(noreplace) /etc/otelcol-sumo/conf.d/common.yaml"
+    "%config(noreplace) /etc/otelcol-sumo/env/token.env"
   )
 
   # Exclude these directories from the RPM as they should already exist and
