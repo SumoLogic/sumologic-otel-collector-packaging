@@ -4,6 +4,7 @@
 # $2 - target path that the package is installing to
 # $3 - target volume that the package is installing to
 
+otc_config_dir="${3}@OTC_CONFIG_DIR@" \
 otc_sumologic_config_path="${3}@OTC_SUMOLOGIC_CONFIG_PATH@"
 otc_config_fragments_dir="${3}@OTC_CONFIG_FRAGMENTS_DIR@"
 otc_launchdaemon_dir="${3}@OTC_LAUNCHD_DIR@"
@@ -13,6 +14,7 @@ set_file_ownership()
 {
     chown -R @SERVICE_USER@:@SERVICE_GROUP@ \
           @SERVICE_USER_HOME@ \
+          "$otc_config_dir" \
           "$otc_sumologic_config_path" \
           "$otc_config_fragments_dir" \
           "$otc_log_dir"
