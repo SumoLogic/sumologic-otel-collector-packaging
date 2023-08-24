@@ -57,7 +57,7 @@ macro(install_otc_config_directory)
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
       GROUP_READ GROUP_EXECUTE
-      WORLD_READ WORLD_EXECUTE
+      WORLD_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -292,7 +292,7 @@ macro(install_otc_linux_hostmetrics_yaml)
   )
 endmacro()
 
-# e.g. /etc/otelcol-sumo/sumologic.yaml
+# e.g. /lib/systemd/system/sumologic.yaml
 macro(install_otc_service_systemd)
   require_variables(
     "ASSETS_DIR"

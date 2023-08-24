@@ -11,6 +11,7 @@ function(render_common_hook_templates)
     "SERVICE_USER"
     "SERVICE_GROUP"
     "SERVICE_USER_HOME"
+    "OTC_CONFIG_DIR"
     "OTC_CONFIG_PATH"
     "OTC_USER_ENV_DIR"
     "OTC_CONFIG_FRAGMENT_DIR"
