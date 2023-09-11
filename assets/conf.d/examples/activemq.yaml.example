@@ -34,6 +34,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /opt/bitnami/activemq/data/activemq.log
   filelog/activemqauditLogs/localhost:
@@ -45,6 +48,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /opt/bitnami/activemq/data/audit.log
 processors:
@@ -56,6 +62,9 @@ processors:
       - key: sumo.datasource
         value: activemq
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: messaging.node.name
         action: insert
         from_attribute: host.name
@@ -64,6 +73,19 @@ processors:
         action: insert
       - key: _sourceCategory
         value: otel/activemq
+        action: insert
+  resource/activemq_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: activemq/jmx
+        action: insert
+      - key: _sourceName
+        value: activemq
+        action: insert
+  resource/activemq_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: activemq/filelog
         action: insert
 service:
   pipelines:
@@ -74,6 +96,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/activemq_resource_attributes/metrics/localhost
         - resource/activemq_resource_attributes/localhost
         - batch
       exporters:
@@ -85,6 +108,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/activemq_resource_attributes/logs/localhost
         - resource/activemq_resource_attributes/localhost
         - batch
       exporters:

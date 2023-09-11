@@ -1,15 +1,38 @@
 receivers:
   windowseventlog/activedirectory/application/localhost:
     channel: Application
+    operators:
+      - type: add
+        field: resource["_sourceName"]
+        value: Application
   windowseventlog/activedirectory/security/localhost:
     channel: Security
+    operators:
+      - type: add
+        field: resource["_sourceName"]
+        value: Security
   windowseventlog/activedirectory/system/localhost:
     channel: System
+    operators:
+      - type: add
+        field: resource["_sourceName"]
+        value: System
 processors:
   resource/activedirectory_resource_attributes/localhost:
     attributes:
       - key: sumo.datasource
         value: activeDirectory
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/activeDirectory
+        action: insert
+  resource/activedirectory_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: activeDirectory/windowseventlog
         action: insert
 service:
   pipelines:
@@ -21,6 +44,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/activedirectory_resource_attributes/logs/localhost
         - resource/activedirectory_resource_attributes/localhost
         - batch
       exporters:

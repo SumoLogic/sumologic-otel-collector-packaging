@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /usr/share/tomcat/logs/access.log
   filelog/tomcat/catalina/localhost:
@@ -15,6 +18,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /usr/share/tomcat/logs/catalina.log
   filelog/tomcat/gc/localhost:
@@ -24,6 +30,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /usr/share/tomcat/logs/gc.log
 processors:
@@ -32,11 +41,19 @@ processors:
       - key: sumo.datasource
         value: tomcat
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: webengine.system
         value: tomcat
         action: insert
       - key: webengine.cluster.name
         value: test
+        action: insert
+  resource/tomcat_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: tomcat/filelog
         action: insert
 service:
   pipelines:
@@ -48,6 +65,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/tomcat_resource_attributes/logs/localhost
         - resource/tomcat_resource_attributes/localhost
         - batch
       exporters:

@@ -7,6 +7,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/opt/mssql/log/errorlog
 processors:
@@ -18,8 +21,16 @@ processors:
       - key: sumo.datasource
         value: sqlserver
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: db.cluster.name
         value: test
+        action: insert
+  resource/sqlserver_linux_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: sqlserver/filelog
         action: insert
 service:
   pipelines:
@@ -29,6 +40,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/sqlserver_linux_resource_attributes/logs/localhost
         - resource/sqlserver_linux_resource_attributes/localhost
         - batch
       exporters:

@@ -9,6 +9,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - C:\Program Files\Microsoft SQL Server\:MSSQL_folder_name:\MSSQL\Log\ERRORLOG*
 processors:
@@ -20,11 +23,27 @@ processors:
       - key: sumo.datasource
         value: sqlserver
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: db.node.name
         action: insert
         from_attribute: host.name
       - key: db.cluster.name
         value: test
+        action: insert
+  resource/sqlserver_windows_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: sqlserver/sqlserver
+        action: insert
+      - key: _sourceName
+        value: sqlserver
+        action: insert
+  resource/sqlserver_windows_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: sqlserver/filelog
         action: insert
 service:
   pipelines:
@@ -34,6 +53,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/sqlserver_windows_resource_attributes/metrics/localhost
         - resource/sqlserver_windows_resource_attributes/localhost
         - batch
       exporters:
@@ -44,6 +64,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/sqlserver_windows_resource_attributes/logs/localhost
         - resource/sqlserver_windows_resource_attributes/localhost
         - batch
       exporters:

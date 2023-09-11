@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/apache2/*.log
   filelog/jira/securitylogs/localhost:
@@ -15,6 +18,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /home/jira/atlassian/application-data/jira/log/atlassian-jira-security.log
   filelog/jira/catalinalogs/localhost:
@@ -24,6 +30,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /home/jira/atlassian/application-data/jira/log/*.log
 processors:
@@ -31,6 +40,17 @@ processors:
     attributes:
       - key: sumo.datasource
         value: jira
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/jira
+        action: insert
+  resource/jira_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: jira/filelog
         action: insert
 service:
   pipelines:
@@ -44,5 +64,6 @@ service:
         - resource/jira_resource_attributes/localhost
         - batch
         - resourcedetection/system
+        - resource/jira_resource_attributes/logs/localhost
       exporters:
         - sumologic

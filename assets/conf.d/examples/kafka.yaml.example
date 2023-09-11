@@ -13,6 +13,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/kafka/server*.log
   filelog/kafka/controllerLogs/localhost:
@@ -24,6 +27,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/kafka/controllerr*.log
 processors:
@@ -35,11 +41,27 @@ processors:
       - key: sumo.datasource
         value: kafka
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: messaging.node.name
         action: insert
         from_attribute: host.name
       - key: messaging.cluster.name
         value: kafka_cluster
+        action: insert
+  resource/kafka_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: kafka/kafkametrics
+        action: insert
+      - key: _sourceName
+        value: kafka
+        action: insert
+  resource/kafka_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: kafka/filelog
         action: insert
 service:
   pipelines:
@@ -49,6 +71,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/kafka_resource_attributes/metrics/localhost
         - resource/kafka_resource_attributes/localhost
         - batch
       exporters:
@@ -60,6 +83,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/kafka_resource_attributes/logs/localhost
         - resource/kafka_resource_attributes/localhost
         - batch
       exporters:

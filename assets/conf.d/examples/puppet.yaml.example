@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/puppetlabs/puppetserver/puppetserver.log
   filelog/puppet/serveraccesslogs/localhost:
@@ -15,6 +18,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/puppetlabs/puppetserver/puppetserver-access.log
   filelog/puppet/reportlogs/localhost:
@@ -24,6 +30,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/puppet/reportlogs/report.log
 processors:
@@ -31,6 +40,17 @@ processors:
     attributes:
       - key: sumo.datasource
         value: puppet
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/puppet
+        action: insert
+  resource/puppet_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: puppet/filelog
         action: insert
 service:
   pipelines:
@@ -44,5 +64,6 @@ service:
         - resource/puppet_resource_attributes/localhost
         - batch
         - resourcedetection/system
+        - resource/puppet_resource_attributes/logs/localhost
       exporters:
         - sumologic
