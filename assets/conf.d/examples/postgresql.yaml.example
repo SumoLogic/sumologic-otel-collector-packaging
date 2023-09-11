@@ -11,6 +11,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/lib/postgresql/:version:/main/log/postgresql*.log
 processors:
@@ -21,6 +24,9 @@ processors:
         action: insert
       - key: sumo.datasource
         value: postgresql
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
         action: insert
       - key: db.node.name
         action: insert
@@ -53,6 +59,19 @@ processors:
         key: db.name
       - action: delete
         key: postgresql.database.name
+  resource/postgresql_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: postgresql/postgresql
+        action: insert
+      - key: _sourceName
+        value: postgresql
+        action: insert
+  resource/postgresql_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: postgresql/filelog
+        action: insert
 service:
   pipelines:
     metrics/postgresql/localhost:
@@ -61,6 +80,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/postgresql_resource_attributes/metrics/localhost
         - resource/postgresql_resource_attributes/localhost
         - resource/postgresql/split_schema_table/localhost
         - resource/postgresql/rename_attr/localhost
@@ -73,6 +93,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/postgresql_resource_attributes/logs/localhost
         - resource/postgresql_resource_attributes/localhost
         - batch
       exporters:

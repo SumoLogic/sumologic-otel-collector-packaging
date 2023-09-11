@@ -46,6 +46,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/mysql/mysqld-error.log
   filelog/mysql/slow_transcations/localhost:
@@ -57,6 +60,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/mysql/mysqld-slow.log
 processors:
@@ -67,6 +73,9 @@ processors:
         action: insert
       - key: sumo.datasource
         value: mysql
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
         action: insert
       - key: db.node.name
         action: insert
@@ -89,6 +98,19 @@ processors:
         key: db.sql.table
       - action: delete
         key: table
+  resource/mysql_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: mysql/mysql
+        action: insert
+      - key: _sourceName
+        value: mysql
+        action: insert
+  resource/mysql_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: mysql/filelog
+        action: insert
 service:
   pipelines:
     metrics/mysql/localhost:
@@ -97,6 +119,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/mysql_resource_attributes/metrics/localhost
         - resource/mysql_resource_attributes/localhost
         - attributes/mysql_metric_label_translation/localhost
         - batch
@@ -109,6 +132,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/mysql_resource_attributes/logs/localhost
         - resource/mysql_resource_attributes/localhost
         - batch
       exporters:

@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/mariadb/mariadb-error.log
   filelog/mariadb/slow_transcations/localhost:
@@ -17,6 +20,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/mariadb/slow_query.log
 processors:
@@ -28,8 +34,16 @@ processors:
       - key: sumo.datasource
         value: mariadb
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: db.cluster.name
         value: mariadb
+        action: insert
+  resource/mariadb_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: mariadb/filelog
         action: insert
 service:
   pipelines:
@@ -40,6 +54,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/mariadb_resource_attributes/logs/localhost
         - resource/mariadb_resource_attributes/localhost
         - batch
       exporters:

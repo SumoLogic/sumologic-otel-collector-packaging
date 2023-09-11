@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/rabbitmq/rabbitmq.log
 processors:
@@ -14,8 +17,16 @@ processors:
       - key: sumo.datasource
         value: rabbitmq
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: messaging.cluster
         value: test
+        action: insert
+  resource/rabbitmq_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: rabbitmq/filelog
         action: insert
 service:
   pipelines:
@@ -27,5 +38,6 @@ service:
         - resource/rabbitmq_resource_attributes/localhost
         - batch
         - resourcedetection/system
+        - resource/rabbitmq_resource_attributes/logs/localhost
       exporters:
         - sumologic

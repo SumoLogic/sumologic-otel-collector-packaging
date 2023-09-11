@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/squid/access.log
 processors:
@@ -14,11 +17,19 @@ processors:
       - key: sumo.datasource
         value: squidproxy
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: webengine.system
         value: squidproxy
         action: insert
       - key: webengine.cluster.name
         value: test
+        action: insert
+  resource/squidproxy_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: squidproxy/filelog
         action: insert
 service:
   pipelines:
@@ -30,5 +41,6 @@ service:
         - resource/squidproxy_resource_attributes/localhost
         - batch
         - resourcedetection/system
+        - resource/squidproxy_resource_attributes/logs/localhost
       exporters:
         - sumologic

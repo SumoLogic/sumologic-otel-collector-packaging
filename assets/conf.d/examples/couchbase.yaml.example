@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /opt/couchbase/var/lib/couchbase/logs/audit.log
   filelog/couchbase/error/localhost:
@@ -15,6 +18,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /opt/couchbase/var/lib/couchbase/logs/error.log
   filelog/couchbase/access/localhost:
@@ -24,6 +30,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /opt/couchbase/var/lib/couchbase/logs/http_access.log
   filelog/couchbase/query/localhost:
@@ -33,6 +42,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /opt/couchbase/var/lib/couchbase/logs/query.log
 processors:
@@ -44,8 +56,16 @@ processors:
       - key: sumo.datasource
         value: couchbase
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: db.cluster.name
         value: couchbaseOtelCluster
+        action: insert
+  resource/couchbase_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: couchbase/filelog
         action: insert
 service:
   pipelines:
@@ -58,6 +78,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/couchbase_resource_attributes/logs/localhost
         - resource/couchbase_resource_attributes/localhost
         - batch
       exporters:

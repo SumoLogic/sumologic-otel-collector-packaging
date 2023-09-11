@@ -8,6 +8,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/apache2/access.log
   filelog/apache/errorLogs/localhost:
@@ -19,6 +22,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/apache2/error.log
 processors:
@@ -30,11 +36,27 @@ processors:
       - key: sumo.datasource
         value: apache
         action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: webengine.node.name
         action: insert
         from_attribute: host.name
       - key: webengine.cluster.name
         value: apache_cluster
+        action: insert
+  resource/apache_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: apache/apache
+        action: insert
+      - key: _sourceName
+        value: apache
+        action: insert
+  resource/apache_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: apache/filelog
         action: insert
 service:
   pipelines:
@@ -44,6 +66,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/apache_resource_attributes/metrics/localhost
         - resource/apache_resource_attributes/localhost
         - batch
       exporters:
@@ -55,6 +78,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/apache_resource_attributes/logs/localhost
         - resource/apache_resource_attributes/localhost
         - batch
       exporters:

@@ -6,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/opt/jfrog/artifactory/logs/artifactory.log
   filelog/artifactory/accesslogs/localhost:
@@ -15,6 +18,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/opt/jfrog/artifactory/logs/access.log
   filelog/artifactory/requestlogs/localhost:
@@ -24,6 +30,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/opt/jfrog/artifactory/logs/request.log
   filelog/artifactory/trafficlogs/localhost:
@@ -33,6 +42,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/opt/jfrog/artifactory/logs/traffic.*.log
 processors:
@@ -40,6 +52,17 @@ processors:
     attributes:
       - key: sumo.datasource
         value: artifactory
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/artifactory
+        action: insert
+  resource/artifactory_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: artifactory/filelog
         action: insert
 service:
   pipelines:
@@ -54,5 +77,6 @@ service:
         - resource/artifactory_resource_attributes/localhost
         - batch
         - resourcedetection/system
+        - resource/artifactory_resource_attributes/logs/localhost
       exporters:
         - sumologic

@@ -30,7 +30,7 @@ processors:
         action: insert
 service:
   pipelines:
-    logs/windows/PCI/localhost:
+    logs/windows/CSMA/localhost:
       receivers:
         - windowseventlog/system/localhost
         - windowseventlog/security/localhost

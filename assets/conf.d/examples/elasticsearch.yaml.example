@@ -40,6 +40,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/elasticsearch/elasticsearch-:clustername:.log
 processors:
@@ -50,6 +53,9 @@ processors:
         action: insert
       - key: sumo.datasource
         value: elasticsearch
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
         action: insert
       - key: db.node.name
         action: insert
@@ -66,6 +72,19 @@ processors:
         key: elasticsearch.index.name
       - action: delete
         key: elasticsearch.node.name
+  resource/elasticsearch_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: elasticsearch/elasticsearch
+        action: insert
+      - key: _sourceName
+        value: elasticsearch
+        action: insert
+  resource/elasticsearch_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: elasticsearch/filelog
+        action: insert
 service:
   pipelines:
     metrics/elasticsearch/localhost:
@@ -74,6 +93,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/elasticsearch_resource_attributes/metrics/localhost
         - resource/elasticsearch_resource_attributes/localhost
         - resource/elasticsearch_metric_label_translation/localhost
         - batch
@@ -85,6 +105,7 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
+        - resource/elasticsearch_resource_attributes/logs/localhost
         - resource/elasticsearch_resource_attributes/localhost
         - batch
       exporters:

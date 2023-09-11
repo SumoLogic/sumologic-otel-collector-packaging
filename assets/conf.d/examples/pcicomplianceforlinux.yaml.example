@@ -1,13 +1,3 @@
----
-##
-# Template Syntax: 
-#   Using handlebarsjs syntax 
-#   see testingdata directory for more info on template validation
-# Expected Common Template Variables
-#   pipeline_name  -> Needed to support multiple databases
-#   user_attributes -> array of user defined key value attributes to add
-# Expected App Specific Template Variables:
-#   linux_include_paths -> log file path array
 receivers:
   filelog/PCILinux/logs/localhost:
     include_file_name: false
@@ -16,6 +6,9 @@ receivers:
       - type: move
         from: attributes["log.file.path"]
         to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
     include:
       - /var/log/auth.log
       - /var/log/syslog
@@ -30,14 +23,19 @@ receivers:
 processors:
   resource/PCILinux_resource_attributes/localhost:
     attributes:
-      # Required static valued resource attributes
       - key: sumo.datasource
         value: linux
         action: insert
-      # user_attributes will hold requires attribute values provided by UI
-      # Required resource attributes fallback, that should be exposed as user inputs in UI and be in user_attributes json object
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
       - key: _sourceCategory
         value: otel/linux
+        action: insert
+  resource/PCILinux_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: linux/filelog
         action: insert
 service:
   pipelines:
@@ -48,6 +46,7 @@ service:
         - memory_limiter
         - resource/PCILinux_resource_attributes/localhost
         - resourcedetection/system
+        - resource/PCILinux_resource_attributes/logs/localhost
         - batch
       exporters:
         - sumologic
