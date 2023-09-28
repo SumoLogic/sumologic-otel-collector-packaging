@@ -131,12 +131,14 @@ jobs:
       # attempt to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
       - name: Download artifacts from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v2.24.3
+        uses: dawidd6/action-download-artifact@v2.28.0
         if: inputs.workflow_id != ''
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
           run_id: ${{ inputs.workflow_id }}
+          workflow: dev_builds.yml
+          workflow_conclusion: success
           name: ${{ steps.otc-bin.outputs.path }}
           path: ./build/gh-artifacts
           if_no_artifact_found: fail
@@ -211,12 +213,14 @@ jobs:
       # will be made to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
       - name: Download artifacts from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v2.24.3
+        uses: dawidd6/action-download-artifact@v2.28.0
         if: inputs.workflow_id != ''
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
           run_id: ${{ inputs.workflow_id }}
+          workflow: dev_builds.yml
+          workflow_conclusion: success
           name: otelcol-sumo-windows_${{ inputs.goarch }}.exe
           path: ./build/artifacts
           if_no_artifact_found: fail
