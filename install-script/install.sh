@@ -127,6 +127,9 @@ CURL_MAX_TIME=1800
 # set by check_dependencies therefore cannot be set by set_defaults
 SYSTEMD_DISABLED=false
 
+INSTALLATION_LOGFILE="/tmp/sumologic-otel-collector_installation.log"
+INSTALLATION_LOGFILE_ENDPOINT='https://stag-open-events.sumologic.net/api/v1/collector/installation/logs'
+
 ############################ Functions
 
 function usage() {
@@ -166,6 +169,13 @@ Supported env variables:
   ${ENV_TOKEN}=<token>       Installation token.'
 EOF
 }
+
+function reporter {
+  echo "Reporting Sumo OpenTelemetry collector installation..."
+  echo "SUMOLOGIC_INSTALLATION_TOKEN=${SUMOLOGIC_INSTALLATION_TOKEN}" >> $INSTALLATION_LOGFILE
+  gzip < "${INSTALLATION_LOGFILE}" | curl --silent --location --post302 --header 'Content-Encoding:gzip' --data-binary @- "${INSTALLATION_LOGFILE_ENDPOINT}"
+}
+trap reporter EXIT
 
 function set_defaults() {
     HOME_DIRECTORY="/var/lib/otelcol-sumo"
@@ -1698,6 +1708,9 @@ function plutil_replace_key() {
 }
 
 ############################ Main code
+
+# Redirect a copy of stdout and stderr into $INSTALLATION_LOGFILE
+exec > >(tee "${INSTALLATION_LOGFILE}") 2>&1
 
 OS_TYPE="$(get_os_type)"
 ARCH_TYPE="$(get_arch_type)"
