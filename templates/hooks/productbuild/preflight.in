@@ -8,5 +8,6 @@
 @common_darwin_functions@
 
 create_user_and_group_if_missing "@SERVICE_USER@" "@SERVICE_GROUP@"
+set_acl_on_log_paths "@SERVICE_GROUP@" "@ACL_LOG_FILE_PATHS@"
 
 exit 0

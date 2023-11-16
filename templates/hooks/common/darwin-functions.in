@@ -179,3 +179,13 @@ create_user_and_group_if_missing()
     # Add user to group if the user is not a member
     add_user_to_group_if_missing "$group" "$user"
 }
+
+# Allow our group to read the supplied log paths
+set_acl_on_log_paths()
+{
+    local group="$1"
+    local acl_log_file_paths="$2"
+    for log_path in ${acl_log_file_paths}; do
+        chmod -R +a "group:$group allow read,readattr,readextattr" "$log_path"
+    done
+}

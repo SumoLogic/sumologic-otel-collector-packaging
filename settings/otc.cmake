@@ -61,6 +61,7 @@ macro(set_otc_settings)
   # File paths
   set(SOURCE_OTC_BINARY_PATH "${SOURCE_OTC_BINARY_DIR}/${OTC_BINARY}")
   set(GH_ARTIFACT_OTC_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_BIN}")
+  set(ACL_LOG_FILE_PATHS "/var/log")
 
   ##
   # Other
