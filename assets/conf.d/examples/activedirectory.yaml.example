@@ -21,7 +21,7 @@ processors:
   resource/activedirectory_resource_attributes/localhost:
     attributes:
       - key: sumo.datasource
-        value: activeDirectory
+        value: windows
         action: insert
       - key: _contentType
         value: OpenTelemetry
