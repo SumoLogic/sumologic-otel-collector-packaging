@@ -28,7 +28,11 @@ param (
     [bool] $Ephemeral,
 
     # The API URL used to communicate with the SumoLogic backend
-    [string] $Api
+    [string] $Api,
+
+    # DisableInstallationTelemetry is used to disable reporting the installation
+    # to Sumologic.
+    [bool] $DisableInstallationTelemetry
 )
 
 $PackageGithubOrg = "SumoLogic"
@@ -564,6 +568,10 @@ try {
     Write-Error $_.Exception.InnerException.Message
 } finally {
     Stop-Transcript | Out-Null
-    Send-Installation-Logs -Endpoint $InstallationLogFileEndpoint -Path $InstallationLogFile -HttpClient $httpClient
+
+    if ($DisableInstallationTelemetry -eq $false) {
+        Send-Installation-Logs -Endpoint $InstallationLogFileEndpoint -Path $InstallationLogFile -HttpClient $httpClient
+    }
+
     Remove-Item $InstallationLogFile
 }
