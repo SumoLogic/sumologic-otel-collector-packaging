@@ -1,0 +1,92 @@
+receivers:
+  filelog/docker/events/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: json_parser
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/docker/events/conainer.json
+  docker_stats/localhost:
+    excluded_images:
+      - dummyContainer1
+      - dummyContainer2
+    metrics:
+      container.cpu.usage.system:
+        enabled: true
+      container.cpu.throttling_data.periods:
+        enabled: true
+      container.cpu.throttling_data.throttled_time:
+        enabled: true
+      container.memory.usage.max:
+        enabled: true
+      container.memory.pgfault:
+        enabled: true
+      container.memory.rss:
+        enabled: true
+      container.memory.unevictable:
+        enabled: true
+      container.network.io.usage.rx_errors:
+        enabled: true
+      container.network.io.usage.rx_packets:
+        enabled: true
+      container.network.io.usage.tx_errors:
+        enabled: true
+      container.network.io.usage.tx_packets:
+        enabled: true
+      container.blockio.io_serviced_recursive:
+        enabled: true
+processors:
+  resource/docker_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: docker
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/docker
+        action: insert
+  resource/docker_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: docker/docker_stats
+        action: insert
+      - key: _sourceName
+        value: docker
+        action: insert
+  resource/docker_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: docker/filelog
+        action: insert
+service:
+  pipelines:
+    metrics/docker/localhost:
+      receivers:
+        - docker_stats/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/docker_resource_attributes/metrics/localhost
+        - resource/docker_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/docker/localhost:
+      receivers:
+        - filelog/docker/events/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/docker_resource_attributes/logs/localhost
+        - resource/docker_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
