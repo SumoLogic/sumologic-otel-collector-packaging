@@ -26,6 +26,7 @@ receivers:
           process.disk.operations:
             enabled: true
   filelog/activemqserverLogs/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     multiline:
@@ -42,6 +43,7 @@ receivers:
   filelog/activemqauditLogs/localhost:
     multiline:
       line_start_pattern: ^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{1,2}:\d{1,2}
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:

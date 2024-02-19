@@ -40,6 +40,7 @@ receivers:
   filelog/mysql/localhost:
     multiline:
       line_start_pattern: ^\d{4}-\d{2}-\d{2}T\d{1,2}:\d{1,2}:\d{1,2}.*
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:
@@ -54,6 +55,7 @@ receivers:
   filelog/mysql/slow_transcations/localhost:
     multiline:
       line_start_pattern: ^#\sTime:\s.*
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:

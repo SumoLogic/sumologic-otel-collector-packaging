@@ -34,6 +34,7 @@ receivers:
       elasticsearch.index.cache.size:
         enabled: true
   filelog/elasticsearch/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:
