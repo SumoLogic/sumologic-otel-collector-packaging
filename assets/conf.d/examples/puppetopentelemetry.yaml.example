@@ -1,0 +1,69 @@
+receivers:
+  filelog/puppet/serverlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/puppetlabs/puppetserver/puppetserver.log
+  filelog/puppet/serveraccesslogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/puppetlabs/puppetserver/puppetserver-access.log
+  filelog/puppet/reportlogs/localhost:
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/puppet/reportlogs/report.log
+processors:
+  resource/puppet_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: puppet
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/puppet
+        action: insert
+  resource/puppet_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: puppet/filelog
+        action: insert
+service:
+  pipelines:
+    logs/puppet/localhost:
+      receivers:
+        - filelog/puppet/serverlogs/localhost
+        - filelog/puppet/serveraccesslogs/localhost
+        - filelog/puppet/reportlogs/localhost
+      processors:
+        - memory_limiter
+        - resource/puppet_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+        - resource/puppet_resource_attributes/logs/localhost
+      exporters:
+        - sumologic
