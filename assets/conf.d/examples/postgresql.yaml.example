@@ -5,6 +5,7 @@ receivers:
     password: null
     transport: tcp
   filelog/postgresql/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:

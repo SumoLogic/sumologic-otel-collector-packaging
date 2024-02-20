@@ -1,5 +1,6 @@
 receivers:
   filelog/puppet/serverlogs/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:
@@ -12,6 +13,7 @@ receivers:
     include:
       - /var/log/puppetlabs/puppetserver/puppetserver.log
   filelog/puppet/serveraccesslogs/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:
@@ -24,6 +26,7 @@ receivers:
     include:
       - /var/log/puppetlabs/puppetserver/puppetserver-access.log
   filelog/puppet/reportlogs/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:

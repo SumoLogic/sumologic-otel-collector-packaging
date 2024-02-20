@@ -1,6 +1,7 @@
 receivers:
   filelog/sqlserver/linux/localhost:
     encoding: utf-16le
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:

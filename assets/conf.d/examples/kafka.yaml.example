@@ -7,6 +7,7 @@ receivers:
       - consumers
     brokers: localhost:9092
   filelog/kafka/serverLogs/localhost:
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:
@@ -21,6 +22,7 @@ receivers:
   filelog/kafka/controllerLogs/localhost:
     multiline:
       line_start_pattern: ^\[\S{3}\s\S{3}\s\d{1,2}\s[^\]]+\].*
+    storage: file_storage
     include_file_name: false
     include_file_path: true
     operators:
