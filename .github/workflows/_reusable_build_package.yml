@@ -131,7 +131,7 @@ jobs:
       # attempt to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
       - name: Download artifacts from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v2.28.0
+        uses: dawidd6/action-download-artifact@v3.1.2
         if: inputs.workflow_id != ''
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
@@ -213,7 +213,7 @@ jobs:
       # will be made to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
       - name: Download artifacts from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v2.28.0
+        uses: dawidd6/action-download-artifact@v3.1.2
         if: inputs.workflow_id != ''
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
