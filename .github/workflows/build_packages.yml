@@ -10,13 +10,13 @@ name: 'Build packages'
 # the commit title (first 72 characters of commit message) - Justin K.
 run-name: >
   ${{
-  github.event.inputs.workflow_id != '' &&
-  format('Build for Remote Workflow: {0}', github.event.inputs.workflow_id)
+  inputs.workflow_id != '' &&
+  format('Build for Remote Workflow: {0}', inputs.workflow_id)
   ||
-  github.event.inputs.otc_version != '' &&
-  github.event.inputs.otc_sumo_version != '' &&
+  inputs.otc_version != '' &&
+  inputs.otc_sumo_version != '' &&
   format('Build for GitHub Release: {0}-sumo-{1}',
-  github.event.inputs.otc_version, github.event.inputs.otc_sumo_version)
+  inputs.otc_version, inputs.otc_sumo_version)
   ||
   github.event.head_commit.message
   }}
@@ -49,9 +49,9 @@ on:
         required: false
         type: string
       release:
-        description: Publish release
+        description: Publish draft release
         type: boolean
-        require: false
+        required: false
         default: false
 
 jobs:
@@ -64,12 +64,12 @@ jobs:
     outputs:
       otc_version: >-
         ${{
-        github.event.inputs.otc_version ||
+        inputs.otc_version ||
         steps.version-core.outputs.version
         }}
       otc_sumo_version: >-
         ${{
-        github.event.inputs.otc_sumo_version ||
+        inputs.otc_sumo_version ||
         steps.sumo-version.outputs.version
         }}
     steps:
@@ -77,15 +77,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Output Remote Workflow URL
-        if: github.event.inputs.workflow_id != ''
-        run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ github.event.inputs.workflow_id }}
+        if: inputs.workflow_id != ''
+        run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ inputs.workflow_id }}
 
       - name: Determine latest release
         id: release
         uses: ./ci/github-actions/get-latest-release
         if: >
-          github.event.inputs.otc_version == '' &&
-          github.event.inputs.otc_sumo_version == ''
+          inputs.otc_version == '' &&
+          inputs.otc_sumo_version == ''
         with:
           token: ${{ github.token }}
           owner: SumoLogic
@@ -94,8 +94,8 @@ jobs:
       - name: Determine version core from release
         id: version-core
         if: >
-          github.event.inputs.otc_version == '' &&
-          github.event.inputs.otc_sumo_version == ''
+          inputs.otc_version == '' &&
+          inputs.otc_sumo_version == ''
         env:
           VERSION_TAG: ${{ steps.release.outputs.tag_name }}
         run: >
@@ -106,8 +106,8 @@ jobs:
       - name: Determine sumo version from release
         id: sumo-version
         if: >
-          github.event.inputs.otc_version == '' &&
-          github.event.inputs.otc_sumo_version == ''
+          inputs.otc_version == '' &&
+          inputs.otc_sumo_version == ''
         env:
           VERSION_TAG: ${{ steps.release.outputs.tag_name }}
         run: >
@@ -128,7 +128,7 @@ jobs:
       otc_sumo_version: ${{ needs.determine_version.outputs.otc_sumo_version }}
       otc_build_number: ${{ github.run_number }}
       cmake_target: ${{ matrix.target }}
-      workflow_id: ${{ github.event.inputs.workflow_id }}
+      workflow_id: ${{ inputs.workflow_id }}
       runs_on: ${{ matrix.runs_on }}
       goarch: ${{ matrix.goarch }}
       package_arch: ${{ matrix.package_arch }}
@@ -173,7 +173,7 @@ jobs:
       - determine_version
     permissions:
       contents: write
-    if: github.event.inputs.release
+    if: inputs.release
     steps:
       - name: Download all packages stored as artifacts
         uses: actions/download-artifact@v3
