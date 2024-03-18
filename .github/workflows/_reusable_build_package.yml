@@ -63,6 +63,12 @@ jobs:
           workflow_id="${{ inputs.workflow_id }}"
           echo "https://github.com/${org}/${repo}/actions/runs/${workflow_id}"
 
+      - name: Determine if MacOS package should be signed
+        if: runner.os == 'macOS'
+        env:
+          PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
+        run: echo "MACOS_SIGNING_ENABLED=${PRODUCTBUILD_IDENTITY_NAME+true}" >> $GITHUB_ENV
+
       - name: Make build directory
         if: runner.os != 'Linux'
         run: mkdir build
@@ -72,7 +78,7 @@ jobs:
         run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
 
       - name: Import macOS Code-Signing Certificates
-        if: runner.os == 'macOS'
+        if: ${{ runner.os == 'macOS' && env.MACOS_SIGNING_ENABLED == 'true' }}
         uses: Apple-Actions/import-codesign-certs@v2
         with:
           # The certificates in a PKCS12 file encoded as a base64 string
