@@ -67,7 +67,10 @@ jobs:
         if: runner.os == 'macOS'
         env:
           PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
-        run: echo "MACOS_SIGNING_ENABLED=${PRODUCTBUILD_IDENTITY_NAME+true}" >> $GITHUB_ENV
+        run: |
+          if [ -n "${PRODUCTBUILD_IDENTITY_NAME}" ]; then
+              echo "MACOS_SIGNING_ENABLED=true" >> $GITHUB_ENV
+          fi
 
       - name: Make build directory
         if: runner.os != 'Linux'
