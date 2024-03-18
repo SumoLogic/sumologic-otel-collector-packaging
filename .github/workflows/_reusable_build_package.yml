@@ -53,7 +53,7 @@ jobs:
       package_path: ${{ steps.package.outputs.path }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Workflow URL for sumologic-otel-collector
         if: inputs.workflow_id != ''
@@ -177,7 +177,7 @@ jobs:
     needs: build_package
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download macOS package
         uses: actions/download-artifact@v3
@@ -197,7 +197,7 @@ jobs:
       package_path: ${{ steps.package.outputs.path }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Workflow URL for sumologic-otel-collector
         if: inputs.workflow_id != ''
@@ -282,7 +282,7 @@ jobs:
     runs-on: windows-2019
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.3

@@ -13,7 +13,7 @@ jobs:
     env:
       SHELLCHECK_VERSION: 0.9.0
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run ShellCheck on *.sh
         uses: ludeeus/action-shellcheck@master
