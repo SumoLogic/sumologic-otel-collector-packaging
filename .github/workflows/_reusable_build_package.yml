@@ -164,7 +164,7 @@ jobs:
         run: make package
 
       - name: Store package as action artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package.outputs.path }}
           path: ./build/${{ steps.package.outputs.path }}
@@ -270,7 +270,7 @@ jobs:
           -Restore
 
       - name: Store MSI as action artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows_${{ inputs.goarch }}_msi
           path: ./msi/wix/bin/${{ inputs.package_arch }}/en-US/*.msi
