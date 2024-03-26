@@ -27,12 +27,12 @@ processors:
         value: OpenTelemetry
         action: insert
       - key: _sourceCategory
-        value: otel/activeDirectory
+        value: otel/windows
         action: insert
   resource/activedirectory_resource_attributes/logs/localhost:
     attributes:
       - key: _source
-        value: activeDirectory/windowseventlog
+        value: windows/windowseventlog
         action: insert
 service:
   pipelines:
