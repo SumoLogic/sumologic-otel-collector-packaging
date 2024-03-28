@@ -165,6 +165,26 @@ jobs:
             package_arch: x64
             build_tool: wix
 
+  install-script:
+    name: Store install script
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Store Linux install script as action artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: install.sh
+          path: ./install-script/install.sh
+          if-no-files-found: error
+
+      - name: Store Windows install script as action artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: install.ps1
+          path: ./install-script/install.ps1
+          if-no-files-found: error
+
   publish_release:
     name: Publish Release
     runs-on: ubuntu-latest
