@@ -30,6 +30,10 @@ on:
       build_tool:
         required: true
         type: string
+      fips:
+        required: false
+        type: boolean
+        default: false
     secrets:
       gh_artifacts_token:
         required: true
@@ -191,7 +195,7 @@ jobs:
 
   build_wix_package:
     runs-on: ${{ inputs.runs_on }}
-    name: Build (WiX)
+    name: Build (WiX) ${{ inputs.fips && 'FIPS' || '' }}
     if: inputs.build_tool == 'wix'
     outputs:
       package_path: ${{ steps.package.outputs.path }}
@@ -217,6 +221,12 @@ jobs:
         if: inputs.workflow_id != ''
         run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
 
+      - name: Determine artifact names
+        run: |
+          echo "OTC_WORKFLOW_ARTIFACT_NAME=otelcol-sumo-${{ inputs.fips && 'fips-' || '' }}windows_${{ inputs.goarch }}.exe" >> $GITHUB_ENV
+          echo "OTC_RELEASE_ARTIFACT_NAME=otelcol-sumo-${{ inputs.otc_version }}-sumo-${{inputs.otc_sumo_version }}-${{ inputs.fips && 'fips-' || '' }}windows_${{ inputs.goarch }}.exe" >> $GITHUB_ENV
+          echo "OTC_BUILD_INPUT_NAME=otelcol-sumo-windows_${{ inputs.goarch }}.exe" >> $GITHUB_ENV
+
       # Download the artifacts required to build the package target. If
       # inputs.workflow_id is empty then this will be skipped and an attempt
       # will be made to fetch the artifacts from a GitHub Release matching
@@ -230,7 +240,7 @@ jobs:
           run_id: ${{ inputs.workflow_id }}
           workflow: dev_builds.yml
           workflow_conclusion: success
-          name: otelcol-sumo-windows_${{ inputs.goarch }}.exe
+          name: ${{ env.OTC_ARTIFACT_NAME }}
           path: ./build/artifacts
           if_no_artifact_found: fail
 
@@ -242,19 +252,23 @@ jobs:
         with:
           repository: SumoLogic/sumologic-otel-collector
           tag: v${{ inputs.otc_version }}-sumo-${{ inputs.otc_sumo_version }}
-          fileName: >-
-            otelcol-sumo-${{ inputs.otc_version }}-sumo-${{
-            inputs.otc_sumo_version }}-windows_${{ inputs.goarch }}.exe
+          fileName: ${{ env.OTC_RELEASE_ARTIFACT_NAME }}
           out-file-path: build/artifacts
 
       - name: Rename GitHub Release artifact
         if: inputs.workflow_id == ''
         working-directory: ./build/artifacts
         env:
-          MV_FROM: >-
-            otelcol-sumo-${{ inputs.otc_version }}-sumo-${{
-            inputs.otc_sumo_version }}-windows_${{ inputs.goarch }}.exe
-          MV_TO: otelcol-sumo-windows_${{ inputs.goarch }}.exe
+          MV_FROM: ${{ env.OTC_RELEASE_ARTIFACT_NAME }}
+          MV_TO: ${{ env.OTC_BUILD_INPUT_NAME }}
+        run: mv "$MV_FROM" "$MV_TO"
+
+      - name: Rename GitHub Workflow artifact
+        if: inputs.workflow_id != ''
+        working-directory: ./build/artifacts
+        env:
+          MV_FROM: ${{ env.OTC_WORKFLOW_ARTIFACT_NAME }}
+          MV_TO: ${{ env.OTC_BUILD_INPUT_NAME }}
         run: mv "$MV_FROM" "$MV_TO"
 
       - name: Build MSI
@@ -267,12 +281,13 @@ jobs:
           msbuild.exe -p:Configuration=Release
           -p:Platform=$PLATFORM
           -p:ProductVersion=$PRODUCT_VERSION
+          -p:FIPSEnabled=${{ inputs.fips }}
           -Restore
 
       - name: Store MSI as action artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows_${{ inputs.goarch }}_msi
+          name: windows_${{ inputs.fips && 'fips_' || '' }}${{ inputs.goarch }}_msi
           path: ./msi/wix/bin/${{ inputs.package_arch }}/en-US/*.msi
           if-no-files-found: error
 

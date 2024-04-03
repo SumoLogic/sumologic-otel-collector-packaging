@@ -133,6 +133,7 @@ jobs:
       goarch: ${{ matrix.goarch }}
       package_arch: ${{ matrix.package_arch }}
       build_tool: ${{ matrix.build_tool }}
+      fips: ${{ matrix.fips || false }}
     secrets:
       apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
       apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
@@ -164,6 +165,12 @@ jobs:
             goarch: amd64
             package_arch: x64
             build_tool: wix
+          - target: otc_fips_windows_amd64_wix
+            runs_on: windows-2019
+            goarch: amd64
+            package_arch: x64
+            build_tool: wix
+            fips: true
 
   install-script:
     name: Store install script
