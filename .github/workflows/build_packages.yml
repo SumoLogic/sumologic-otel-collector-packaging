@@ -230,5 +230,5 @@ jobs:
           body: |
             This release packages [${{ env.OTC_APP_VERSION }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/${{ env.OTC_APP_VERSION }}).
 
-            The changelog below is for the package itself, rather than the otel collector application.
+            The changelog below is for the package itself, rather than the Sumo Logic Distribution for OpenTelemetry Collector.
 
