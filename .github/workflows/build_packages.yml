@@ -201,6 +201,8 @@ jobs:
     permissions:
       contents: write
     if: inputs.release
+    env:
+      OTC_APP_VERSION: v${{ needs.determine_version.outputs.otc_version }}-sumo-${{ needs.determine_version.outputs.otc_sumo_version }}
     steps:
       - name: Download all packages stored as artifacts
         uses: actions/download-artifact@v4
@@ -214,6 +216,7 @@ jobs:
           tag: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
 
           draft: true
+          generateReleaseNotes: true
           prerelease: false
 
           allowUpdates: true
@@ -225,6 +228,7 @@ jobs:
           replacesArtifacts: true
 
           body: |
-            ## v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
+            This release packages [${{ env.OTC_APP_VERSION }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/${{ env.OTC_APP_VERSION }}).
 
-            **TODO**
+            The changelog below is for the package itself, rather than the Sumo Logic Distribution for OpenTelemetry Collector.
+
