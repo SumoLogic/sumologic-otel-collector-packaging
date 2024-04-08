@@ -261,7 +261,7 @@ jobs:
         env:
           MV_FROM: ${{ env.OTC_RELEASE_ARTIFACT_NAME }}
           MV_TO: ${{ env.OTC_BUILD_INPUT_NAME }}
-        run: mv "$MV_FROM" "$MV_TO"
+        run: mv -n "$MV_FROM" "$MV_TO"
 
       - name: Rename GitHub Workflow artifact
         if: inputs.workflow_id != ''
@@ -269,7 +269,7 @@ jobs:
         env:
           MV_FROM: ${{ env.OTC_WORKFLOW_ARTIFACT_NAME }}
           MV_TO: ${{ env.OTC_BUILD_INPUT_NAME }}
-        run: mv "$MV_FROM" "$MV_TO"
+        run: mv -n "$MV_FROM" "$MV_TO"
 
       - name: Build MSI
         working-directory: ./msi/wix
