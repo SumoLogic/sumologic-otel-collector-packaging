@@ -27,6 +27,7 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
+				checkLatestAppVersion,
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(localSystemSID),
 				checkUserConfigCreated,
@@ -45,6 +46,25 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInConfig,
+				checkEphemeralInConfig(userConfigPath),
+				checkHostmetricsConfigNotCreated,
+			},
+		},
+		{
+			name: "installation token and fips",
+			options: installOptions{
+				installToken: installToken,
+				ephemeral:    true,
+				fips:         true,
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryFipsError,
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(localSystemSID),
 				checkUserConfigCreated,

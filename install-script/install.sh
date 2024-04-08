@@ -127,9 +127,6 @@ CURL_MAX_TIME=1800
 # set by check_dependencies therefore cannot be set by set_defaults
 SYSTEMD_DISABLED=false
 
-# alternative commands
-TAC="tac"
-
 ############################ Functions
 
 function usage() {
@@ -417,16 +414,6 @@ function check_dependencies() {
         fi
     done
 
-    # verify if `tac` is supported, otherwise check for `tail -r`
-    if ! command -v "tac" &> /dev/null; then
-        if echo '' | tail -r  &> /dev/null; then
-            TAC="tail -r"
-        else
-            echo "Neither command 'tac' nor support for 'tail -r' not found. Please install it."
-            error=1
-        fi
-    fi
-
     if [[ ! -d /run/systemd/system ]]; then
         SYSTEMD_DISABLED=true
     fi
@@ -486,10 +473,9 @@ function get_versions() {
     -sH "Accept: application/vnd.github.v3+json" \
     https://api.github.com/repos/SumoLogic/sumologic-otel-collector/releases \
     | grep -E '(tag_name|"(draft|prerelease)")' \
-    | ${TAC} \
     | sed 'N;N;s/.*true.*//' \
     | grep -o 'v.*"' \
-    | sort -r \
+    | sort -rV \
     | sed 's/^v//;s/"$//'
 }
 
@@ -508,36 +494,14 @@ function get_package_versions() {
     -sH "Accept: application/vnd.github.v3+json" \
     https://api.github.com/repos/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases \
     | grep -E '(tag_name|"(draft|prerelease)")' \
-    | ${TAC} \
     | sed 'N;N;s/.*true.*//' \
     | grep -o 'v.*"' \
-    | sort -r \
+    | sort -rV \
     | sed 's/^v//;s/"$//'
 }
 
 # Get versions from provided one to the latest
 get_versions_from() {
-    local versions
-    readonly versions="${1}"
-
-    local from
-    readonly from="${2}"
-
-    # Return if there is no installed version
-    if [[ "${from}" == "" ]]; then
-        return 0
-    fi
-
-    local line
-    readonly line="$(( $(echo "${versions}" | sed 's/ /\n/g' | grep -n "${from}$" | sed 's/:.*//g') - 1 ))"
-
-    if [[ "${line}" -gt "0" ]]; then
-        echo "${versions}" | sed 's/ /\n/g' | head -n "${line}" | sort
-    fi
-    return 0
-}
-
-get_package_versions_from() {
     local versions
     readonly versions="${1}"
 
@@ -655,7 +619,8 @@ function print_breaking_changes() {
     readonly versions="${1}"
 
     local changelog
-    readonly changelog="$(echo -e "$(curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -sS https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/main/CHANGELOG.md)")"
+    changelog="$(echo -e "$(curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -sS https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/main/CHANGELOG.md)")"
+    declare -r changelog
 
     local is_breaking_change
     local message
@@ -1033,9 +998,6 @@ function unescape_yaml() {
     local fields
     readonly fields="${1}"
 
-    local unescaped
-    unescaped=""
-
     # Process the string line by line
     echo -e "${fields}" | while IFS= read -r line; do
         # strip `\` from the end of the line
@@ -1159,7 +1121,8 @@ function get_user_tags() {
 function get_fields_to_compare() {
     local fields
     # replace \/ with /
-    readonly fields="$(echo "${FIELDS}" | sed -e 's|\\/|/|')"
+    fields="$(echo "${FIELDS}" | sed -e 's|\\/|/|')"
+    declare -r fields
 
     unescape_yaml "${fields}" \
         | grep -vE '^$' \

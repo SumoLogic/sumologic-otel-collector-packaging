@@ -16,8 +16,7 @@ jobs:
       - name: Run ShellCheck on *.sh
         uses: ludeeus/action-shellcheck@master
         with:
-          # TODO: remove this after fixing shellcheck warnings for install.sh
-          ignore_paths: ./install-script/install.sh
+          severity: info  # TODO: check if we can resolve the style issues as well
 
       - name: Run ShellCheck on hook templates
         uses: ludeeus/action-shellcheck@master
