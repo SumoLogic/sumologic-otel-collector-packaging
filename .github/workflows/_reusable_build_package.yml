@@ -231,7 +231,7 @@ jobs:
       # inputs.workflow_id is empty then this will be skipped and an attempt
       # will be made to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
-      - name: Download artifacts from sumologic-otel-collector
+      - name: Download artifact from workflow
         uses: dawidd6/action-download-artifact@v3.1.4
         if: inputs.workflow_id != ''
         with:
@@ -240,7 +240,7 @@ jobs:
           run_id: ${{ inputs.workflow_id }}
           workflow: dev_builds.yml
           workflow_conclusion: success
-          name: ${{ env.OTC_ARTIFACT_NAME }}
+          name: ${{ env.OTC_WORKFLOW_ARTIFACT_NAME }}
           path: ./build/artifacts
           if_no_artifact_found: fail
 
