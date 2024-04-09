@@ -215,7 +215,7 @@ jobs:
         run: mkdir build
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Use GitHub Artifacts for binaries
         if: inputs.workflow_id != ''
@@ -300,7 +300,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Restore NuGet packages
         working-directory: ./msi/SumoLogic.wixext/SumoLogicTests
