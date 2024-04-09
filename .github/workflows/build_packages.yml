@@ -24,9 +24,7 @@ run-name: >
 on:
   push:
     branches:
-      - '**'
-    tags-ignore:
-      - '**'
+      - 'main'
   pull_request:
   workflow_dispatch:
     inputs:
