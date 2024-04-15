@@ -78,16 +78,16 @@ jobs:
         if: inputs.workflow_id != ''
         run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ inputs.workflow_id }}
 
-      - name: Determine latest release
+      - name: Determine latest release version
         id: release
-        uses: ./ci/github-actions/get-latest-release
         if: >
           inputs.otc_version == '' &&
           inputs.otc_sumo_version == ''
-        with:
-          token: ${{ github.token }}
-          owner: SumoLogic
-          repository: sumologic-otel-collector
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG_NAME=$(gh release view -R SumoLogic/sumologic-otel-collector --jq ".tagName" --json "tagName")
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Determine version core from release
         id: version-core
