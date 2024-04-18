@@ -82,7 +82,7 @@
     <Property Id="API" Hidden="yes" />
 
     <!-- The OpAmp UrL if overriden -->
-    <Property ID="OPAMPENDPOINT" Hidden="yes" />
+    <Property Id="OPAMPENDPOINT" Hidden="yes" />
 
     <!-- UI Properties -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
