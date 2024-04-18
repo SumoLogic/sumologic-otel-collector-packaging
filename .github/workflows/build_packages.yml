@@ -206,17 +206,36 @@ jobs:
     if: inputs.release
     env:
       OTC_APP_VERSION: v${{ needs.determine_version.outputs.otc_version }}-sumo-${{ needs.determine_version.outputs.otc_sumo_version }}
+      RELEASE_TAG_NAME: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
     steps:
       - name: Download all packages stored as artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
 
+      # Create the release tag separately to add a message to it
+      - name: Create release tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: ${{ env.RELEASE_TAG_NAME }},
+              message: `App Version: ${{ env.OTC_APP_VERSION }}`,
+              object: context.sha,
+              type: 'commit',
+              tagger: {
+                name: "${{ env.GIT_USER }}",
+                email: "${{ env.GIT_EMAIL }}",
+              },
+            })
+
       - uses: ncipollo/release-action@v1
         with:
           name: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
           commit: ${{ github.sha }}
-          tag: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
+          tag: ${{ env.RELEASE_TAG_NAME }}
 
           draft: true
           generateReleaseNotes: true
