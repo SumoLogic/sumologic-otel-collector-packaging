@@ -201,8 +201,8 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     name: Build (WiX) ${{ inputs.fips && 'FIPS' || '' }}
     if: inputs.build_tool == 'wix'
-    outputs:
-      package_path: ${{ steps.package.outputs.path }}
+    env:
+      PRODUCT_VERSION: ${{ inputs.otc_version }}.${{ inputs.otc_build_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -276,23 +276,25 @@ jobs:
         run: mv -n "$MV_FROM" "$MV_TO"
 
       - name: Build MSI
+        id: build
         working-directory: ./msi/wix
         env:
           PLATFORM: ${{ inputs.package_arch }}
-          PRODUCT_VERSION: >-
-            ${{ inputs.otc_version }}.${{ inputs.otc_build_number }}
-        run: >-
-          msbuild.exe -p:Configuration=Release
-          -p:Platform=$PLATFORM
-          -p:ProductVersion=$PRODUCT_VERSION
-          -p:FIPSEnabled=${{ inputs.fips }}
-          -Restore
+        run: |
+          msbuild.exe -p:Configuration=Release \
+            -p:Platform=$PLATFORM \
+            -p:ProductVersion=$PRODUCT_VERSION \
+            -p:FIPSEnabled=${{ inputs.fips }} \
+            -Restore
+          PACKAGE_PATH=./msi/wix/$(find bin/${{ inputs.package_arch }}/en-US -name "*.msi")
+          echo "package_path=${PACKAGE_PATH}" >> $GITHUB_OUTPUT
+          echo "package_filename=$(basename ${PACKAGE_PATH})" >> $GITHUB_OUTPUT
 
       - name: Store MSI as action artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows_${{ inputs.fips && 'fips_' || '' }}${{ inputs.goarch }}_msi
-          path: ./msi/wix/bin/${{ inputs.package_arch }}/en-US/*.msi
+          name: ${{ steps.build.outputs.package_filename }}
+          path: ${{ steps.build.outputs.package_path }}
           if-no-files-found: error
 
   test_wixext:
