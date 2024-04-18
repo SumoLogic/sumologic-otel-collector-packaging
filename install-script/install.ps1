@@ -28,7 +28,10 @@ param (
     [bool] $Ephemeral,
 
     # The API URL used to communicate with the SumoLogic backend
-    [string] $Api
+    [string] $Api,
+
+    # The OpAmp Endpoint used to communicate with the OpAmp backend
+    [string] $OpAmpBackend
 )
 
 $PackageGithubOrg = "SumoLogic"
@@ -516,6 +519,9 @@ try {
     }
     if ($RemotelyManaged -eq $true) {
         $msiAddLocal += "REMOTELYMANAGED"
+        if ($OpAmpBackend.Length -gt 0) {
+            $msiProperties += "OPAMPENDPOINT=`"${opampEndpoint}`""
+        }
     }
     if ($Ephemeral -eq $true) {
         $msiAddLocal += "EPHEMERAL"
