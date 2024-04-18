@@ -10,13 +10,17 @@ name: 'Build packages'
 # the commit title (first 72 characters of commit message) - Justin K.
 run-name: >
   ${{
-  inputs.workflow_id != '' &&
-  format('Build for Remote Workflow: {0}', inputs.workflow_id)
-  ||
+  (inputs.workflow_id != '' &&   
   inputs.otc_version != '' &&
-  inputs.otc_sumo_version != '' &&
-  format('Build for GitHub Release: {0}-sumo-{1}',
-  inputs.otc_version, inputs.otc_sumo_version)
+  inputs.otc_sumo_version != '') &&
+  format('Build for Remote Workflow: {0}, Version: {1}-sumo-{2}', inputs.workflow_id, inputs.otc_version, inputs.otc_sumo_version)
+  ||
+  (inputs.otc_version != '' &&
+  inputs.otc_sumo_version != '') &&
+  format('Build for GitHub Release: {0}-sumo-{1}, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
+  ||
+  inputs.workflow_id != '' &&
+  format('Build for Remote Workflow: {0}, Version: unknown', inputs.workflow_id)
   ||
   github.event.head_commit.message
   }}
@@ -60,16 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Determine version
     outputs:
-      otc_version: >-
-        ${{
-        inputs.otc_version ||
-        steps.version-core.outputs.version
-        }}
-      otc_sumo_version: >-
-        ${{
-        inputs.otc_sumo_version ||
-        steps.sumo-version.outputs.version
-        }}
+      otc_version: ${{ steps.versions.outputs.otc_version }}
+      otc_sumo_version: ${{ steps.versions.outputs.otc_sumo_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -112,6 +108,15 @@ jobs:
           ./ci/get_version.sh otc_sumo_version > /tmp/otc_sumo_version &&
           cat /tmp/otc_sumo_version &&
           echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
+
+      - name: Set output versions
+        id: versions
+        run: |
+            echo "otc_version=${{ inputs.otc_version || steps.version-core.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "otc_sumo_version=${{ inputs.otc_sumo_version || steps.sumo-version.outputs.version }}" >> $GITHUB_OUTPUT
+      
+      - name: Output App Version
+        run: echo ::notice title=App Version::${{ steps.versions.outputs.otc_version }}-sumo-${{ steps.versions.outputs.otc_sumo_version }}
 
   # Builds a package for each target in the matrix. The target must be an
   # existing file name (without extension) in the targets directory when
