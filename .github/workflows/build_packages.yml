@@ -221,7 +221,7 @@ jobs:
             github.rest.git.createTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag: ${{ env.RELEASE_TAG_NAME }},
+              tag: '${{ env.RELEASE_TAG_NAME }}',
               message: `App Version: ${{ env.OTC_APP_VERSION }}`,
               object: context.sha,
               type: 'commit',
