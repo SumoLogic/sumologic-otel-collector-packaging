@@ -226,8 +226,8 @@ jobs:
               object: context.sha,
               type: 'commit',
               tagger: {
-                name: "${{ env.GIT_USER }}",
-                email: "${{ env.GIT_EMAIL }}",
+                name: "${{ github.actor }}",
+                email: "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com",
               },
             })
 
