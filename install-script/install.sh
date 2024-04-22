@@ -185,6 +185,7 @@ function reporter {
     if ! $DISABLE_INSTALLATION_TELEMETRY; then
         echo "SUMOLOGIC_INSTALLATION_TOKEN=${SUMOLOGIC_INSTALLATION_TOKEN}" >> "$INSTALLATION_LOGFILE"
         curl --silent --location -X POST --data-binary @"${INSTALLATION_LOGFILE}" "${INSTALLATION_LOGFILE_ENDPOINT}"
+        rm -f "${INSTALLATION_LOGFILE}"
     fi
 }
 trap reporter EXIT
