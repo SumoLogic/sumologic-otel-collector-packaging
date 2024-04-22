@@ -61,7 +61,7 @@ func (io *installOptions) string() []string {
 	if io.installationLogfileEndpoint == "" {
 		opts = append(opts, "-InstallationLogfileEndpoint", StagingInstallationLogfileEndpoint)
 	} else {
-		opts = append(opts, "-InstallationLogfileEndpoint", io.installationTokenEndpoint)
+		opts = append(opts, "-InstallationLogfileEndpoint", io.installationLogfileEndpoint)
 	}
 
 	return opts
