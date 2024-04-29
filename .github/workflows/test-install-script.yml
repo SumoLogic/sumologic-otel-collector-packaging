@@ -32,9 +32,7 @@ jobs:
 
       - name: Setup go
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: actions/setup-go@v5
-        with:
-          cache-dependency-path: 'install-script/test/go.sum'
+        uses: WillAbides/setup-go-faster@v1.14.0
 
       - name: Run install script tests
         if: steps.changed-files.outputs.any_changed == 'true'
