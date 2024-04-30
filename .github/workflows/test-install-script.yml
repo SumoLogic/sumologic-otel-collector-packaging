@@ -29,10 +29,13 @@ jobs:
         with:
           files: |
             install-script/**/*
+            .github/**
 
       - name: Setup go
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: WillAbides/setup-go-faster@v1.14.0
+        uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: stable
 
       - name: Run install script tests
         if: steps.changed-files.outputs.any_changed == 'true'
