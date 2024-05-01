@@ -23,7 +23,7 @@ namespace SumoLogic.wixext
         private const string pEphemeral = "Ephemeral";
         private const string pConfigFolder = "ConfigFolder";
         private const string pOpAmpFolder = "OpAmpFolder";
-        private const string pOpAmpEndpoint = "OpAmpApi";
+        private const string pOpAmpApi = "OpAmpApi";
         private const string pConfigFragmentsFolder = "ConfigFragmentsFolder";
 
         // WiX features
