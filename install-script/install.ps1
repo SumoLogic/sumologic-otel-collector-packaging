@@ -31,7 +31,7 @@ param (
     [string] $Api,
 
     # The OpAmp Endpoint used to communicate with the OpAmp backend
-    [string] $OpAmpBackend
+    [string] $OpAmpApi
 )
 
 $PackageGithubOrg = "SumoLogic"
@@ -520,7 +520,7 @@ try {
     if ($RemotelyManaged -eq $true) {
         $msiAddLocal += "REMOTELYMANAGED"
         if ($OpAmpBackend.Length -gt 0) {
-            $msiProperties += "OPAMPENDPOINT=`"${opampEndpoint}`""
+            $msiProperties += "OPAMPAPI=`"${OpAmpApi}`""
         }
     }
     if ($Ephemeral -eq $true) {
