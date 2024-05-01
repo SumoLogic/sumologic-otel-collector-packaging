@@ -66,10 +66,10 @@ namespace SumoLogic.wixext
                 EnsureScalarKey(opamp, "remote_configuration_directory");
                 opamp.Children["remote_configuration_directory"] = config.OpAmpFolder;
 
-                if (!string.IsNullOrEmpty(config.OpAmpEndpoint))
+                if (!string.IsNullOrEmpty(config.OpAmpApi))
                 {
                     EnsureScalarKey(opamp, "endpoint");
-                    opamp.Children["endpoint"] = config.OpAmpEndpoint;
+                    opamp.Children["endpoint"] = config.OpAmpApi;
                 }
 
                 // Add OpAmp extension to service section
