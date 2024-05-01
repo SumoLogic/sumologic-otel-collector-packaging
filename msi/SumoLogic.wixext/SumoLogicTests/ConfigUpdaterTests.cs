@@ -147,6 +147,26 @@ namespace SumoLogicTests
             Assert.AreEqual(config.Api, apiBaseUrl.ToString());
         }
 
+        public void OpAmpApiAssertions(Config config, StreamReader sr)
+        {
+            YamlStream ys = new YamlStream();
+            ys.Load(sr);
+            YamlMappingNode root = (YamlMappingNode)ys.Documents[0].RootNode;
+
+            Assert.IsTrue(root.Children.ContainsKey("extensions"));
+            Assert.AreEqual(YamlNodeType.Mapping, root.Children["extensions"].NodeType);
+            var extensions = (YamlMappingNode)root.Children["extensions"];
+
+            Assert.IsTrue(extensions.Children.ContainsKey("opamp"));
+            Assert.AreEqual(YamlNodeType.Mapping, extensions.Children["opamp"].NodeType);
+            var sumologic = (YamlMappingNode)extensions.Children["opamp"];
+
+            Assert.IsTrue(sumologic.Children.ContainsKey("endpoint"));
+            Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["endpoint"].NodeType);
+            var opAmpApi = (YamlScalarNode)sumologic.Children["endpoint"];
+            Assert.AreEqual(config.OpAmpApi, opAmpApi.ToString());
+        }
+
         [TestMethod]
         public void TestUpdate_WithExtensionsBlock()
         {
@@ -406,5 +426,33 @@ namespace SumoLogicTests
                 ApiAssertions(config, sr);
             }
         }
+
+        [TestMethod]
+        public void TestUpdate_OpAmpApi()
+        {
+            var filePath = Path.Combine(testDataPath, "with-extensions-block.yaml");
+            var config = new Config { InstallationToken = "foobar", RemotelyManaged = true, OpAmpApi = "http://opampapiurl.local", OpAmpFolder = "/opamp" };
+            config.SetCollectorFieldsFromTags(@"foo=bar,baz=kaz,xaz=yaz");
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                var configUpdater = new ConfigUpdater(new StreamReader(filePath));
+                configUpdater.Update(config);
+                configUpdater.Save(new StreamWriter(ms));
+
+                ms.Seek(0, SeekOrigin.Begin);
+
+                StreamReader sr = new StreamReader(ms);
+                while (!sr.EndOfStream)
+                {
+                    Console.WriteLine(sr.ReadLine());
+                }
+
+                ms.Seek(0, SeekOrigin.Begin);
+
+                OpAmpApiAssertions(config, sr);
+            }
+        }
+
     }
 }
