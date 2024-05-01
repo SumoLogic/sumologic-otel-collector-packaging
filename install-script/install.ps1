@@ -519,7 +519,7 @@ try {
     }
     if ($RemotelyManaged -eq $true) {
         $msiAddLocal += "REMOTELYMANAGED"
-        if ($OpAmpBackend.Length -gt 0) {
+        if ($OpAmpApi.Length -gt 0) {
             $msiProperties += "OPAMPAPI=`"${OpAmpApi}`""
         }
     }
