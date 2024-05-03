@@ -159,12 +159,12 @@ namespace SumoLogicTests
 
             Assert.IsTrue(extensions.Children.ContainsKey("opamp"));
             Assert.AreEqual(YamlNodeType.Mapping, extensions.Children["opamp"].NodeType);
-            var sumologic = (YamlMappingNode)extensions.Children["opamp"];
+            var opamp = (YamlMappingNode)extensions.Children["opamp"];
 
-            Assert.IsTrue(sumologic.Children.ContainsKey("endpoint"));
-            Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["endpoint"].NodeType);
-            var opAmpApi = (YamlScalarNode)sumologic.Children["endpoint"];
-            Assert.AreEqual(config.OpAmpApi, opAmpApi.ToString());
+            Assert.IsTrue(opamp.Children.ContainsKey("endpoint"));
+            Assert.AreEqual(YamlNodeType.Scalar, opamp.Children["endpoint"].NodeType);
+            var endpoint = (YamlScalarNode)opamp.Children["endpoint"];
+            Assert.AreEqual(config.OpAmpApi, endpoint.ToString());
         }
 
         [TestMethod]
