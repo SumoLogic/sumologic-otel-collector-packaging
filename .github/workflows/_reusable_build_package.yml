@@ -296,7 +296,6 @@ jobs:
           certificate: '${{ secrets.MICROSOFT_CERTIFICATE }}'
           password: '${{ secrets.MICROSOFT_CERTIFICATE_PASSWORD }}'
           certificatesha1: '${{ secrets.MICROSOFT_CERTHASH }}'
-          certificatename: '${{ secrets.MICROSOFT_CERTNAME }}'
           description: '${{ secrets.MICROSOFT_DESCRIPTION }}'
           folder: ./msi/wix/bin/${{ matrix.platform }}/en-US
 
