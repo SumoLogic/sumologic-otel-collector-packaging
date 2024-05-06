@@ -293,11 +293,11 @@ jobs:
       - name: Sign MSI
         uses: skymatic/code-sign-action@v3
         with:
-          certificate: '${{ secrets.MICROSOFT_CERTIFICATE }}'
-          password: '${{ secrets.MICROSOFT_CERTIFICATE_PASSWORD }}'
-          certificatesha1: '${{ secrets.MICROSOFT_CERTHASH }}'
-          certificatename: '${{ secrets.MICROSOFT_CERTNAME }}'
-          description: '${{ secrets.MICROSOFT_DESCRIPTION }}'
+          certificate: ${{ secrets.microsoft_certificate }}
+          password: ${{ secrets.microsoft_certificate_password }}
+          certificatesha1: ${{ secrets.microsoft_certhash }}
+          certificatename: ${{ secrets.microsoft_certname }}
+          description: ${{ secrets.microsoft_description }}
           folder: ./msi/wix/bin/${{ matrix.platform }}/en-US
 
       - name: Store MSI as action artifact
