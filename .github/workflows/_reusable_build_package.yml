@@ -308,7 +308,7 @@ jobs:
           certificatesha1: ${{ secrets.microsoft_certhash }}
           certificatename: ${{ secrets.microsoft_certname }}
           description: ${{ secrets.microsoft_description }}
-          folder: ./msi/wix/$(find bin/${{ inputs.package_arch }}/en-US
+          folder: ./msi/wix/bin/${{ inputs.package_arch }}/en-US
 
       - name: Store MSI as action artifact
         uses: actions/upload-artifact@v4
