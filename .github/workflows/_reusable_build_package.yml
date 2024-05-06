@@ -306,7 +306,6 @@ jobs:
           certificate: ${{ secrets.microsoft_certificate }}
           password: ${{ secrets.microsoft_certificate_password }}
           certificatesha1: ${{ secrets.microsoft_certhash }}
-          certificatename: ${{ secrets.microsoft_certname }}
           description: ${{ secrets.microsoft_description }}
           folder: ./msi/wix/bin/${{ inputs.package_arch }}/en-US
 
