@@ -43,6 +43,16 @@ on:
         required: false
       productbuild_identity_name:
         required: false
+      microsoft_certificate:
+        required: false
+      microsoft_certificate_password:
+        required: false
+      microsoft_certhash:
+        required: false
+      microsoft_certname:
+        required: false
+      microsoft_description:
+        required: false
 
 defaults:
   run:
