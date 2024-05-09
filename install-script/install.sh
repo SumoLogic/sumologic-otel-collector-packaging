@@ -704,6 +704,10 @@ function setup_config() {
             write_api_url "${API_BASE_URL}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
         fi
 
+        if [[ -n "${OPAMP_API_URL}" ]]; then
+            write_opamp_endpoint "${OPAMP_API_URL}" "${CONFIG_PATH}" "${EXT_INDENDATION}"
+        fi
+
         if [[ -n "${FIELDS}" ]]; then
             write_tags "${FIELDS}" "${CONFIG_PATH}" "${INDENTATION}" "${EXT_INDENTATION}"
         fi
@@ -1106,6 +1110,25 @@ function get_user_api_url() {
     || echo ""
 }
 
+function get_user_opamp_endpoint() {
+    local file
+    readonly file="${1}"
+
+    if [[ ! -f "${file}" ]]; then
+        return
+    fi
+
+    # extract endpoint and strip quotes
+    grep -m 1 endpoint "${file}" \
+        | sed 's/.*endpoint:[[:blank:]]*//' \
+        | sed 's/[[:blank:]]*$//' \
+        | sed 's/^"//' \
+        | sed "s/^'//" \
+        | sed 's/"$//' \
+        | sed "s/'\$//" \
+    || echo ""
+}
+
 function get_user_tags() {
     local file
     readonly file="${1}"
@@ -1327,6 +1350,27 @@ function write_api_url() {
         # write api_url on the top of sumologic: extension
         sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
 \\${ext_indentation}api_base_url: $(escape_sed "${api_url}")/" "${file}"
+    fi
+}
+
+# write opamp endpoint to user configuration file
+function write_opamp_endpoint() {
+    local opamp_endpoint
+    readonly opamp_endpoint="${1}"
+
+    local file
+    readonly file="${2}"
+
+    local ext_indentation
+    readonly ext_indentation="${3}"
+
+    # ToDo: ensure we override only sumologic `api_base_url`
+    if grep "endpoint" "${file}" > /dev/null; then
+        sed -i.bak -e "s/endpoint:.*$/endpoint: $(escape_sed "${api_url}")/" "${file}"
+    else
+        # write endpoint on the top of sumologic: opamp: extension
+        sed -i.bak -e "1,/opamp:/ s/opamp:/opamp:\\
+\\${ext_indentation}endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
     fi
 }
 
@@ -1773,7 +1817,7 @@ if [[ -z "${DOWNLOAD_ONLY}" ]]; then
             exit 1
         fi
 
-        USER_OPAMP_API_URL="$(get_user_opamp_api_url "${COMMON_CONFIG_PATH}")"
+        USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
         if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
             echo "You are trying to install with different opamp endpoint than in your configuration file!"
             exit 1
