@@ -705,7 +705,7 @@ function setup_config() {
         fi
 
         if [[ -n "${OPAMP_API_URL}" ]]; then
-            write_opamp_endpoint "${OPAMP_API_URL}" "${CONFIG_PATH}" "${EXT_INDENDATION}"
+            write_opamp_endpoint "${OPAMP_API_URL}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
         fi
 
         if [[ -n "${FIELDS}" ]]; then
