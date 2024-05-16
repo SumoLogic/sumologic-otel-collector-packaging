@@ -180,6 +180,27 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "installation token, remotely-managed, and opamp-api-url",
+			options: installOptions{
+				skipSystemd:     true,
+				installToken:    installToken,
+				remotelyManaged: true,
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkRemoteConfigDirectoryCreated,
+				checkConfigFilesOwnershipAndPermissions(rootUser, rootGroup),
+				checkTokenInSumoConfig,
+				checkEphemeralNotInConfig(configPath),
+				checkSystemdConfigNotCreated,
+				checkUserNotExists,
+				checkOpAmpEndpointSet,
+			},
+		},
+		{
 			name: "installation token only, binary not in PATH",
 			options: installOptions{
 				skipSystemd:  true,
