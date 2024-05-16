@@ -180,11 +180,12 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
-			name: "installation token, remotely-managed, and opamp-api-url",
+			name: "installation token, remotely-managed, and opamp-api",
 			options: installOptions{
 				skipSystemd:     true,
 				installToken:    installToken,
 				remotelyManaged: true,
+				opampEndpoint:   "wss://example.com",
 			},
 			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
 			postChecks: []checkFunc{
