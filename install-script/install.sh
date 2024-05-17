@@ -1366,7 +1366,7 @@ function write_opamp_endpoint() {
 
     # ToDo: ensure we override only sumologic `api_base_url`
     if grep "endpoint" "${file}" > /dev/null; then
-        sed -i.bak -e "s/endpoint:.*$/endpoint: $(escape_sed "${api_url}")/" "${file}"
+        sed -i.bak -e "s/endpoint:.*$/endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
     else
         # write endpoint on the top of sumologic: opamp: extension
         sed -i.bak -e "1,/opamp:/ s/opamp:/opamp:\\
