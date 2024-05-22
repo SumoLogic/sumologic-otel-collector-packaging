@@ -32,6 +32,7 @@ type installOptions struct {
 	remotelyManaged    bool
 	ephemeral          bool
 	timeout            float64
+	opampEndpoint      string
 }
 
 func (io *installOptions) string() []string {
@@ -103,6 +104,10 @@ func (io *installOptions) string() []string {
 
 	if io.timeout != 0 {
 		opts = append(opts, "--download-timeout", fmt.Sprintf("%f", io.timeout))
+	}
+
+	if io.opampEndpoint != "" {
+		opts = append(opts, "--opamp-api", io.opampEndpoint)
 	}
 
 	return opts
