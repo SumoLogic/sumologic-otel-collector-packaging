@@ -142,6 +142,12 @@ jobs:
       apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
       productbuild_identity_name: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
+      microsoft_certificate: ${{ secrets.MICROSOFT_CERTIFICATE }}
+      microsoft_certificate_password: ${{ secrets.MICROSOFT_CERTIFICATE_PASSWORD }}
+      microsoft_certhash: ${{ secrets.MICROSOFT_CERTHASH }}
+      microsoft_certname: ${{ secrets.MICROSOFT_CERTNAME }}
+      microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
+
     strategy:
       matrix:
         include:

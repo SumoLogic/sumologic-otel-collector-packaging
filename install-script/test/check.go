@@ -106,6 +106,13 @@ func checkNoBakFilesPresent(c check) {
 	}
 }
 
+func checkOpAmpEndpointSet(c check) {
+	conf, err := getConfig(configPath)
+	require.NoError(c.test, err, "error while reading configuration")
+
+	require.Equal(c.test, conf.Extensions.OpAmp.Endpoint, "wss://example.com")
+}
+
 func checkHostmetricsConfigCreated(c check) {
 	require.FileExists(c.test, hostmetricsConfigPath, "hostmetrics configuration has not been created properly")
 }

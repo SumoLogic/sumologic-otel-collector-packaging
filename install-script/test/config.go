@@ -12,6 +12,7 @@ type config struct {
 
 type extensions struct {
 	Sumologic sumologicExtension `yaml:"sumologic"`
+	OpAmp     opampExtension     `yaml:"opamp"`
 }
 
 type sumologicExtension struct {
@@ -19,6 +20,10 @@ type sumologicExtension struct {
 	Tags              map[string]string `yaml:"collector_fields"`
 	APIBaseURL        string            `yaml:"api_base_url"`
 	Ephemeral         bool              `yaml:"ephemeral"`
+}
+
+type opampExtension struct {
+	Endpoint string
 }
 
 func getConfig(path string) (config, error) {

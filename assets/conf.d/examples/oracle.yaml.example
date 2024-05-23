@@ -38,6 +38,8 @@ receivers:
         to: resource["_sourceName"]
     include:
       - /var/log/oracle/auditlogs/oracle*.log
+    multiline:
+      line_start_pattern: ^<AuditRecord>
 processors:
   resource/oracle_resource_attributes/localhost:
     attributes:
