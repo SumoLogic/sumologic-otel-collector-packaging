@@ -23,6 +23,7 @@ namespace SumoLogic.wixext
         private const string pEphemeral = "Ephemeral";
         private const string pConfigFolder = "ConfigFolder";
         private const string pOpAmpFolder = "OpAmpFolder";
+        private const string pOpAmpApi = "OpAmpApi";
         private const string pConfigFragmentsFolder = "ConfigFragmentsFolder";
 
         // WiX features
@@ -68,6 +69,7 @@ namespace SumoLogic.wixext
             var remotelyManaged = (session.CustomActionData.ContainsKey(pRemotelyManaged) && session.CustomActionData[pRemotelyManaged] == "true");
             var ephemeral = (session.CustomActionData.ContainsKey(pEphemeral) && session.CustomActionData[pEphemeral] == "true");
             var opAmpFolder = session.CustomActionData[pOpAmpFolder];
+            var opAmpApi = session.CustomActionData[pOpAmpApi];
             var api = session.CustomActionData[pApi];
 
             if (remotelyManaged && string.IsNullOrEmpty(opAmpFolder))
@@ -78,7 +80,7 @@ namespace SumoLogic.wixext
 
             // Load config from disk and replace values
             Config config = new Config { InstallationToken = installationToken, RemotelyManaged = remotelyManaged, Ephemeral = ephemeral,
-                OpAmpFolder = opAmpFolder, Api = api };
+                OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api };
             config.SetCollectorFieldsFromTags(tags);
 
             var configFile = remotelyManaged ? sumoLogicConfigPath : commonConfigPath;

@@ -12,6 +12,7 @@ namespace SumoLogic.wixext
         public bool Ephemeral { get; set; }
         public string OpAmpFolder { get; set; }
         public string Api { get; set; }
+        public string OpAmpApi { get; set; }
 
         public Config() {
             this.CollectorFields = new Dictionary<string, string>();
