@@ -1249,11 +1249,7 @@ function write_installation_token_env() {
     readonly file="${2}"
 
     local token_name
-    if (( MAJOR_VERSION == 0 && MINOR_VERSION <= 71 )); then
-        token_name="${DEPRECATED_ENV_TOKEN}"
-    else
-        token_name="${ENV_TOKEN}"
-    fi
+    token_name="${ENV_TOKEN}"
     readonly token_name
 
     # ToDo: ensure we override only ${ENV_TOKEN}" env value
@@ -1888,11 +1884,7 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
         VERSION="$(get_latest_package_version "${VERSIONS}")"
     fi
 
-    VERSION_PREFIX="${VERSION%.*}"       # cut off the suffix starting with the last stop
-    MAJOR_VERSION="${VERSION_PREFIX%.*}" # take the prefix from before the first stop
-    MINOR_VERSION="${VERSION_PREFIX#*.}" # take the suffix after the first stop
-
-    readonly VERSIONS VERSION INSTALLED_VERSION VERSION_PREFIX MAJOR_VERSION MINOR_VERSION
+    readonly VERSIONS VERSION
 
     echo -e "Version to install:\t${VERSION}"
 
@@ -2001,23 +1993,9 @@ if [[ -z "${VERSION}" ]]; then
     VERSION="$(get_latest_version "${VERSIONS}")"
 fi
 
-VERSION_PREFIX="${VERSION%.*}"       # cut off the suffix starting with the last stop
-MAJOR_VERSION="${VERSION_PREFIX%.*}" # take the prefix from before the first stop
-MINOR_VERSION="${VERSION_PREFIX#*.}" # take the suffix after the first stop
-
-
-readonly VERSIONS VERSION INSTALLED_VERSION VERSION_PREFIX MAJOR_VERSION MINOR_VERSION
-
 echo -e "Version to install:\t${VERSION}"
 
-if [[ -z "${CONFIG_BRANCH}" ]]; then
-    # Remove glob for versions up to 0.57
-    if (( MAJOR_VERSION == 0 && MINOR_VERSION <= 57 )); then
-        CONFIG_BRANCH="9e06ada346b5e7fb3df582f28e582e07730899de"
-    else
-        CONFIG_BRANCH="v${VERSION}"
-    fi
-fi
+CONFIG_BRANCH="v${VERSION}"
 readonly CONFIG_BRANCH BINARY_BRANCH
 
 # Check if otelcol is already in newest version
@@ -2076,13 +2054,7 @@ if [[ "${SYSTEMD_DISABLED}" == "true" ]]; then
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         COMMAND_FLAGS="--remote-config \"opamp:${CONFIG_PATH}\""
     else
-        COMMAND_FLAGS="--config=${CONFIG_PATH}"
-        # Add glob for versions above 0.57
-        if (( MAJOR_VERSION >= 0 && MINOR_VERSION > 57 )); then
-            COMMAND_FLAGS="${COMMAND_FLAGS} --config \"glob:${CONFIG_DIRECTORY}/conf.d/*.yaml\""
-        else
-            COMMAND_FLAGS="${COMMAND_FLAGS} --config ${COMMON_CONFIG_PATH}"
-        fi
+        COMMAND_FLAGS="--config=${CONFIG_PATH} --config \"glob:${CONFIG_DIRECTORY}/conf.d/*.yaml\""
     fi
 
     echo ""
@@ -2136,11 +2108,6 @@ echo 'Getting service configuration'
 curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -fL "${SYSTEMD_CONFIG_URL}" --output "${TMP_SYSTEMD_CONFIG}" --progress-bar
 sed -i.bak -e "s%/etc/otelcol-sumo%${CONFIG_DIRECTORY}%" "${TMP_SYSTEMD_CONFIG}"
 sed -i.bak -e "s%/etc/otelcol-sumo/env%${USER_ENV_DIRECTORY}%" "${TMP_SYSTEMD_CONFIG}"
-
-# Remove glob for versions up to 0.57
-if (( MAJOR_VERSION == 0 && MINOR_VERSION <= 57 )); then
-    sed -i.bak -e "s% --config \"glob.*\"% --config ${COMMON_CONFIG_PATH}%" "${TMP_SYSTEMD_CONFIG}"
-fi
 
 if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
     sed -i.bak -e "s% --config.*$% --remote-config \"opamp:${CONFIG_PATH}\"%" "${TMP_SYSTEMD_CONFIG}"
