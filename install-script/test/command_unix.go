@@ -32,6 +32,7 @@ type installOptions struct {
 	remotelyManaged              bool
 	ephemeral                    bool
 	timeout                      float64
+	opampEndpoint                string
 	disableInstallationTelemetry bool
 	installationLogfileEndpoint  string
 }
@@ -115,6 +116,10 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "--installation-logfile-endpoint", StagingInstallationLogfileEndpoint)
 	} else {
 		opts = append(opts, "--installation-logfile-endpoint", io.installationLogfileEndpoint)
+	}
+
+	if io.opampEndpoint != "" {
+		opts = append(opts, "--opamp-api", io.opampEndpoint)
 	}
 
 	return opts

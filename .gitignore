@@ -17,3 +17,4 @@ UpgradeLog*.htm
 wix/packages
 msi/wix/packages
 msi/SumoLogic.wixext/packages
+install-script/test/sumologic_scripts_tests.test

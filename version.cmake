@@ -28,10 +28,9 @@ endif()
 
 set(OTC_SUMO_VERSION "$ENV{OTC_SUMO_VERSION}")
 
-if(NOT "${OTC_SUMO_VERSION}" MATCHES "^[0-9]+$")
+if(NOT ("${OTC_SUMO_VERSION}" MATCHES "^[0-9]+$" OR "${OTC_SUMO_VERSION}" MATCHES "^[0-9]+-rc.[0-9]+$"))
     message(FATAL_ERROR
       "OTC_SUMO_VERSION contains an invalid version: ${OTC_SUMO_VERSION}\n"
-      "Must be an unsigned integer"
     )
 endif()
 

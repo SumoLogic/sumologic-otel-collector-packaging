@@ -11,6 +11,8 @@ ARG_SHORT_HELP='h'
 ARG_LONG_HELP='help'
 ARG_SHORT_API='a'
 ARG_LONG_API='api'
+ARG_SHORT_OPAMP_API='o'
+ARG_LONG_OPAMP_API='opamp-api'
 ARG_SHORT_TAG='t'
 ARG_LONG_TAG='tag'
 ARG_SHORT_VERSION='v'
@@ -87,6 +89,7 @@ fi
 set -u
 
 API_BASE_URL=""
+OPAMP_API_URL=""
 FIELDS=""
 VERSION=""
 FIPS=false
@@ -113,6 +116,7 @@ LAUNCHD_ENV_KEY=""
 LAUNCHD_TOKEN_KEY=""
 
 USER_API_URL=""
+USER_OPAMP_API_URL=""
 USER_TOKEN=""
 USER_FIELDS=""
 
@@ -142,7 +146,7 @@ INSTALLATION_LOGFILE_ENDPOINT='https://open-events.sumologic.net/api/v1/collecto
 function usage() {
   cat << EOF
 
-Usage: bash install.sh [--${ARG_LONG_TOKEN} <token>] [--${ARG_LONG_TAG} <key>=<value> [ --${ARG_LONG_TAG} ...]] [--${ARG_LONG_API} <url>] [--${ARG_LONG_VERSION} <version>] \\
+Usage: bash install.sh [--${ARG_LONG_TOKEN} <token>] [--${ARG_LONG_TAG} <key>=<value> [ --${ARG_LONG_TAG} ...]] [--${ARG_LONG_API} <url>] [--${ARG_LONG_OPAMP_API} <url>] [--${ARG_LONG_VERSION} <version>] \\
                        [--${ARG_LONG_YES}] [--${ARG_LONG_VERSION} <version>] [--${ARG_LONG_HELP}]
 
 Supported arguments:
@@ -158,7 +162,8 @@ Supported arguments:
   -${ARG_SHORT_PURGE}, --${ARG_LONG_PURGE}                           It has to be used with '--${ARG_LONG_UNINSTALL}'.
                                         It removes all Sumo Logic Distribution for OpenTelemetry Collector related configuration and data.
 
-  -${ARG_SHORT_API}, --${ARG_LONG_API} <url>                       Api URL
+  -${ARG_SHORT_API}, --${ARG_LONG_API} <url>                       API URL, forces the collector to use non-default API
+  -${ARG_SHORT_OPAMP_API}, --${ARG_LONG_OPAMP_API} <url>            OpAmp API URL, forces the collector to use non-default OpAmp API
   -${ARG_SHORT_SKIP_SYSTEMD}, --${ARG_LONG_SKIP_SYSTEMD}                    Do not install systemd unit.
   -${ARG_SHORT_SKIP_CONFIG}, --${ARG_LONG_SKIP_CONFIG}                     Do not create default configuration.
   -${ARG_SHORT_VERSION}, --${ARG_LONG_VERSION} <version>               Version of Sumo Logic Distribution for OpenTelemetry Collector to install, e.g. 0.57.2-sumo-1.
@@ -232,6 +237,9 @@ function parse_options() {
         echo "--${DEPRECATED_ARG_LONG_TOKEN}" is deprecated. Please use "--${ARG_LONG_TOKEN}" instead.
         set -- "$@" "-${ARG_SHORT_TOKEN}"
         ;;
+      "--${ARG_LONG_OPAMP_API}")
+        set -- "$@" "-${ARG_SHORT_OPAMP_API}"
+        ;;
       "--${ARG_LONG_API}")
         set -- "$@" "-${ARG_SHORT_API}"
         ;;
@@ -284,7 +292,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_SKIP_SYSTEMD}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}"|"-${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_SKIP_SYSTEMD}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}"|"-${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -314,7 +322,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_SKIP_SYSTEMD}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_SKIP_SYSTEMD}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -329,6 +337,7 @@ function parse_options() {
       "${ARG_SHORT_HELP}")          usage; DISABLE_INSTALLATION_TELEMETRY=true exit 0 ;;
       "${ARG_SHORT_TOKEN}")         SUMOLOGIC_INSTALLATION_TOKEN="${OPTARG}" ;;
       "${ARG_SHORT_API}")           API_BASE_URL="${OPTARG}" ;;
+      "${ARG_SHORT_OPAMP_API}")     OPAMP_API_URL="${OPTARG}" ;;
       "${ARG_SHORT_SKIP_CONFIG}")   SKIP_CONFIG=true ;;
       "${ARG_SHORT_VERSION}")       VERSION="${OPTARG}" ;;
       "${ARG_SHORT_FIPS}")          FIPS=true ;;
@@ -712,7 +721,7 @@ function setup_config() {
         mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
         write_sumologic_extension "${CONFIG_PATH}" "${INDENTATION}"
-        write_opamp_extension "${CONFIG_PATH}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${API_BASE_URL}"
+        write_opamp_extension "${CONFIG_PATH}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${OPAMP_API_URL}"
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
             write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
@@ -724,6 +733,10 @@ function setup_config() {
 
         if [[ -n "${API_BASE_URL}" ]]; then
             write_api_url "${API_BASE_URL}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
+        fi
+
+        if [[ -n "${OPAMP_API_URL}" ]]; then
+            write_opamp_endpoint "${OPAMP_API_URL}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
         fi
 
         if [[ -n "${FIELDS}" ]]; then
@@ -782,6 +795,11 @@ function setup_config() {
             write_api_url "${API_BASE_URL}" "${COMMON_CONFIG_PATH}" "${EXT_INDENTATION}"
         fi
 
+        # fill in opamp url
+        if [[ -n "${OPAMP_API_URL}" && -z "${USER_OPAMP_API_URL}" ]]; then
+            write_opamp_extension "${CONFIG_PATH}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${OPAMP_API_URL}"
+        fi
+
         if [[ -n "${FIELDS}" && -z "${USER_FIELDS}" ]]; then
             write_tags "${FIELDS}" "${COMMON_CONFIG_PATH}" "${INDENTATION}" "${EXT_INDENTATION}"
         fi
@@ -827,7 +845,7 @@ function setup_config_darwin() {
         echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
         mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
-        write_opamp_extension "${config_path}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${API_BASE_URL}"
+        write_opamp_extension "${config_path}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${OPAMP_API_URL}"
 
         write_remote_config_launchd "${LAUNCHD_CONFIG}"
 
@@ -1123,6 +1141,25 @@ function get_user_api_url() {
     || echo ""
 }
 
+function get_user_opamp_endpoint() {
+    local file
+    readonly file="${1}"
+
+    if [[ ! -f "${file}" ]]; then
+        return
+    fi
+
+    # extract endpoint and strip quotes
+    grep -m 1 endpoint "${file}" \
+        | sed 's/.*endpoint:[[:blank:]]*//' \
+        | sed 's/[[:blank:]]*$//' \
+        | sed 's/^"//' \
+        | sed "s/^'//" \
+        | sed 's/"$//' \
+        | sed "s/'\$//" \
+    || echo ""
+}
+
 function get_user_tags() {
     local file
     readonly file="${1}"
@@ -1243,11 +1280,7 @@ function write_installation_token_env() {
     readonly file="${2}"
 
     local token_name
-    if (( MAJOR_VERSION == 0 && MINOR_VERSION <= 71 )); then
-        token_name="${DEPRECATED_ENV_TOKEN}"
-    else
-        token_name="${ENV_TOKEN}"
-    fi
+    token_name="${ENV_TOKEN}"
     readonly token_name
 
     # ToDo: ensure we override only ${ENV_TOKEN}" env value
@@ -1347,6 +1380,27 @@ function write_api_url() {
     fi
 }
 
+# write opamp endpoint to user configuration file
+function write_opamp_endpoint() {
+    local opamp_endpoint
+    readonly opamp_endpoint="${1}"
+
+    local file
+    readonly file="${2}"
+
+    local ext_indentation
+    readonly ext_indentation="${3}"
+
+    # ToDo: ensure we override only sumologic `api_base_url`
+    if grep "endpoint" "${file}" > /dev/null; then
+        sed -i.bak -e "s/endpoint:.*$/endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
+    else
+        # write endpoint on the top of sumologic: opamp: extension
+        sed -i.bak -e "1,/opamp:/ s/opamp:/opamp:\\
+\\${ext_indentation}endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
+    fi
+}
+
 # write tags to user configuration file
 function write_tags() {
     local fields
@@ -1411,18 +1465,11 @@ ${indentation}opamp:/" "${file}"
 
     # if a different base url is specified, configure the corresponding opamp endpoint
     if [[ -n "${api_url}" ]]; then
-        wss_url=${api_url/https:/"wss:"}
-        wss_url=${wss_url%/}
-        wss_url=${wss_url/open-events/"opamp-events"}
-        wss_url=${wss_url/open-collectors/"opamp-collectors"}
-        wss_url=${wss_url/\.net/".net/v1/opamp"}
-        wss_url=${wss_url/\.com/".com/v1/opamp"}
-
         if grep "endpoint: wss:" "${file}" > /dev/null; then
-            sed -i.bak -e "s/endpoint: wss:.*$/endpoint: $(escape_sed "${wss_url}")/" "${file}"
+            sed -i.bak -e "s/endpoint: wss:.*$/endpoint: $(escape_sed "${api_url}")/" "${file}"
         else
             sed -i.bak -e "s/opamp:/opamp:\\
-\\${ext_indentation}endpoint: $(escape_sed "${wss_url}")/" "${file}"
+\\${ext_indentation}endpoint: $(escape_sed "${api_url}")/" "${file}"
         fi
     fi
 
@@ -1746,7 +1793,7 @@ set_tmpdir
 install_missing_dependencies
 check_dependencies
 
-readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL FIELDS CONTINUE FILE_STORAGE CONFIG_DIRECTORY SYSTEMD_CONFIG UNINSTALL
+readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE FILE_STORAGE CONFIG_DIRECTORY SYSTEMD_CONFIG UNINSTALL
 readonly USER_CONFIG_DIRECTORY USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
 readonly ACL_LOG_FILE_PATHS
 readonly INSTALL_HOSTMETRICS
@@ -1797,6 +1844,12 @@ if [[ -z "${DOWNLOAD_ONLY}" ]]; then
         USER_API_URL="$(get_user_api_url "${COMMON_CONFIG_PATH}")"
         if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
             echo "You are trying to install with different api base url than in your configuration file!"
+            exit 1
+        fi
+
+        USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
+        if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
+            echo "You are trying to install with different opamp endpoint than in your configuration file!"
             exit 1
         fi
 
@@ -1865,11 +1918,7 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
         VERSION="$(get_latest_package_version "${VERSIONS}")"
     fi
 
-    VERSION_PREFIX="${VERSION%.*}"       # cut off the suffix starting with the last stop
-    MAJOR_VERSION="${VERSION_PREFIX%.*}" # take the prefix from before the first stop
-    MINOR_VERSION="${VERSION_PREFIX#*.}" # take the suffix after the first stop
-
-    readonly VERSIONS VERSION INSTALLED_VERSION VERSION_PREFIX MAJOR_VERSION MINOR_VERSION
+    readonly VERSIONS VERSION
 
     echo -e "Version to install:\t${VERSION}"
 
@@ -1978,23 +2027,9 @@ if [[ -z "${VERSION}" ]]; then
     VERSION="$(get_latest_version "${VERSIONS}")"
 fi
 
-VERSION_PREFIX="${VERSION%.*}"       # cut off the suffix starting with the last stop
-MAJOR_VERSION="${VERSION_PREFIX%.*}" # take the prefix from before the first stop
-MINOR_VERSION="${VERSION_PREFIX#*.}" # take the suffix after the first stop
-
-
-readonly VERSIONS VERSION INSTALLED_VERSION VERSION_PREFIX MAJOR_VERSION MINOR_VERSION
-
 echo -e "Version to install:\t${VERSION}"
 
-if [[ -z "${CONFIG_BRANCH}" ]]; then
-    # Remove glob for versions up to 0.57
-    if (( MAJOR_VERSION == 0 && MINOR_VERSION <= 57 )); then
-        CONFIG_BRANCH="9e06ada346b5e7fb3df582f28e582e07730899de"
-    else
-        CONFIG_BRANCH="v${VERSION}"
-    fi
-fi
+CONFIG_BRANCH="v${VERSION}"
 readonly CONFIG_BRANCH BINARY_BRANCH
 
 # Check if otelcol is already in newest version
@@ -2053,13 +2088,7 @@ if [[ "${SYSTEMD_DISABLED}" == "true" ]]; then
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         COMMAND_FLAGS="--remote-config \"opamp:${CONFIG_PATH}\""
     else
-        COMMAND_FLAGS="--config=${CONFIG_PATH}"
-        # Add glob for versions above 0.57
-        if (( MAJOR_VERSION >= 0 && MINOR_VERSION > 57 )); then
-            COMMAND_FLAGS="${COMMAND_FLAGS} --config \"glob:${CONFIG_DIRECTORY}/conf.d/*.yaml\""
-        else
-            COMMAND_FLAGS="${COMMAND_FLAGS} --config ${COMMON_CONFIG_PATH}"
-        fi
+        COMMAND_FLAGS="--config=${CONFIG_PATH} --config \"glob:${CONFIG_DIRECTORY}/conf.d/*.yaml\""
     fi
 
     echo ""
@@ -2113,11 +2142,6 @@ echo 'Getting service configuration'
 curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -fL "${SYSTEMD_CONFIG_URL}" --output "${TMP_SYSTEMD_CONFIG}" --progress-bar
 sed -i.bak -e "s%/etc/otelcol-sumo%${CONFIG_DIRECTORY}%" "${TMP_SYSTEMD_CONFIG}"
 sed -i.bak -e "s%/etc/otelcol-sumo/env%${USER_ENV_DIRECTORY}%" "${TMP_SYSTEMD_CONFIG}"
-
-# Remove glob for versions up to 0.57
-if (( MAJOR_VERSION == 0 && MINOR_VERSION <= 57 )); then
-    sed -i.bak -e "s% --config \"glob.*\"% --config ${COMMON_CONFIG_PATH}%" "${TMP_SYSTEMD_CONFIG}"
-fi
 
 if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
     sed -i.bak -e "s% --config.*$% --remote-config \"opamp:${CONFIG_PATH}\"%" "${TMP_SYSTEMD_CONFIG}"

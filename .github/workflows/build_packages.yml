@@ -10,13 +10,17 @@ name: 'Build packages'
 # the commit title (first 72 characters of commit message) - Justin K.
 run-name: >
   ${{
-  inputs.workflow_id != '' &&
-  format('Build for Remote Workflow: {0}', inputs.workflow_id)
-  ||
+  (inputs.workflow_id != '' &&   
   inputs.otc_version != '' &&
-  inputs.otc_sumo_version != '' &&
-  format('Build for GitHub Release: {0}-sumo-{1}',
-  inputs.otc_version, inputs.otc_sumo_version)
+  inputs.otc_sumo_version != '') &&
+  format('Build for Remote Workflow: {0}, Version: {1}-sumo-{2}', inputs.workflow_id, inputs.otc_version, inputs.otc_sumo_version)
+  ||
+  (inputs.otc_version != '' &&
+  inputs.otc_sumo_version != '') &&
+  format('Build for GitHub Release: {0}-sumo-{1}, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
+  ||
+  inputs.workflow_id != '' &&
+  format('Build for Remote Workflow: {0}, Version: unknown', inputs.workflow_id)
   ||
   github.event.head_commit.message
   }}
@@ -60,16 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Determine version
     outputs:
-      otc_version: >-
-        ${{
-        inputs.otc_version ||
-        steps.version-core.outputs.version
-        }}
-      otc_sumo_version: >-
-        ${{
-        inputs.otc_sumo_version ||
-        steps.sumo-version.outputs.version
-        }}
+      otc_version: ${{ steps.versions.outputs.otc_version }}
+      otc_sumo_version: ${{ steps.versions.outputs.otc_sumo_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,16 +74,16 @@ jobs:
         if: inputs.workflow_id != ''
         run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ inputs.workflow_id }}
 
-      - name: Determine latest release
+      - name: Determine latest release version
         id: release
-        uses: ./ci/github-actions/get-latest-release
         if: >
           inputs.otc_version == '' &&
           inputs.otc_sumo_version == ''
-        with:
-          token: ${{ github.token }}
-          owner: SumoLogic
-          repository: sumologic-otel-collector
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG_NAME=$(gh release view -R SumoLogic/sumologic-otel-collector --jq ".tagName" --json "tagName")
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Determine version core from release
         id: version-core
@@ -113,6 +109,15 @@ jobs:
           cat /tmp/otc_sumo_version &&
           echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
 
+      - name: Set output versions
+        id: versions
+        run: |
+            echo "otc_version=${{ inputs.otc_version || steps.version-core.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "otc_sumo_version=${{ inputs.otc_sumo_version || steps.sumo-version.outputs.version }}" >> $GITHUB_OUTPUT
+      
+      - name: Output App Version
+        run: echo ::notice title=App Version::${{ steps.versions.outputs.otc_version }}-sumo-${{ steps.versions.outputs.otc_sumo_version }}
+
   # Builds a package for each target in the matrix. The target must be an
   # existing file name (without extension) in the targets directory when
   # build_tool is cmake.
@@ -137,6 +142,12 @@ jobs:
       apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
       productbuild_identity_name: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
+      microsoft_certificate: ${{ secrets.MICROSOFT_CERTIFICATE }}
+      microsoft_certificate_password: ${{ secrets.MICROSOFT_CERTIFICATE_PASSWORD }}
+      microsoft_certhash: ${{ secrets.MICROSOFT_CERTHASH }}
+      microsoft_certname: ${{ secrets.MICROSOFT_CERTNAME }}
+      microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
+
     strategy:
       matrix:
         include:
@@ -201,17 +212,43 @@ jobs:
     if: inputs.release
     env:
       OTC_APP_VERSION: v${{ needs.determine_version.outputs.otc_version }}-sumo-${{ needs.determine_version.outputs.otc_sumo_version }}
+      RELEASE_TAG_NAME: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
     steps:
       - name: Download all packages stored as artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
 
+      # Create the release tag separately to add a message to it
+      # NOTE: As per the github API, we need to create the tag object first, and then the git reference
+      - name: Create release tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tagRequest = await github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: '${{ env.RELEASE_TAG_NAME }}',
+              message: `App Version: ${{ env.OTC_APP_VERSION }}`,
+              object: context.sha,
+              type: 'commit',
+              tagger: {
+                name: "${{ github.actor }}",
+                email: "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com",
+              },
+            })
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ env.RELEASE_TAG_NAME }}',
+              sha: tagRequest.data.sha
+            })
+
       - uses: ncipollo/release-action@v1
         with:
           name: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
           commit: ${{ github.sha }}
-          tag: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
+          tag: ${{ env.RELEASE_TAG_NAME }}
 
           draft: true
           generateReleaseNotes: true

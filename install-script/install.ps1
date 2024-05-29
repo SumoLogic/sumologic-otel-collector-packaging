@@ -36,7 +36,10 @@ param (
 
     # InstallationLogfileEndpoint is used to configure the endpoint where
     # installation logs will be sent.
-    [string] $InstallationLogfileEndpoint
+    [string] $InstallationLogfileEndpoint,
+
+    # The OpAmp Endpoint used to communicate with the OpAmp backend
+    [string] $OpAmpApi
 )
 
 $PackageGithubOrg = "SumoLogic"
@@ -562,6 +565,9 @@ try {
     }
     if ($RemotelyManaged -eq $true) {
         $msiAddLocal += "REMOTELYMANAGED"
+        if ($OpAmpApi.Length -gt 0) {
+            $msiProperties += "OPAMPAPI=`"${OpAmpApi}`""
+        }
     }
     if ($Ephemeral -eq $true) {
         $msiAddLocal += "EPHEMERAL"
