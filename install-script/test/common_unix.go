@@ -23,9 +23,10 @@ func cleanCache(t *testing.T) {
 
 func runTest(t *testing.T, spec *testSpec) {
 	ch := check{
-		test:                t,
-		installOptions:      spec.options,
-		expectedInstallCode: spec.installCode,
+		test:                     t,
+		installationLogsEndpoint: new(mockInstallationLogsEndpoint),
+		installOptions:           spec.options,
+		expectedInstallCode:      spec.installCode,
 	}
 
 	t.Log("Running conditional checks")

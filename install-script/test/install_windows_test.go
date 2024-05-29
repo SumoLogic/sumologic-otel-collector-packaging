@@ -146,6 +146,24 @@ func TestInstallScript(t *testing.T) {
 				checkTags,
 			},
 		},
+		{
+			name: "installation telemetry is uploaded",
+			options: installOptions{
+				disableInstallationTelemetry: false,
+				installationLogfileEndpoint:  "http://localhost:4444/",
+			},
+			preActions: []checkFunc{preActionStartInstallationLogsMockReceiver},
+			postChecks: []checkFunc{checkInstallationLogsReceived},
+		},
+		{
+			name: "installation telemetry can be disabled",
+			options: installOptions{
+				disableInstallationTelemetry: true,
+				installationLogfileEndpoint:  "http://localhost:4444/",
+			},
+			preActions: []checkFunc{preActionStartInstallationLogsMockReceiver},
+			postChecks: []checkFunc{checkInstallationLogsNotReceived},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			runTest(t, &spec)
