@@ -154,6 +154,7 @@ func TestInstallScript(t *testing.T) {
 			},
 			preActions: []checkFunc{preActionStartInstallationLogsMockReceiver},
 			postChecks: []checkFunc{checkInstallationLogsReceived},
+			installCode: 1,
 		},
 		{
 			name: "installation telemetry can be disabled",
@@ -163,6 +164,7 @@ func TestInstallScript(t *testing.T) {
 			},
 			preActions: []checkFunc{preActionStartInstallationLogsMockReceiver},
 			postChecks: []checkFunc{checkInstallationLogsNotReceived},
+			installCode: 1,
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
