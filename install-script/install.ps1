@@ -201,7 +201,7 @@ function Get-InstalledApplicationVersion {
 }
 
 function Get-InstalledPackageVersion {
-    $package = Get-Package -name "OpenTelemetry Collector"
+    $package = Get-Package -name "OpenTelemetry Collector" -EA Ignore
 
     if ($package -eq $null) {
         return
