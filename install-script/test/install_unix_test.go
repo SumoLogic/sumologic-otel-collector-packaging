@@ -623,6 +623,26 @@ func TestInstallScript(t *testing.T) {
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
 			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigNotCreated, checkSystemdConfigNotCreated},
 		},
+		{
+			name: "installation telemetry is uploaded",
+			options: installOptions{
+				disableInstallationTelemetry: false,
+				installationLogfileEndpoint:  "http://localhost:4444/",
+			},
+			preActions:  []checkFunc{preActionStartInstallationLogsMockReceiver},
+			postChecks:  []checkFunc{checkInstallationLogsReceived},
+			installCode: 1,
+		},
+		{
+			name: "installation telemetry can be disabled",
+			options: installOptions{
+				disableInstallationTelemetry: true,
+				installationLogfileEndpoint:  "http://localhost:4444/",
+			},
+			preActions:  []checkFunc{preActionStartInstallationLogsMockReceiver},
+			postChecks:  []checkFunc{checkInstallationLogsNotReceived},
+			installCode: 1,
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			runTest(t, &spec)

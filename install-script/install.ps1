@@ -30,6 +30,14 @@ param (
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
 
+    # DisableInstallationTelemetry is used to disable reporting the installation
+    # to Sumologic.
+    [bool] $DisableInstallationTelemetry,
+
+    # InstallationLogfileEndpoint is used to configure the endpoint where
+    # installation logs will be sent.
+    [string] $InstallationLogfileEndpoint,
+
     # The OpAmp Endpoint used to communicate with the OpAmp backend
     [string] $OpAmpApi
 )
@@ -399,19 +407,48 @@ function Get-BinaryFromUri {
     Write-Host "Downloaded ${Path}"
 }
 
+function Send-Installation-Logs {
+    param (
+        [Parameter(Mandatory, Position=0)]
+        [HttpClient] $HttpClient,
+
+        [Parameter(Mandatory, Position=1)]
+        [string] $Endpoint,
+
+        [Parameter(Mandatory, Position=2)]
+        [string] $Path
+    )
+
+    $Content = Get-Content -Path $Path
+    $StringContent = [System.Net.Http.StringContent]::new($Content)
+
+    $response = $HttpClient.PostAsync($Endpoint, $StringContent).GetAwaiter().GetResult()
+    if (!($response.IsSuccessStatusCode)) {
+        $statusCode = [int]$response.StatusCode
+        $reasonPhrase = $response.StatusCode.ToString()
+        $errMsg = "${statusCode} ${reasonPhrase}"
+
+        if ($response.Content -ne $null) {
+            $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+            $errMsg += ": ${content}"
+        }
+
+        Write-Error $errMsg -ErrorAction Stop
+    }
+}
+
 ##
 # Main code
 ##
 
 try {
-    if ($InstallationToken -eq $null -or $InstallationToken -eq "") {
-        Write-Error "Installation token has not been provided. Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable." -ErrorAction Stop
+    $InstallationLogFile = New-TemporaryFile
+
+    if ($InstallationLogFileEndpoint -eq "") {
+        $InstallationLogFileEndpoint = "https://open-events.sumologic.net/api/v1/collector/installation/logs"
     }
 
-    $osName = Get-OSName
-    $archName = Get-ArchName
-    Write-Host "Detected OS type:`t${osName}"
-    Write-Host "Detected architecture:`t${archName}"
+    Start-Transcript $InstallationLogFile | Out-Null
 
     $handler = New-Object HttpClientHandler
     $handler.AllowAutoRedirect = $true
@@ -422,6 +459,15 @@ try {
 
     # set http client timeout to 30 seconds
     $httpClient.Timeout = New-Object System.TimeSpan(0, 0, 30)
+
+    if ($InstallationToken -eq $null -or $InstallationToken -eq "") {
+        Write-Error "Installation token has not been provided. Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable." -ErrorAction Stop
+    }
+
+    $osName = Get-OSName
+    $archName = Get-ArchName
+    Write-Host "Detected OS type:`t${osName}"
+    Write-Host "Detected architecture:`t${archName}"
 
     if ($Fips -eq $true) {
         if ($osName -ne "Win32NT" -or $archName -ne "x64") {
@@ -533,4 +579,12 @@ try {
     msiexec.exe /i "$msiPath" /passive $msiProperties
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message
+} finally {
+    Stop-Transcript | Out-Null
+
+    if ($DisableInstallationTelemetry -eq $false) {
+        Send-Installation-Logs -Endpoint $InstallationLogFileEndpoint -Path $InstallationLogFile -HttpClient $httpClient
+    }
+
+    Remove-Item $InstallationLogFile
 }

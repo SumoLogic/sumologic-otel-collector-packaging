@@ -12,14 +12,16 @@ import (
 )
 
 type installOptions struct {
-	installToken       string
-	tags               map[string]string
-	fips               bool
-	envs               map[string]string
-	apiBaseURL         string
-	installHostmetrics bool
-	remotelyManaged    bool
-	ephemeral          bool
+	installToken                 string
+	tags                         map[string]string
+	fips                         bool
+	envs                         map[string]string
+	apiBaseURL                   string
+	installHostmetrics           bool
+	remotelyManaged              bool
+	ephemeral                    bool
+	disableInstallationTelemetry bool
+	installationLogfileEndpoint  string
 }
 
 func (io *installOptions) string() []string {
@@ -50,6 +52,16 @@ func (io *installOptions) string() []string {
 
 	if io.apiBaseURL != "" {
 		opts = append(opts, "-Api", io.apiBaseURL)
+	}
+
+	if io.disableInstallationTelemetry {
+		opts = append(opts, "-DisableInstallationTelemetry")
+	}
+
+	if io.installationLogfileEndpoint == "" {
+		opts = append(opts, "-InstallationLogfileEndpoint", StagingInstallationLogfileEndpoint)
+	} else {
+		opts = append(opts, "-InstallationLogfileEndpoint", io.installationLogfileEndpoint)
 	}
 
 	return opts

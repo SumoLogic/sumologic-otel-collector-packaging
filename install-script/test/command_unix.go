@@ -14,25 +14,27 @@ import (
 )
 
 type installOptions struct {
-	installToken       string
-	autoconfirm        bool
-	skipSystemd        bool
-	tags               map[string]string
-	skipConfig         bool
-	skipInstallToken   bool
-	fips               bool
-	envs               map[string]string
-	uninstall          bool
-	purge              bool
-	apiBaseURL         string
-	configBranch       string
-	downloadOnly       bool
-	dontKeepDownloads  bool
-	installHostmetrics bool
-	remotelyManaged    bool
-	ephemeral          bool
-	timeout            float64
-	opampEndpoint      string
+	installToken                 string
+	autoconfirm                  bool
+	skipSystemd                  bool
+	tags                         map[string]string
+	skipConfig                   bool
+	skipInstallToken             bool
+	fips                         bool
+	envs                         map[string]string
+	uninstall                    bool
+	purge                        bool
+	apiBaseURL                   string
+	configBranch                 string
+	downloadOnly                 bool
+	dontKeepDownloads            bool
+	installHostmetrics           bool
+	remotelyManaged              bool
+	ephemeral                    bool
+	timeout                      float64
+	opampEndpoint                string
+	disableInstallationTelemetry bool
+	installationLogfileEndpoint  string
 }
 
 func (io *installOptions) string() []string {
@@ -104,6 +106,16 @@ func (io *installOptions) string() []string {
 
 	if io.timeout != 0 {
 		opts = append(opts, "--download-timeout", fmt.Sprintf("%f", io.timeout))
+	}
+
+	if io.disableInstallationTelemetry {
+		opts = append(opts, "--disable-installation-telemetry")
+	}
+
+	if io.installationLogfileEndpoint == "" {
+		opts = append(opts, "--installation-logfile-endpoint", StagingInstallationLogfileEndpoint)
+	} else {
+		opts = append(opts, "--installation-logfile-endpoint", io.installationLogfileEndpoint)
 	}
 
 	if io.opampEndpoint != "" {
