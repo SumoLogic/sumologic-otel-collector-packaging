@@ -255,14 +255,14 @@ require 'yaml'
 begin
     root = {}
     begin
-        root = YAML.load_file("${file}")
+        root = YAML.load_file('${file}')
     rescue
     end
 
     p = root
     gp = root
     pkey = nil
-    "${key}".split(' ').each { |part|
+    '${key}'.split(' ').each { |part|
         pkey = part
         if p[part] == nil
             p[part] = {}
@@ -296,14 +296,14 @@ require 'yaml'
 begin
     root = {}
     begin
-        root = YAML.load_file("${file}")
+        root = YAML.load_file('${file}')
     rescue
     end
 
     gp = root
     p = root
     key = nil
-    "${key}".split(' ').each { |part|
+    '${key}'.split(' ').each { |part|
         key = part
         if p[part] == nil
             p[part] = {}
@@ -315,7 +315,7 @@ begin
         gp[key] = []
         p = gp[key]
     end
-    value = YAML.load("${value}")
+    value = YAML.load('${value}')
     p.append(value)
     File.open('${file}', 'w') { |f| YAML.dump(root, f) }
 rescue
