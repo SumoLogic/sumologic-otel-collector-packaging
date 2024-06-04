@@ -247,7 +247,7 @@ function write_yaml_config_key() {
     readonly key="${2}"
 
     local value
-    readonly value="${3}"
+    readonly value="$(escape_yaml_value ${3})"
 
     ruby << EOF
 require 'yaml'
@@ -288,7 +288,7 @@ function append_yaml_config_list() {
     readonly key="${2}"
 
     local value
-    readonly value="${3}"
+    readonly value="$(escape_yaml_value ${3})"
 
     ruby << EOF
 require 'yaml'
