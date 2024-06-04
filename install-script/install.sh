@@ -228,11 +228,11 @@ function read_yaml_config_key() {
     local key
     readonly key="${2}"
 
-    ruby << 'EOF'
+    ruby << EOF
 require 'yaml'
 begin
-    data = YAML.load_file("${file}")
-    "${key}".split(' ').each { |part| data = data[part] }
+    data = YAML.load_file('${file}')
+    '${key}'.split(' ').each { |part| data = data[part] }
     puts data
 rescue
 end
@@ -271,7 +271,7 @@ begin
         gp = p
         p = p[part]
     }
-    value = YAML.load('${value}')
+    value = YAML.load(${value})
     gp[pkey] = value
     File.open('${file}', 'w') { |f| YAML.dump(root, f) }
 rescue
@@ -324,7 +324,7 @@ begin
         gp[key] = []
         p = gp[key]
     end
-    value = YAML.load('${value}')
+    value = YAML.load(${value})
     p.append(value)
     File.open('${file}', 'w') { |f| YAML.dump(root, f) }
 rescue
