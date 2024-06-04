@@ -5,7 +5,6 @@ This directory contains the tests for the [installation script](../../scripts/in
 Run them with:
 
 ```bash
-cd ./pkg/scripts_test
 make test
 ```
 

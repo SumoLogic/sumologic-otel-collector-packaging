@@ -221,6 +221,110 @@ function set_defaults() {
     mkdir -p "${DOWNLOAD_CACHE_DIR}"
 }
 
+function read_yaml_config_key() {
+    local file
+    readonly file="${1}"
+
+    local key
+    readonly key="${2}"
+
+    ruby << 'EOF'
+require 'yaml'
+begin
+    data = YAML.load_file("${file}")
+    "${key}".split(' ').each { |part| data = data[part] }
+    puts data
+rescue
+end
+EOF
+}
+
+function write_yaml_config_key() {
+    local file
+    readonly file="${1}"
+
+    local key
+    readonly key="${2}"
+
+    local value
+    readonly value="${3}"
+
+    ruby << EOF
+require 'yaml'
+
+begin
+    root = {}
+    begin
+        root = YAML.load_file("${file}")
+    rescue
+    end
+
+    p = root
+    gp = root
+    pkey = nil
+    "${key}".split(' ').each { |part|
+        pkey = part
+        if p[part] == nil
+            p[part] = {}
+        end
+        gp = p
+        p = p[part]
+    }
+    value = YAML.load('${value}')
+    gp[pkey] = value
+    File.open('${file}', 'w') { |f| YAML.dump(root, f) }
+rescue
+    puts 'error writing yaml config key'
+    raise
+end
+EOF
+}
+
+function append_yaml_config_list() {
+    local file
+    readonly file="${1}"
+
+    local key
+    readonly key="${2}"
+
+    local value
+    readonly value="${3}"
+
+    ruby << EOF
+require 'yaml'
+
+begin
+    root = {}
+    begin
+        root = YAML.load_file("${file}")
+    rescue
+    end
+
+    gp = root
+    p = root
+    key = nil
+    "${key}".split(' ').each { |part|
+        key = part
+        if p[part] == nil
+            p[part] = {}
+        end
+        gp = p
+        p = p[part]
+    }
+    if !p.is_a?(Array)
+        gp[key] = []
+        p = gp[key]
+    end
+    value = YAML.load("${value}")
+    p.append(value)
+    File.open('${file}', 'w') { |f| YAML.dump(root, f) }
+rescue
+    puts 'error appending yaml list'
+    raise
+end
+EOF
+}
+
 function parse_options() {
   # Transform long options to short ones
   for arg in "$@"; do
@@ -442,7 +546,7 @@ function check_dependencies() {
         error=1
     fi
 
-    REQUIRED_COMMANDS=(echo sed curl head grep sort mv chmod getopts hostname touch xargs)
+    REQUIRED_COMMANDS=(echo sed curl head grep sort mv chmod getopts hostname touch xargs ruby)
     if [[ -n "${BINARY_BRANCH}" ]]; then  # unzip is only necessary for downloading from GHA artifacts
         REQUIRED_COMMANDS+=(unzip)
     fi
@@ -1023,23 +1127,7 @@ function get_user_config() {
         return
     fi
 
-    # extract installation_token and strip quotes
-    # fallback to deprecated install_token
-    grep -m 1 installation_token "${file}" \
-        | sed 's/.*installation_token:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || grep -m 1 install_token "${file}" \
-        | sed 's/.*install_token:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || echo ""
+    read_yaml_config_key $file "extensions sumologic installation_token" # || read_yaml_config_key $file "extensions sumologic install_token"
 }
 
 # remove quotes and double quotes from yaml `value`` for `key: value` form
@@ -1130,15 +1218,7 @@ function get_user_api_url() {
         return
     fi
 
-    # extract api_base_url and strip quotes
-    grep -m 1 api_base_url "${file}" \
-        | sed 's/.*api_base_url:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || echo ""
+    read_yaml_config_key $file "extensions sumologic api_base_url"
 }
 
 function get_user_opamp_endpoint() {
@@ -1149,41 +1229,18 @@ function get_user_opamp_endpoint() {
         return
     fi
 
-    # extract endpoint and strip quotes
-    grep -m 1 endpoint "${file}" \
-        | sed 's/.*endpoint:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || echo ""
+    read_yaml_config_key $file "extensions opamp endpoint"
 }
 
 function get_user_tags() {
     local file
     readonly file="${1}"
 
-    local indentation
-    readonly indentation="${2}"
-
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
     if [[ ! -f "${file}" ]]; then
         return
     fi
 
-    local fields
-    fields="$(sed -e '/^extensions/,/^[a-z]/!d' "${file}" \
-        | sed -e "/^${indentation}sumologic/,/^${indentation}[a-z]/!d" \
-        | sed -e "/^${ext_indentation}collector_fields/,/^${ext_indentation}[a-z]/!d;" \
-        | grep -vE "^${ext_indentation}\\S" \
-        | sed -e 's/^[[:blank:]]*//' \
-        || echo "")"
-    unescape_yaml "${fields}" \
-        | sort \
-        || echo ""
+    read_yaml_config_key $file "extensions sumologic collector_fields"
 }
 
 function get_fields_to_compare() {
@@ -1215,7 +1272,7 @@ function add_extension_to_config() {
     local file
     readonly file="${1}"
 
-    if grep -q 'extensions:$' "${file}"; then
+    if grep -q '^extensions:$' "${file}"; then
         return
     fi
 
@@ -1228,16 +1285,7 @@ function write_sumologic_extension() {
     local file
     readonly file="${1}"
 
-    local indentation
-    readonly indentation="${2}"
-
-    if sed -e '/^extensions/,/^[a-z]/!d' "${file}" | grep -qE '^\s+(sumologic|sumologic\/.*):\s*$'; then
-        return
-    fi
-
-    # add sumologic extension on the top of the extensions
-    sed -i.bak -e "s/extensions:/extensions:\\
-${indentation}sumologic:/" "${file}"
+    write_yaml_config_key $file "extensions sumologic" "{}"
 }
 
 # write installation token to user configuration file
@@ -1248,27 +1296,7 @@ function write_installation_token() {
     local file
     readonly file="${2}"
 
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    # ToDo: ensure we override only sumologic `installation_token`
-    if grep "installation_token" "${file}" > /dev/null; then
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "s/installation_token:.*$/installation_token: $(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-
-        return
-    fi
-
-    # ToDo: ensure we override only sumologic `install_token`
-    if grep "install_token" "${file}" > /dev/null; then
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "s/install_token:.*$/installation_token: $(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-    else
-        # write installation token on the top of sumologic: extension
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}installation_token: $(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-    fi
+    write_yaml_config_key $file "extensions sumologic installation_token" $token
 }
 
 # write ${ENV_TOKEN}" to systemd env configuration file
@@ -1347,16 +1375,7 @@ function write_ephemeral_true() {
     local file
     readonly file="${1}"
 
-    local ext_indentation
-    readonly ext_indentation="${2}"
-
-    if grep "ephemeral:" "${file}" > /dev/null; then
-        sed -i.bak -e "1,/ephemeral:/ s/ephemeral:.*$/ephemeral: true/" "${file}"
-    else
-        # write ephemeral: true on the top of sumologic: extension
-        sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}ephemeral: true/" "${file}"
-    fi
+    write_yaml_config_key $file "extensions sumologic ephemeral" "true"
 }
 
 # write api_url to user configuration file
@@ -1367,17 +1386,7 @@ function write_api_url() {
     local file
     readonly file="${2}"
 
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    # ToDo: ensure we override only sumologic `api_base_url`
-    if grep "api_base_url" "${file}" > /dev/null; then
-        sed -i.bak -e "s/api_base_url:.*$/api_base_url: $(escape_sed "${api_url}")/" "${file}"
-    else
-        # write api_url on the top of sumologic: extension
-        sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}api_base_url: $(escape_sed "${api_url}")/" "${file}"
-    fi
+    write_yaml_config_key $file "extensions sumologic api_base_url" $api_url
 }
 
 # write opamp endpoint to user configuration file
@@ -1388,17 +1397,7 @@ function write_opamp_endpoint() {
     local file
     readonly file="${2}"
 
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    # ToDo: ensure we override only sumologic `api_base_url`
-    if grep "endpoint" "${file}" > /dev/null; then
-        sed -i.bak -e "s/endpoint:.*$/endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
-    else
-        # write endpoint on the top of sumologic: opamp: extension
-        sed -i.bak -e "1,/opamp:/ s/opamp:/opamp:\\
-\\${ext_indentation}endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
-    fi
+    write_yaml_config_key $file "extensions opamp endpoint" $opamp_endpoint
 }
 
 # write tags to user configuration file
@@ -1409,27 +1408,7 @@ function write_tags() {
     local file
     readonly file="${2}"
 
-    local indentation
-    readonly indentation="${3}"
-
-    local ext_indentation
-    readonly ext_indentation="${4}"
-
-    local fields_indentation
-    readonly fields_indentation="${ext_indentation}${indentation}"
-
-    local fields_to_write
-    fields_to_write="$(echo "${fields}" | sed -e "s/^\\([^\\]\\)/${fields_indentation}\\1/")"
-    readonly fields_to_write
-
-    # ToDo: ensure we override only sumologic `collector_fields`
-    if grep "collector_fields" "${file}" > /dev/null; then
-        sed -i.bak -e "s/collector_fields:.*$/collector_fields: ${fields_to_write}/" "${file}"
-    else
-        # write installation token on the top of sumologic: extension
-        sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}collector_fields: ${fields_to_write}/" "${file}"
-    fi
+    write_yaml_config_key $file "extensions sumologic collector_fields" $fields
 }
 
 # configure and enable the opamp extension for remote management
@@ -1440,44 +1419,18 @@ function write_opamp_extension() {
     local directory
     readonly directory="${2}"
 
-    local indentation
-    readonly indentation="${3}"
-
-    local ext_indentation
-    readonly ext_indentation="${4}"
-
     local api_url
     readonly api_url="${5}"
 
-    # add opamp extension if its missing
-    if ! grep "opamp:" "${file}" > /dev/null; then
-        sed -i.bak -e "1,/extensions:/ s/extensions:/extensions:\\
-${indentation}opamp:/" "${file}"
-    fi
-
-    # set the remote_configuration_directory
-    if grep "remote_configuration_directory:" "${file}" > /dev/null; then
-        sed -i.bak -e "s/remote_configuration_directory:.*$/remote_configuration_directory: $(escape_sed "${directory}")/" "${file}"
-    else
-        sed -i.bak -e "s/opamp:/opamp:\\
-\\${ext_indentation}remote_configuration_directory: $(escape_sed "${directory}")/" "${file}"
-    fi
+    write_yaml_config_key $file "extensions opamp remote_configuration_directory" $directory
 
     # if a different base url is specified, configure the corresponding opamp endpoint
     if [[ -n "${api_url}" ]]; then
-        if grep "endpoint: wss:" "${file}" > /dev/null; then
-            sed -i.bak -e "s/endpoint: wss:.*$/endpoint: $(escape_sed "${api_url}")/" "${file}"
-        else
-            sed -i.bak -e "s/opamp:/opamp:\\
-\\${ext_indentation}endpoint: $(escape_sed "${api_url}")/" "${file}"
-        fi
+        write_yaml_config_key $file "extensions opamp endpoint" $api_url
     fi
 
     # enable the opamp extension
-    if ! grep "\- opamp" "${file}" > /dev/null; then
-        sed -i.bak -e "s/${indentation}extensions:/${indentation}extensions:\\
-\\${ext_indentation}- opamp/" "${file}"
-    fi
+    append_yaml_config_list $file "service extensions" "opamp"
 }
 
 function get_binary_from_branch() {

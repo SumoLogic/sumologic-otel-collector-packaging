@@ -64,6 +64,9 @@ func checkLatestAppVersion(c check) {
 }
 
 func checkRun(c check) {
+	if c.expectedInstallCode != c.code {
+		c.test.Error(c.errorOutput)
+	}
 	require.Equal(c.test, c.expectedInstallCode, c.code, "unexpected installation script error code")
 }
 
