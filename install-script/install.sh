@@ -247,7 +247,7 @@ function write_yaml_config_key() {
     readonly key="${2}"
 
     local value
-    value="$(escape_yaml_value "${3}")"
+    value="$(escape_ruby_string "${3}")"
     readonly value
 
     ruby << EOF
@@ -279,6 +279,13 @@ rescue
     raise
 end
 EOF
+}
+
+function escape_ruby_string() {
+    local value
+    readonly value=${1}
+
+    echo "'$(echo -e "${value}" | sed "s/'/\\'/")'"
 }
 
 function append_yaml_config_list() {
