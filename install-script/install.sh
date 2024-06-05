@@ -232,7 +232,7 @@ function read_yaml_config_key() {
 require 'yaml'
 begin
     data = YAML.load_file('${file}')
-    '${key}'.split(' ').each { |part| data = data[part] }
+    '${key}'.split('.').each { |part| data = data[part] }
     puts data
 rescue
 end
@@ -263,7 +263,7 @@ begin
     p = root
     gp = root
     pkey = nil
-    '${key}'.split(' ').each { |part|
+    '${key}'.split('.').each { |part|
         pkey = part
         if p[part] == nil
             p[part] = {}
@@ -312,7 +312,7 @@ begin
     gp = root
     p = root
     key = nil
-    '${key}'.split(' ').each { |part|
+    '${key}'.split('.').each { |part|
         key = part
         if p[part] == nil
             p[part] = {}
@@ -1136,7 +1136,7 @@ function get_user_config() {
         return
     fi
 
-    read_yaml_config_key "${file}" "extensions sumologic installation_token" # || read_yaml_config_key $file "extensions sumologic install_token"
+    read_yaml_config_key "${file}" "extensions.sumologic.installation_token" # || read_yaml_config_key $file "extensions sumologic install_token"
 }
 
 # remove quotes and double quotes from yaml `value`` for `key: value` form
@@ -1227,7 +1227,7 @@ function get_user_api_url() {
         return
     fi
 
-    read_yaml_config_key "${file}" "extensions sumologic api_base_url"
+    read_yaml_config_key "${file}" "extensions.sumologic.api_base_url"
 }
 
 function get_user_opamp_endpoint() {
@@ -1238,7 +1238,7 @@ function get_user_opamp_endpoint() {
         return
     fi
 
-    read_yaml_config_key "${file}" "extensions opamp endpoint"
+    read_yaml_config_key "${file}" "extensions.opamp.endpoint"
 }
 
 function get_user_tags() {
@@ -1249,7 +1249,7 @@ function get_user_tags() {
         return
     fi
 
-    read_yaml_config_key "${file}" "extensions sumologic collector_fields"
+    read_yaml_config_key "${file}" "extensions.sumologic.collector_fields"
 }
 
 function get_fields_to_compare() {
@@ -1294,7 +1294,7 @@ function write_sumologic_extension() {
     local file
     readonly file="${1}"
 
-    write_yaml_config_key "${file}" "extensions sumologic" "{}"
+    write_yaml_config_key "${file}" "extensions.sumologic" "{}"
 }
 
 # write installation token to user configuration file
@@ -1305,7 +1305,7 @@ function write_installation_token() {
     local file
     readonly file="${2}"
 
-    write_yaml_config_key "${file}" "extensions sumologic installation_token" "${token}"
+    write_yaml_config_key "${file}" "extensions.sumologic.installation_token" "${token}"
 }
 
 # write ${ENV_TOKEN}" to systemd env configuration file
@@ -1384,7 +1384,7 @@ function write_ephemeral_true() {
     local file
     readonly file="${1}"
 
-    write_yaml_config_key "${file}" "extensions sumologic ephemeral" "true"
+    write_yaml_config_key "${file}" "extensions.sumologic.ephemeral" "true"
 }
 
 # write api_url to user configuration file
@@ -1395,7 +1395,7 @@ function write_api_url() {
     local file
     readonly file="${2}"
 
-    write_yaml_config_key "${file}" "extensions sumologic api_base_url" "${api_url}"
+    write_yaml_config_key "${file}" "extensions.sumologic.api_base_url" "${api_url}"
 }
 
 # write opamp endpoint to user configuration file
@@ -1406,7 +1406,7 @@ function write_opamp_endpoint() {
     local file
     readonly file="${2}"
 
-    write_yaml_config_key "${file}" "extensions opamp endpoint" "${opamp_endpoint}"
+    write_yaml_config_key "${file}" "extensions.opamp.endpoint" "${opamp_endpoint}"
 }
 
 # write tags to user configuration file
@@ -1417,7 +1417,7 @@ function write_tags() {
     local file
     readonly file="${2}"
 
-    write_yaml_config_key "${file}" "extensions sumologic collector_fields" "${fields}"
+    write_yaml_config_key "${file}" "extensions.sumologic.collector_fields" "${fields}"
 }
 
 # configure and enable the opamp extension for remote management
@@ -1431,15 +1431,15 @@ function write_opamp_extension() {
     local api_url
     readonly api_url="${5}"
 
-    write_yaml_config_key "${file}" "extensions opamp remote_configuration_directory" "${directory}"
+    write_yaml_config_key "${file}" "extensions.opamp.remote_configuration_directory" "${directory}"
 
     # if a different base url is specified, configure the corresponding opamp endpoint
     if [[ -n "${api_url}" ]]; then
-        write_yaml_config_key "${file}" "extensions opamp endpoint" "${api_url}"
+        write_yaml_config_key "${file}" "extensions.opamp.endpoint" "${api_url}"
     fi
 
     # enable the opamp extension
-    append_yaml_config_list "${file}" "service extensions" "opamp"
+    append_yaml_config_list "${file}" "service.extensions" "opamp"
 }
 
 function get_binary_from_branch() {
