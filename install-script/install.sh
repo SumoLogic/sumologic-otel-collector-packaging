@@ -1136,7 +1136,14 @@ function get_user_config() {
         return
     fi
 
-    read_yaml_config_key "${file}" "extensions.sumologic.installation_token" # || read_yaml_config_key $file "extensions sumologic install_token"
+    local token
+    token="$(read_yaml_config_key "${file}" "extensions.sumologic.installation_token")"
+
+    if [[ -z "${token}" ]]; then
+        token="$(read_yaml_config_key "${file}" "extensions.sumologic.install_token")"
+    fi
+
+    echo "${token}"
 }
 
 # remove quotes and double quotes from yaml `value`` for `key: value` form
