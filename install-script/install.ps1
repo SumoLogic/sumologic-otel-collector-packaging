@@ -445,7 +445,7 @@ try {
     $InstallationLogFile = New-TemporaryFile
 
     if ($InstallationLogFileEndpoint -eq "") {
-        $InstallationLogFileEndpoint = "https://open-events.sumologic.net/api/v1/collector/installation/logs"
+        $InstallationLogFileEndpoint = "https://long-open-events.sumologic.net/api/v1/collector/installation/logs"
     }
 
     Start-Transcript $InstallationLogFile | Out-Null

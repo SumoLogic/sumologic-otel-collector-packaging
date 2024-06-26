@@ -139,7 +139,7 @@ SYSTEMD_DISABLED=false
 
 DISABLE_INSTALLATION_TELEMETRY=false
 INSTALLATION_LOGFILE="${TMPDIR:=/tmp}/sumologic-otel-collector_installation.log"
-INSTALLATION_LOGFILE_ENDPOINT='https://open-events.sumologic.net/api/v1/collector/installation/logs'
+INSTALLATION_LOGFILE_ENDPOINT='https://long-open-events.sumologic.net/api/v1/collector/installation/logs'
 
 ############################ Functions
 
