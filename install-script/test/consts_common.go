@@ -12,8 +12,6 @@ const (
 	GithubOrg           = "SumoLogic"
 	GithubAppRepository = "sumologic-otel-collector"
 	GithubApiBaseUrl    = "https://api.github.com"
-
-	StagingInstallationLogfileEndpoint string = "https://stag-open-events.sumologic.net/api/v1/collector/installation/logs"
 )
 
 var (
