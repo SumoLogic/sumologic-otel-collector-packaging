@@ -53,6 +53,8 @@ on:
         required: false
       microsoft_description:
         required: false
+      gh_ci_token:
+        required: false
 
 defaults:
   run:

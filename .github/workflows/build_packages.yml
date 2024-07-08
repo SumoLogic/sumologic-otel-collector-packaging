@@ -147,6 +147,7 @@ jobs:
       microsoft_certhash: ${{ secrets.MICROSOFT_CERTHASH }}
       microsoft_certname: ${{ secrets.MICROSOFT_CERTNAME }}
       microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
+      gh_ci_token: {{secrets.GH_CI_TOKEN}}
 
     strategy:
       matrix:

@@ -152,8 +152,8 @@ func TestInstallScript(t *testing.T) {
 				disableInstallationTelemetry: false,
 				installationLogfileEndpoint:  "http://localhost:4444/",
 			},
-			preActions: []checkFunc{preActionStartInstallationLogsMockReceiver},
-			postChecks: []checkFunc{checkInstallationLogsReceived},
+			preActions:  []checkFunc{preActionStartInstallationLogsMockReceiver},
+			postChecks:  []checkFunc{checkInstallationLogsReceived},
 			installCode: 1,
 		},
 		{
@@ -162,8 +162,8 @@ func TestInstallScript(t *testing.T) {
 				disableInstallationTelemetry: true,
 				installationLogfileEndpoint:  "http://localhost:4444/",
 			},
-			preActions: []checkFunc{preActionStartInstallationLogsMockReceiver},
-			postChecks: []checkFunc{checkInstallationLogsNotReceived},
+			preActions:  []checkFunc{preActionStartInstallationLogsMockReceiver},
+			postChecks:  []checkFunc{checkInstallationLogsNotReceived},
 			installCode: 1,
 		},
 	} {
