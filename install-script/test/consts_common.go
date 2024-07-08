@@ -21,7 +21,7 @@ var (
 )
 
 func authenticateGithub() string {
-	githubToken := os.Getenv("GITHUB_TOKEN")
+	githubToken := os.Getenv("GH_CI_TOKEN")
 	if githubToken == "" {
 		fmt.Println("Error: GitHub token not found in environment variables")
 		os.Exit(1)
