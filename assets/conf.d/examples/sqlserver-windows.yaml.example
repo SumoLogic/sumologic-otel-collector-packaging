@@ -8,6 +8,9 @@ receivers:
         enabled: true
       sqlserver.instance.name:
         enabled: true
+    metrics:
+      sqlserver.processes.blocked:
+        enabled: true
   filelog/sqlserver/windows/localhost:
     encoding: utf-16le
     storage: file_storage
