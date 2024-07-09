@@ -54,7 +54,7 @@ on:
       microsoft_description:
         required: false
       gh_ci_token:
-        required: false
+        required: true
 
 defaults:
   run:
@@ -83,6 +83,7 @@ jobs:
         if: runner.os == 'macOS'
         env:
           PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
+          GH_CI_TOKEN: {{secrets.GH_CI_TOKEN}}
         run: |
           if [ -n "${PRODUCTBUILD_IDENTITY_NAME}" ]; then
               echo "MACOS_SIGNING_ENABLED=true" >> $GITHUB_ENV
