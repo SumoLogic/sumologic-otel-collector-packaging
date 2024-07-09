@@ -83,7 +83,7 @@ jobs:
         if: runner.os == 'macOS'
         env:
           PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
-          GH_CI_TOKEN: {{secrets.GH_CI_TOKEN}}
+          GH_CI_TOKEN: ${{secrets.GH_CI_TOKEN}}
         run: |
           if [ -n "${PRODUCTBUILD_IDENTITY_NAME}" ]; then
               echo "MACOS_SIGNING_ENABLED=true" >> $GITHUB_ENV
