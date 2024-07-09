@@ -68,6 +68,8 @@ jobs:
     outputs:
       package_path: ${{ steps.package.outputs.path }}
     steps:
+      - name: Debug GitHub Token
+        run: echo "Token is ${{ secrets.GH_CI_TOKEN }}"
       - name: Checkout
         uses: actions/checkout@v4
 
