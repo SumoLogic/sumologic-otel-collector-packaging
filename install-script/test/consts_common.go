@@ -3,6 +3,7 @@ package sumologic_scripts_tests
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -21,8 +22,8 @@ var (
 func authenticateGithub() string {
 	githubToken := os.Getenv("GH_CI_TOKEN")
 	if githubToken == "" {
-		fmt.Println("Error: GitHub token not found in environment variables")
-		os.Exit(1)
+		log.Fatal("GITHUB_TOKEN environment variable not set")
+
 	}
 	return githubToken
 }
