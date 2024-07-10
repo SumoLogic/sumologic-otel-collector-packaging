@@ -31,6 +31,10 @@ jobs:
             install-script/**/*
             .github/**
 
+      - name: Set up environment variables
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+
       - name: Setup go
         if: steps.changed-files.outputs.any_changed == 'true'
         uses: WillAbides/setup-go-faster@v1
@@ -40,4 +44,4 @@ jobs:
       - name: Run install script tests
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: install-script/test
-        run: make test
+        run: make test --token $GITHUB_TOKEN
