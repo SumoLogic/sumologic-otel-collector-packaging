@@ -3,6 +3,7 @@ package sumologic_scripts_tests
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,18 +19,36 @@ var (
 	latestAppVersion string
 )
 
+func authenticateGithub() string {
+	githubToken := os.Getenv("GH_CI_TOKEN")
+	if githubToken == "" {
+		log.Fatal("GITHUB_TOKEN environment variable not set")
+
+	}
+	return githubToken
+}
+
 func getLatestAppReleaseVersion() (string, error) {
 	githubApiBaseUrl, err := url.Parse(GithubApiBaseUrl)
 	if err != nil {
 		return "", err
 	}
-	githubApiLatestReleaseUrl := githubApiBaseUrl.JoinPath(
-		"repos",
-		GithubOrg,
-		GithubAppRepository,
-		"releases",
-		"latest")
-	response, err := http.Get(githubApiLatestReleaseUrl.String()) //nolint:noctx
+	githubToken := authenticateGithub()
+
+	githubApiLatestReleaseUrl := fmt.Sprintf("%s/repos/%s/%s/releases/latest", githubApiBaseUrl, GithubOrg, GithubAppRepository)
+
+	req, err := http.NewRequest("GET", githubApiLatestReleaseUrl, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// Set Authorization header with GitHub token
+	req.Header.Set("Authorization", "token "+githubToken)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	// Send request
+	client := http.Client{}
+	response, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
