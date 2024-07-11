@@ -1,4 +1,7 @@
 receivers:
+  haproxy/localhost:
+    endpoint: localhost:8404/stats
+    collection_interval: 1m
   filelog/haproxy/localhost:
     storage: file_storage
     include_file_name: false
@@ -24,8 +27,19 @@ processors:
       - key: webengine.system
         value: haproxy
         action: insert
+      - key: webengine.node.name
+        action: insert
+        from_attribute: host.name
       - key: proxy.cluster
         value: test
+        action: insert
+  resource/haproxy_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: haproxy/haproxy
+        action: insert
+      - key: _sourceName
+        value: haproxy
         action: insert
   resource/haproxy_resource_attributes/logs/localhost:
     attributes:
@@ -34,6 +48,17 @@ processors:
         action: insert
 service:
   pipelines:
+    metrics/haproxy/localhost:
+      receivers:
+        - haproxy/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/haproxy_resource_attributes/metrics/localhost
+        - resource/haproxy_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
     logs/haproxy/localhost:
       receivers:
         - filelog/haproxy/localhost
