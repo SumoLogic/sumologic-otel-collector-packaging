@@ -341,7 +341,7 @@ function parse_options() {
 
         value="$(echo -e "${OPTARG}" | sed 's/.*=//')"
         key="$(echo -e "${OPTARG}" | sed 's/\(.*\)=.*/\1/')"
-        line="${key}: $(escape_yaml_value "${value}")"
+        line="${key}=$(escape_yaml_value "${value}")"
 
         # Cannot use `\n` and have to use `\\` as break line due to OSx sed implementation
         FIELDS="${FIELDS}\\
@@ -691,27 +691,27 @@ function setup_config() {
         echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
         mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
-        write_sumologic_extension "${CONFIG_PATH}" "${INDENTATION}"
-        write_opamp_extension "${CONFIG_PATH}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${OPAMP_API_URL}"
+        write_sumologic_extension
+        write_opamp_extension
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
-            write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
         fi
 
         if [[ "${EPHEMERAL}" == "true" ]]; then
-            write_ephemeral_true "${CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_ephemeral_true
         fi
 
         if [[ -n "${API_BASE_URL}" ]]; then
-            write_api_url "${API_BASE_URL}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_api_url "${API_BASE_URL}"
         fi
 
         if [[ -n "${OPAMP_API_URL}" ]]; then
-            write_opamp_endpoint "${OPAMP_API_URL}" "${CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_opamp_endpoint "${OPAMP_API_URL}"
         fi
 
         if [[ -n "${FIELDS}" ]]; then
-            write_tags "${FIELDS}" "${CONFIG_PATH}" "${INDENTATION}" "${EXT_INDENTATION}"
+            write_tags "${FIELDS}"
         fi
 
         rm -f "${CONFIG_BAK_PATH}"
@@ -751,28 +751,29 @@ function setup_config() {
     if [[ ( -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ) || -n "${API_BASE_URL}" || -n "${FIELDS}" || "${EPHEMERAL}" == "true" ]]; then
         create_user_config_file "${COMMON_CONFIG_PATH}"
         add_extension_to_config "${COMMON_CONFIG_PATH}"
-        write_sumologic_extension "${COMMON_CONFIG_PATH}" "${INDENTATION}"
+        write_sumologic_extension
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
-            write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}" "${COMMON_CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
         fi
 
         if [[ "${EPHEMERAL}" == "true" ]]; then
-            write_ephemeral_true "${COMMON_CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_ephemeral_true
         fi
 
         # fill in api base url
         if [[ -n "${API_BASE_URL}" && -z "${USER_API_URL}" ]]; then
-            write_api_url "${API_BASE_URL}" "${COMMON_CONFIG_PATH}" "${EXT_INDENTATION}"
+            write_api_url "${API_BASE_URL}"
         fi
 
         # fill in opamp url
         if [[ -n "${OPAMP_API_URL}" && -z "${USER_OPAMP_API_URL}" ]]; then
-            write_opamp_extension "${CONFIG_PATH}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${OPAMP_API_URL}"
+            write_opamp_extension
+            write_opamp_endpoint "${OPAMP_API_URL}"
         fi
 
         if [[ -n "${FIELDS}" && -z "${USER_FIELDS}" ]]; then
-            write_tags "${FIELDS}" "${COMMON_CONFIG_PATH}" "${INDENTATION}" "${EXT_INDENTATION}"
+            write_tags "${FIELDS}"
         fi
 
         # clean up bak file
@@ -795,19 +796,19 @@ function setup_config_darwin() {
 
     create_user_config_file "${config_path}"
     add_extension_to_config "${config_path}"
-    write_sumologic_extension "${config_path}" "${INDENTATION}"
+    write_sumologic_extension
 
     if [[ "${EPHEMERAL}" == "true" ]]; then
-        write_ephemeral_true "${config_path}" "${EXT_INDENTATION}"
+        write_ephemeral_true
     fi
 
     # fill in api base url
     if [[ -n "${API_BASE_URL}" ]]; then
-        write_api_url "${API_BASE_URL}" "${config_path}" "${EXT_INDENTATION}"
+        write_api_url "${API_BASE_URL}"
     fi
 
     if [[ -n "${FIELDS}" ]]; then
-        write_tags "${FIELDS}" "${config_path}" "${INDENTATION}" "${EXT_INDENTATION}"
+        write_tags "${FIELDS}"
     fi
 
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
@@ -816,7 +817,7 @@ function setup_config_darwin() {
         echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
         mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
-        write_opamp_extension "${config_path}" "${REMOTE_CONFIG_DIRECTORY}" "${INDENTATION}" "${EXT_INDENTATION}" "${OPAMP_API_URL}"
+        write_opamp_extension
 
         write_remote_config_launchd "${LAUNCHD_CONFIG}"
 
@@ -1196,19 +1197,7 @@ function add_extension_to_config() {
 
 # write sumologic extension to user configuration file
 function write_sumologic_extension() {
-    local file
-    readonly file="${1}"
-
-    local indentation
-    readonly indentation="${2}"
-
-    if sed -e '/^extensions/,/^[a-z]/!d' "${file}" | grep -qE '^\s+(sumologic|sumologic\/.*):\s*$'; then
-        return
-    fi
-
-    # add sumologic extension on the top of the extensions
-    sed -i.bak -e "s/extensions:/extensions:\\
-${indentation}sumologic:/" "${file}"
+    otelcol-config --write-kv '.extensions.sumologic = {}'
 }
 
 # write installation token to user configuration file
@@ -1216,30 +1205,7 @@ function write_installation_token() {
     local token
     readonly token="${1}"
 
-    local file
-    readonly file="${2}"
-
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    # ToDo: ensure we override only sumologic `installation_token`
-    if grep "installation_token" "${file}" > /dev/null; then
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "s/installation_token:.*$/installation_token: $(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-
-        return
-    fi
-
-    # ToDo: ensure we override only sumologic `install_token`
-    if grep "install_token" "${file}" > /dev/null; then
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "s/install_token:.*$/installation_token: $(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-    else
-        # write installation token on the top of sumologic: extension
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}installation_token: $(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-    fi
+    otelcol-config --set-installation-token "$token"
 }
 
 # write ${ENV_TOKEN}" to systemd env configuration file
@@ -1315,19 +1281,7 @@ function write_remote_config_launchd() {
 
 # write sumologic ephemeral: true to user configuration file
 function write_ephemeral_true() {
-    local file
-    readonly file="${1}"
-
-    local ext_indentation
-    readonly ext_indentation="${2}"
-
-    if grep "ephemeral:" "${file}" > /dev/null; then
-        sed -i.bak -e "1,/ephemeral:/ s/ephemeral:.*$/ephemeral: true/" "${file}"
-    else
-        # write ephemeral: true on the top of sumologic: extension
-        sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}ephemeral: true/" "${file}"
-    fi
+    otelcol-config --enable-ephemeral
 }
 
 # write api_url to user configuration file
@@ -1335,20 +1289,7 @@ function write_api_url() {
     local api_url
     readonly api_url="${1}"
 
-    local file
-    readonly file="${2}"
-
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    # ToDo: ensure we override only sumologic `api_base_url`
-    if grep "api_base_url" "${file}" > /dev/null; then
-        sed -i.bak -e "s/api_base_url:.*$/api_base_url: $(escape_sed "${api_url}")/" "${file}"
-    else
-        # write api_url on the top of sumologic: extension
-        sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}api_base_url: $(escape_sed "${api_url}")/" "${file}"
-    fi
+    otelcol-config --set-api-url "$api_url"
 }
 
 # write opamp endpoint to user configuration file
@@ -1356,20 +1297,7 @@ function write_opamp_endpoint() {
     local opamp_endpoint
     readonly opamp_endpoint="${1}"
 
-    local file
-    readonly file="${2}"
-
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    # ToDo: ensure we override only sumologic `api_base_url`
-    if grep "endpoint" "${file}" > /dev/null; then
-        sed -i.bak -e "s/endpoint:.*$/endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
-    else
-        # write endpoint on the top of sumologic: opamp: extension
-        sed -i.bak -e "1,/opamp:/ s/opamp:/opamp:\\
-\\${ext_indentation}endpoint: $(escape_sed "${opamp_endpoint}")/" "${file}"
-    fi
+    otelcol-config --set-opamp-endpoint "$opamp_endpoint"
 }
 
 # write tags to user configuration file
@@ -1377,78 +1305,15 @@ function write_tags() {
     local fields
     readonly fields="${1}"
 
-    local file
-    readonly file="${2}"
-
-    local indentation
-    readonly indentation="${3}"
-
-    local ext_indentation
-    readonly ext_indentation="${4}"
-
-    local fields_indentation
-    readonly fields_indentation="${ext_indentation}${indentation}"
-
-    local fields_to_write
-    fields_to_write="$(echo "${fields}" | sed -e "s/^\\([^\\]\\)/${fields_indentation}\\1/")"
-    readonly fields_to_write
-
-    # ToDo: ensure we override only sumologic `collector_fields`
-    if grep "collector_fields" "${file}" > /dev/null; then
-        sed -i.bak -e "s/collector_fields:.*$/collector_fields: ${fields_to_write}/" "${file}"
-    else
-        # write installation token on the top of sumologic: extension
-        sed -i.bak -e "1,/sumologic:/ s/sumologic:/sumologic:\\
-\\${ext_indentation}collector_fields: ${fields_to_write}/" "${file}"
-    fi
+    for field in $fields
+    do
+        otelcol-config --add-tag "$field"
+    done
 }
 
 # configure and enable the opamp extension for remote management
 function write_opamp_extension() {
-    local file
-    readonly file="${1}"
-
-    local directory
-    readonly directory="${2}"
-
-    local indentation
-    readonly indentation="${3}"
-
-    local ext_indentation
-    readonly ext_indentation="${4}"
-
-    local api_url
-    readonly api_url="${5}"
-
-    # add opamp extension if its missing
-    if ! grep "opamp:" "${file}" > /dev/null; then
-        sed -i.bak -e "1,/extensions:/ s/extensions:/extensions:\\
-${indentation}opamp:/" "${file}"
-    fi
-
-    # set the remote_configuration_directory
-    if grep "remote_configuration_directory:" "${file}" > /dev/null; then
-        sed -i.bak -e "s/remote_configuration_directory:.*$/remote_configuration_directory: $(escape_sed "${directory}")/" "${file}"
-    else
-        sed -i.bak -e "s/opamp:/opamp:\\
-\\${ext_indentation}remote_configuration_directory: $(escape_sed "${directory}")/" "${file}"
-    fi
-
-    # if a different base url is specified, configure the corresponding opamp endpoint
-    if [[ -n "${api_url}" ]]; then
-        if grep "endpoint: wss:" "${file}" > /dev/null; then
-            sed -i.bak -e "s/endpoint: wss:.*$/endpoint: $(escape_sed "${api_url}")/" "${file}"
-        else
-            sed -i.bak -e "s/opamp:/opamp:\\
-\\${ext_indentation}endpoint: $(escape_sed "${api_url}")/" "${file}"
-        fi
-    fi
-
-    # enable the opamp extension
-    if ! grep "\- opamp" "${file}" > /dev/null; then
-        sed -i.bak -e "s/${indentation}extensions:/${indentation}extensions:\\
-\\${ext_indentation}- opamp/" "${file}"
-    fi
+    otelcol-config --enable-remote-control
 }
 
 function get_binary_from_branch() {
