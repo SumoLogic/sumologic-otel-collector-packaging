@@ -1,5 +1,5 @@
 FROM alpine:3.17
-MAINTAINER Sumo Logic <collection@sumologic.com>
+LABEL org.opencontainers.image.authors="Sumo Logic <collection@sumologic.com>"
 
 RUN apk add --no-cache \
     cmake \

@@ -10,6 +10,7 @@ macro(default_otc_linux_install)
   install_otc_common_yaml()
   install_otc_token_env()
   install_otc_binary()
+  install_otc_config_binary()
 endmacro()
 
 macro(default_otc_darwin_install)
@@ -24,6 +25,7 @@ macro(default_otc_darwin_install)
   install_otc_common_yaml()
   install_otc_darwin_hostmetrics_yaml()
   install_otc_binary()
+  install_otc_config_binary()
   install_otc_uninstall_script()
 endmacro()
 
@@ -184,6 +186,26 @@ macro(install_otc_binary)
       GROUP_READ GROUP_EXECUTE
       WORLD_READ WORLD_EXECUTE
     RENAME "${OTC_BINARY}"
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /usr/local/bin/otelcol-config
+macro(install_otc_config_binary)
+  require_variables(
+    "OTC_BIN_DIR"
+    "OTC_CONFIG_BINARY"
+    "SOURCE_OTC_CONFIG_BINARY_PATH"
+  )
+
+  install(
+    FILES "${SOURCE_OTC_CONFIG_BINARY_PATH}"
+    DESTINATION "${OTC_BIN_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_EXECUTE
+      GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
+    RENAME "${OTC_CONFIG_BINARY}"
     COMPONENT otelcol-sumo
   )
 endmacro()
