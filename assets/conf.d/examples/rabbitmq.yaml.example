@@ -1,4 +1,9 @@
 receivers:
+  rabbitmq/localhost:
+    endpoint: localhost:15672
+    collection_interval: 1m
+    username: admin
+    password: password
   filelog/rabbitmq/localhost:
     storage: file_storage
     include_file_name: false
@@ -21,8 +26,19 @@ processors:
       - key: _contentType
         value: OpenTelemetry
         action: insert
+      - key: messaging.node.name
+        action: insert
+        from_attribute: host.name
       - key: messaging.cluster
         value: test
+        action: insert
+  resource/rabbitmq_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: rabbitmq/rabbitmq
+        action: insert
+      - key: _sourceName
+        value: rabbitmq
         action: insert
   resource/rabbitmq_resource_attributes/logs/localhost:
     attributes:
@@ -31,14 +47,25 @@ processors:
         action: insert
 service:
   pipelines:
+    metrics/rabbitmq/localhost:
+      receivers:
+        - rabbitmq/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/rabbitmq_resource_attributes/localhost
+        - resource/rabbitmq_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
     logs/rabbitmq/localhost:
       receivers:
         - filelog/rabbitmq/localhost
       processors:
         - memory_limiter
-        - resource/rabbitmq_resource_attributes/localhost
-        - batch
         - resourcedetection/system
+        - batch
+        - resource/rabbitmq_resource_attributes/localhost
         - resource/rabbitmq_resource_attributes/logs/localhost
       exporters:
         - sumologic
