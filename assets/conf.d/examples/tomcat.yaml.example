@@ -1,4 +1,12 @@
 receivers:
+  jmx/tomcatmetrics/localhost:
+    jar_path: /etc/otelcol-sumo/opentelemetry-jmx-metrics.jar
+    endpoint: localhost:11211
+    target_system: tomcat
+    collection_interval: 1m
+    username: sumo_jmx
+    password: safe_password
+    log_level: info
   filelog/tomcat/access/localhost:
     storage: file_storage
     include_file_name: false
@@ -50,6 +58,9 @@ processors:
       - key: webengine.system
         value: tomcat
         action: insert
+      - key: webengine.node.name
+        action: insert
+        from_attribute: host.name
       - key: webengine.cluster.name
         value: test
         action: insert
@@ -58,8 +69,27 @@ processors:
       - key: _source
         value: tomcat/filelog
         action: insert
+  resource/tomcat_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: tomcat/jmx
+        action: insert
+      - key: _sourceName
+        value: tomcat
+        action: insert
 service:
   pipelines:
+    metrics/tomcat/localhost:
+      receivers:
+        - jmx/tomcatmetrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/tomcat_resource_attributes/localhost
+        - resource/tomcat_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
     logs/tomcat/localhost:
       receivers:
         - filelog/tomcat/access/localhost

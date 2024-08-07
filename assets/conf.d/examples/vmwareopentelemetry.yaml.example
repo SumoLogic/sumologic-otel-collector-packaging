@@ -1,0 +1,42 @@
+receivers:
+  vcenter/metrics/localhost:
+    endpoint: https://vcsaesxlab.com
+    username: vcenter_username1
+    password: vcenter_password1
+    collection_interval: 5m
+    tls:
+      insecure: true
+      insecure_skip_verify: true
+processors:
+  resource/vmware_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: vmware
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/vmware
+        action: insert
+  resource/vmware_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: vmware/vcenter
+        action: insert
+      - key: _sourceName
+        value: vmware
+        action: insert
+service:
+  pipelines:
+    metrics/vmware/localhost:
+      receivers:
+        - vcenter/metrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/vmware_resource_attributes/localhost
+        - resource/vmware_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
