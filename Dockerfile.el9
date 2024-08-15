@@ -10,9 +10,7 @@ RUN dnf install -y \
     git \
     systemd
 
-RUN ln -s /usr/bin/sh /bin/sh
-
-RUN curl -Lo cmake.sh https://github.com/Kitware/CMake/releases/download/v3.24.3/cmake-3.24.3-linux-x86_64.sh
+RUN curl -Lo cmake.sh https://github.com/Kitware/CMake/releases/download/v3.30.2/cmake-3.30.2-linux-aarch64.sh
 RUN chmod +x cmake.sh
 RUN ./cmake.sh --skip-license --prefix=/usr
 RUN rm cmake.sh

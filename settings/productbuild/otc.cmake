@@ -1,6 +1,7 @@
 macro(set_otc_productbuild_settings)
   require_variables(
     "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "PRODUCTBUILD_HOOK_TEMPLATES_OUTPUT_DIR"
   )
 
@@ -20,7 +21,7 @@ macro(set_otc_productbuild_settings)
   set(CPACK_PREFLIGHT_OTELCOL-SUMO_SCRIPT "${PRODUCTBUILD_HOOK_TEMPLATES_OUTPUT_DIR}/preflight")
   set(CPACK_POSTFLIGHT_OTELCOL-SUMO_SCRIPT "${PRODUCTBUILD_HOOK_TEMPLATES_OUTPUT_DIR}/postflight")
 
-  set(SOURCE_OTC_UNINSTALL_SCRIPT_PATH "${ASSETS_DIR}/productbuild/uninstall.sh")
+  set(SOURCE_OTC_UNINSTALL_SCRIPT_PATH "${OTC_ASSETS_DIR}/productbuild/uninstall.sh")
   set(OTC_APP_SUPPORT_DIR "Library/Application Support/otelcol-sumo")
 
   if(DEFINED ENV{PRODUCTBUILD_IDENTITY_NAME})

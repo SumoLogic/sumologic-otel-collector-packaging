@@ -17,9 +17,12 @@ Group:          @CPACK_RPM_PACKAGE_GROUP@
 Vendor:         @CPACK_RPM_PACKAGE_VENDOR@
 
 @TMP_RPM_URL@
+BuildRequires: selinux-policy-devel
 @TMP_RPM_REQUIRES@
+Requires: selinux-policy-%{selinuxtype}
 @TMP_RPM_REQUIRES_PRE@
 @TMP_RPM_REQUIRES_POST@
+Requires(post): selinux-policy-%{selinuxtype}
 @TMP_RPM_REQUIRES_PREUN@
 @TMP_RPM_REQUIRES_POSTUN@
 @TMP_RPM_PROVIDES@
@@ -31,18 +34,17 @@ Vendor:         @CPACK_RPM_PACKAGE_VENDOR@
 @TMP_RPM_AUTOREQPROV@
 @TMP_RPM_BUILDARCH@
 @TMP_RPM_PREFIXES@
-@TMP_RPM_EPOCH@
-
-%{?selinux_requires}
 
 @TMP_RPM_DEBUGINFO@
+
+%{?selinux_requires}
 
 %define _rpmdir %_topdir/RPMS
 %define _srcrpmdir %_topdir/SRPMS
 @FILE_NAME_DEFINE@
 %define _unpackaged_files_terminate_build 0
 @TMP_RPM_SPEC_INSTALL_POST@
-@TMP_RPM_REQUIRES_EXCLUDE_FROM@
+#@TMP_RPM_REQUIRES_EXCLUDE_FROM@
 @CPACK_RPM_SPEC_MORE_DEFINE@
 @CPACK_RPM_COMPRESSION_TYPE_TMP@
 

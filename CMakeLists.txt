@@ -12,12 +12,12 @@ include(CPackComponent)
 set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 set(COMPONENTS_DIR "${CMAKE_SOURCE_DIR}/components")
 set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/external_projects")
+set(PACKAGES_DIR "${CMAKE_SOURCE_DIR}/packages")
 set(SETTINGS_DIR "${CMAKE_SOURCE_DIR}/settings")
 set(TARGETS_DIR "${CMAKE_SOURCE_DIR}/targets")
 set(TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates")
 set(TEMPLATES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/templates_output")
 set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
-set(OTC_ASSETS_DIR "${ASSETS_DIR}/otc")
 
 # Include CMake files
 include("${CMAKE_SOURCE_DIR}/utils.cmake")
@@ -28,7 +28,7 @@ include("${CMAKE_SOURCE_DIR}/packages.cmake")
 include("${CMAKE_SOURCE_DIR}/settings.cmake")
 
 # Add module paths
-list(APPEND CMAKE_MODULE_PATH "${ASSETS_DIR}/productbuild")
+list(APPEND CMAKE_MODULE_PATH "${OTC_ASSETS_DIR}/productbuild")
 
 # Prevent In-Source builds
 validate_build_dir()

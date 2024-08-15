@@ -13,4 +13,4 @@ set_otc_productbuild_settings()
 default_otc_darwin_install()
 install_otc_service_launchd()
 
-build_productbuild_cpack_config()
+build_otc_productbuild_cpack_config()

@@ -1,2 +1,3 @@
-/usr/local/bin/otelcol-sumo               --  gen_context(unconfined_u:object_r:bin_t,s0)
-/etc/systemd/system/otelcol-sumo.service  --  gen_context(unconfined_u:object_r:systemd_unit_file_t:s0)
+/usr/local/bin/otelcol-config             --  gen_context(system_u:object_r:bin_t,s0)
+/usr/local/bin/otelcol-sumo               --  gen_context(system_u:object_r:bin_t,s0)
+/lib/systemd/system/otelcol-sumo.service  --  gen_context(system_u:object_r:systemd_unit_file_t:s0)

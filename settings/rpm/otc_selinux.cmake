@@ -4,7 +4,7 @@ macro(set_otc_selinux_rpm_settings)
   )
 
   # Use our own RPM spec template to enable the use of RPM macros for SELinux
-  set(CPACK_RPM_USER_BINARY_SPECFILE_TEMPLATE "${OTC_SELINUX_ASSETS_DIR}/otelcol-sumo-selinux.spec.in")
+  set(CPACK_RPM_USER_BINARY_SPECFILE "${OTC_SELINUX_ASSETS_DIR}/otelcol-sumo-selinux.spec.in")
 
   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
 

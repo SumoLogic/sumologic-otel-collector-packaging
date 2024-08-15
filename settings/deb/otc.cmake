@@ -1,6 +1,6 @@
 macro(set_otc_deb_settings)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "DEB_HOOK_TEMPLATES_OUTPUT_DIR"
   )
 
@@ -12,7 +12,7 @@ macro(set_otc_deb_settings)
 
   # Add the list of config files to prevent package upgrades from replacing
   # config files by default
-  list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${ASSETS_DIR}/deb/conffiles")
+  list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${OTC_ASSETS_DIR}/deb/conffiles")
 
   # Add the package hook scripts
   list(APPEND CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA

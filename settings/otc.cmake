@@ -2,7 +2,6 @@ macro(set_otc_settings)
   require_variables(
     "ARTIFACTS_DIR"
     "ASSETS_DIR"
-    "OTC_ASSETS_DIR"
     "OTC_VERSION"
     "OTC_SUMO_VERSION"
     "goos"
@@ -28,12 +27,14 @@ macro(set_otc_settings)
   set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
 
   # Directories
+  set(OTC_ASSETS_DIR "${ASSETS_DIR}/otc")
   set(OTC_BIN_DIR "usr/local/bin")
   set(OTC_CONFIG_DIR "etc/otelcol-sumo")
   set(OTC_CONFIG_FRAGMENTS_DIR "${OTC_CONFIG_DIR}/conf.d")
   set(OTC_USER_ENV_DIR "${OTC_CONFIG_DIR}/env")
   set(OTC_STATE_DIR "var/lib/otelcol-sumo")
   set(OTC_FILESTORAGE_STATE_DIR "${OTC_STATE_DIR}/file_storage")
+  set(OTC_SERVICES_DIR "${OTC_ASSETS_DIR}/services")
   set(OTC_LAUNCHD_DIR "Library/LaunchDaemons")
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
   set(OTC_LOG_DIR "var/log/otelcol-sumo")

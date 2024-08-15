@@ -81,7 +81,7 @@ endmacro()
 macro(install_otc_config_examples)
   require_variables(
     "OTC_CONFIG_FRAGMENTS_DIR"
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
   )
 
   install(
@@ -93,7 +93,7 @@ macro(install_otc_config_examples)
     COMPONENT otelcol-sumo
   )
 
-  file(GLOB_RECURSE examples CONFIGURE_DEPENDS "${ASSETS_DIR}/conf.d/examples/*.yaml.example")
+  file(GLOB_RECURSE examples CONFIGURE_DEPENDS "${OTC_ASSETS_DIR}/conf.d/examples/*.yaml.example")
 
   foreach(example ${examples})
     install(
@@ -227,11 +227,11 @@ endmacro()
 # e.g. /etc/otelcol-sumo/env/token.env
 macro(install_otc_token_env)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_USER_ENV_DIR"
   )
   install(
-    FILES "${ASSETS_DIR}/env/token.env"
+    FILES "${OTC_ASSETS_DIR}/env/token.env"
     DESTINATION "${OTC_USER_ENV_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
@@ -243,11 +243,11 @@ endmacro()
 # e.g. /etc/otelcol-sumo/conf.d/common.yaml
 macro(install_otc_common_yaml)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_CONFIG_FRAGMENTS_DIR"
   )
   install(
-    FILES "${ASSETS_DIR}/conf.d/common.yaml"
+    FILES "${OTC_ASSETS_DIR}/conf.d/common.yaml"
     DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
@@ -259,11 +259,11 @@ endmacro()
 # e.g. /etc/otelcol-sumo/conf.d/hostmetrics.yaml
 macro(install_otc_darwin_hostmetrics_yaml)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_CONFIG_FRAGMENTS_DIR"
   )
   install(
-    FILES "${ASSETS_DIR}/conf.d/darwin.yaml"
+    FILES "${OTC_ASSETS_DIR}/conf.d/darwin.yaml"
     DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
     RENAME "hostmetrics.yaml"
     PERMISSIONS
@@ -277,11 +277,11 @@ endmacro()
 # e.g. /etc/otelcol-sumo/conf.d/hostmetrics.yaml
 macro(install_otc_linux_hostmetrics_yaml)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_CONFIG_FRAGMENTS_DIR"
   )
   install(
-    FILES "${ASSETS_DIR}/conf.d/linux.yaml"
+    FILES "${OTC_ASSETS_DIR}/conf.d/linux.yaml"
     DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
     RENAME "hostmetrics.yaml"
     PERMISSIONS
@@ -295,11 +295,11 @@ endmacro()
 # e.g. /lib/systemd/system/sumologic.yaml
 macro(install_otc_service_systemd)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_SYSTEMD_DIR"
   )
   install(
-    FILES "${OTC_ASSETS_DIR}/systemd/otelcol-sumo.service"
+    FILES "${OTC_SERVICES_DIR}/systemd/otelcol-sumo.service"
     DESTINATION "${OTC_SYSTEMD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
@@ -312,11 +312,11 @@ endmacro()
 # e.g. /Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist
 macro(install_otc_service_launchd)
   require_variables(
-    "ASSETS_DIR"
+    "OTC_ASSETS_DIR"
     "OTC_LAUNCHD_DIR"
   )
   install(
-    FILES "${ASSETS_DIR}/services/launchd/com.sumologic.otelcol-sumo.plist"
+    FILES "${OTC_ASSETS_DIR}/services/launchd/com.sumologic.otelcol-sumo.plist"
     DESTINATION "${OTC_LAUNCHD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE

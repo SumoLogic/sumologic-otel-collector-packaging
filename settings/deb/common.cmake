@@ -1,6 +1,5 @@
 macro(set_common_deb_settings)
   require_variables(
-    "ASSETS_DIR"
     "BUILD_NUMBER"
     "PROJECT_VERSION"
     "package_name"

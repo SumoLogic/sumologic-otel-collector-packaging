@@ -12,4 +12,4 @@ set_otc_deb_settings()
 default_otc_linux_install()
 install_otc_service_systemd()
 
-build_deb_cpack_config()
+build_otc_deb_cpack_config()
