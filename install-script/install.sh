@@ -52,10 +52,6 @@ ARG_SHORT_EPHEMERAL='E'
 ARG_LONG_EPHEMERAL='ephemeral'
 ARG_SHORT_TIMEOUT='m'
 ARG_LONG_TIMEOUT='download-timeout'
-ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY='S'
-ARG_LONG_DISABLE_INSTALLATION_TELEMETRY='disable-installation-telemetry'
-ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT='l'
-ARG_LONG_INSTALLATION_LOGFILE_ENDPOINT='installation-logfile-endpoint'
 
 PACKAGE_GITHUB_ORG="SumoLogic"
 PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
@@ -71,8 +67,6 @@ readonly ARG_SHORT_INSTALL_HOSTMETRICS ARG_LONG_INSTALL_HOSTMETRICS
 readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
 readonly ARG_SHORT_EPHEMERAL ARG_LONG_EPHEMERAL
 readonly ARG_SHORT_TIMEOUT ARG_LONG_TIMEOUT
-readonly ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY ARG_LONG_DISABLE_INSTALLATION_TELEMETRY
-readonly ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT ARG_LONG_INSTALLATION_LOGFILE_ENDPOINT
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
 readonly PACKAGE_GITHUB_ORG PACKAGE_GITHUB_REPO
 
@@ -137,10 +131,6 @@ CURL_MAX_TIME=1800
 # set by check_dependencies therefore cannot be set by set_defaults
 SYSTEMD_DISABLED=false
 
-DISABLE_INSTALLATION_TELEMETRY=false
-INSTALLATION_LOGFILE="${TMPDIR:=/tmp}/sumologic-otel-collector_installation.log"
-INSTALLATION_LOGFILE_ENDPOINT='https://open-events.sumologic.net/api/v1/collector/installation/logs'
-
 ############################ Functions
 
 function usage() {
@@ -174,7 +164,6 @@ Supported arguments:
   -${ARG_SHORT_EPHEMERAL}, --${ARG_LONG_EPHEMERAL}                       Delete the collector from Sumo Logic after 12 hours of inactivity.
   -${ARG_SHORT_TIMEOUT}, --${ARG_LONG_TIMEOUT} <timeout>      Timeout in seconds after which download will fail. Default is ${CURL_MAX_TIME}.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
-  -${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}, --${ARG_LONG_DISABLE_INSTALLATION_TELEMETRY}  Do not report installation logs to Sumologic.
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
 
@@ -182,18 +171,6 @@ Supported env variables:
   ${ENV_TOKEN}=<token>       Installation token.'
 EOF
 }
-
-# shellcheck disable=SC2317  # Don't warn about unreachable commands in this function
-# ShellCheck may incorrectly believe that code is unreachable if it's invoked in
-# a trap, like the reporter function.
-function reporter {
-    if ! $DISABLE_INSTALLATION_TELEMETRY; then
-        echo "SUMOLOGIC_INSTALLATION_TOKEN=${SUMOLOGIC_INSTALLATION_TOKEN}" >> "$INSTALLATION_LOGFILE"
-        curl --silent --location -X POST --data-binary @"${INSTALLATION_LOGFILE}" "${INSTALLATION_LOGFILE_ENDPOINT}"
-        rm -f "${INSTALLATION_LOGFILE}"
-    fi
-}
-trap reporter EXIT
 
 function set_defaults() {
     HOME_DIRECTORY="/var/lib/otelcol-sumo"
@@ -292,7 +269,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_SKIP_SYSTEMD}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}"|"-${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_SKIP_SYSTEMD}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -303,12 +280,6 @@ function parse_options() {
         ;;
       "--${ARG_LONG_EPHEMERAL}")
         set -- "$@" "-${ARG_SHORT_EPHEMERAL}"
-        ;;
-      "--${ARG_LONG_DISABLE_INSTALLATION_TELEMETRY}")
-        set -- "$@" "-${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}"
-        ;;
-      "--${ARG_LONG_INSTALLATION_LOGFILE_ENDPOINT}")
-        set -- "$@" "-${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}"
         ;;
       -*)
         echo "Unknown option ${arg}"; usage; exit 1 ;;
@@ -322,7 +293,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_SKIP_SYSTEMD}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_SKIP_SYSTEMD}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -334,7 +305,7 @@ function parse_options() {
 
     # Validate opt and set arguments
     case "$opt" in
-      "${ARG_SHORT_HELP}")          usage; DISABLE_INSTALLATION_TELEMETRY=true exit 0 ;;
+      "${ARG_SHORT_HELP}")          usage; exit 0 ;;
       "${ARG_SHORT_TOKEN}")         SUMOLOGIC_INSTALLATION_TOKEN="${OPTARG}" ;;
       "${ARG_SHORT_API}")           API_BASE_URL="${OPTARG}" ;;
       "${ARG_SHORT_OPAMP_API}")     OPAMP_API_URL="${OPTARG}" ;;
@@ -361,8 +332,6 @@ function parse_options() {
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
-      "${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}") DISABLE_INSTALLATION_TELEMETRY=true ;;
-      "${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}")  INSTALLATION_LOGFILE_ENDPOINT="${OPTARG}" ;;
       "${ARG_SHORT_TAG}")
         if [[ "${OPTARG}" != ?*"="* ]]; then
             echo "Invalid tag: '${OPTARG}'. Should be in 'key=value' format"
@@ -487,7 +456,9 @@ function get_latest_version() {
 
     # get latest version directly from website if there is no versions from api
     if [[ -z "${versions}" ]]; then
-        curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -s https://github.com/SumoLogic/sumologic-otel-collector/releases | grep -oE '/SumoLogic/sumologic-otel-collector/releases/tag/(.*)"' | head -n 1 | sed 's%/SumoLogic/sumologic-otel-collector/releases/tag/v\([^"]*\)".*%\1%g'
+        curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 5 --retry-max-time 150 -s https://github.com/SumoLogic/sumologic-otel-collector/releases \
+        | grep -Eo '/SumoLogic/sumologic-otel-collector/releases/tag/v[0-9]+\.[0-9]+\.[0-9]+-sumo-[0-9]+[^-]' \
+        | head -n 1 | sed 's%/SumoLogic/sumologic-otel-collector/releases/tag/v\([^"]*\)".*%\1%g'
     else
         # sed 's/ /\n/g' converts spaces to new lines
         echo "${versions}" | sed 's/ /\n/g' | head -n 1
@@ -520,7 +491,7 @@ function get_versions() {
 }
 
 function get_package_versions() {
-    # returns empty in case we exceeded github rate limit
+    # returns empty in case we exceeded github rate limit. This can happen if we are running this script too many times in a short period.
     if [[ "$(github_rate_limit)" == "0" ]]; then
         return
     fi
@@ -1776,9 +1747,6 @@ function plutil_replace_key() {
 }
 
 ############################ Main code
-
-# Redirect a copy of stdout and stderr into $INSTALLATION_LOGFILE
-exec > >(tee "${INSTALLATION_LOGFILE}") 2>&1
 
 OS_TYPE="$(get_os_type)"
 ARCH_TYPE="$(get_arch_type)"
