@@ -52,6 +52,7 @@ expected_collector_files=(
   "Library/Application Support/otelcol-sumo"
   "Library/Application Support/otelcol-sumo/uninstall.sh"
   "Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
+  "usr/local/bin/otelcol-config"
   "usr/local/bin/otelcol-sumo"
   "var/lib/otelcol-sumo"
   "var/lib/otelcol-sumo/file_storage"
