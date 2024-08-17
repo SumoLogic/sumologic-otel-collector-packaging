@@ -43,6 +43,7 @@ collector_files=(
   "/etc/otelcol-sumo/sumologic.yaml"
   "/etc/otelcol-sumo/conf.d"
   "/etc/otelcol-sumo"
+  "/usr/local/bin/otelcol-config"
   "/usr/local/bin/otelcol-sumo"
   "/var/lib/otelcol-sumo/file_storage"
   "/var/lib/otelcol-sumo"
