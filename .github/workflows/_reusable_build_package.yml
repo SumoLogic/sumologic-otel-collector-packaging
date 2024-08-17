@@ -163,7 +163,7 @@ jobs:
             steps.cmake-other.outputs.otc-config-bin
             }}
         run: >
-          echo otelcol_sumo_path="$OTC_BIN" >> $GITHUB_OUTPUT
+          echo otelcol_sumo_path="$OTC_BIN" >> $GITHUB_OUTPUT &&
           echo otelcol_config_path="$OTC_CONFIG_BIN" >> $GITHUB_OUTPUT
 
       # Download the artifacts required to build the package target. If
