@@ -18,6 +18,10 @@ on:
       workflow_id:
         required: false
         type: string
+      use_release_artifacts:
+        required: false
+        type: boolean
+        default: false
       runs_on:
         required: true
         type: string
@@ -72,7 +76,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Workflow URL for sumologic-otel-collector
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         run: |
           org="SumoLogic"
           repo="sumologic-otel-collector"
@@ -94,7 +98,7 @@ jobs:
         run: mkdir build
 
       - name: Use GitHub Artifacts for binaries
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
 
       # TODO: Go back to using Apple-Actions/import-codesign-certs once https://github.com/Apple-Actions/import-codesign-certs/pull/58 is merged
@@ -146,7 +150,7 @@ jobs:
 
       - name: Set simple otc-bin outputs
         id: otc-bin
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         env:
           OTC_BIN: >-
             ${{
@@ -162,7 +166,7 @@ jobs:
       # otc_version and otc_sumo_version.
       - name: Download artifacts from sumologic-otel-collector
         uses: dawidd6/action-download-artifact@v3.1.4
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
@@ -221,7 +225,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Workflow URL for sumologic-otel-collector
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         run: |
           org="SumoLogic"
           repo="sumologic-otel-collector"
@@ -235,7 +239,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Use GitHub Artifacts for binaries
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
 
       - name: Determine artifact names
@@ -250,7 +254,7 @@ jobs:
       # otc_version and otc_sumo_version.
       - name: Download artifact from workflow
         uses: dawidd6/action-download-artifact@v3.1.4
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
@@ -265,7 +269,7 @@ jobs:
       # GitHub Release.
       - name: Download artifact from GitHub Release
         uses: robinraju/release-downloader@v1.10
-        if: inputs.workflow_id == ''
+        if: ${{ inputs.use_release_artifacts && inputs.workflow_id == '' }}
         with:
           repository: SumoLogic/sumologic-otel-collector
           tag: v${{ inputs.otc_version }}-sumo-${{ inputs.otc_sumo_version }}
@@ -273,7 +277,7 @@ jobs:
           out-file-path: build/artifacts
 
       - name: Rename GitHub Release artifact
-        if: inputs.workflow_id == ''
+        if: ${{ inputs.use_release_artifacts && inputs.workflow_id == '' }}
         working-directory: ./build/artifacts
         env:
           MV_FROM: ${{ env.OTC_RELEASE_ARTIFACT_NAME }}
@@ -281,7 +285,7 @@ jobs:
         run: mv -n "$MV_FROM" "$MV_TO"
 
       - name: Rename GitHub Workflow artifact
-        if: inputs.workflow_id != ''
+        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         working-directory: ./build/artifacts
         env:
           MV_FROM: ${{ env.OTC_WORKFLOW_ARTIFACT_NAME }}
