@@ -5,19 +5,31 @@
 name: 'Build packages'
 
 # Sets the name of the CI run based on whether the run was triggered by a push
-# or remotely with or without workflow_run_id set. The name used for push events
-# is the full commit message as I have not been able to find a way to only show
-# the commit title (first 72 characters of commit message) - Justin K.
+# or remotely with or without workflow_run_id or use_release_artifacts  set. The
+# name used for push events is the full commit message as I have not been able
+# to find a way to only show the commit title (first 72 characters of commit
+# message) - Justin K.
 run-name: >
   ${{
-  (inputs.workflow_id != '' &&   
+  (inputs.use_release_artifacts &&
+  inputs.otc_version != '' &&
+  inputs.otc_sumo_version != '') &&
+  format('Build for GitHub Release: {0}-sumo-{1}, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
+  ||
+  (inputs.use_release_artifacts &&
+  (inputs.otc_version == '' ||
+  inputs.otc_sumo_version == '')) &&
+  'Build for GitHub Release: latest'
+  ||
+  (inputs.workflow_id != '' &&
   inputs.otc_version != '' &&
   inputs.otc_sumo_version != '') &&
   format('Build for Remote Workflow: {0}, Version: {1}-sumo-{2}', inputs.workflow_id, inputs.otc_version, inputs.otc_sumo_version)
   ||
-  (inputs.otc_version != '' &&
+  (inputs.workflow_id == '' &&
+  inputs.otc_version != '' &&
   inputs.otc_sumo_version != '') &&
-  format('Build for GitHub Release: {0}-sumo-{1}, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
+  format('Build for Remote Workflow: latest-main, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
   ||
   inputs.workflow_id != '' &&
   format('Build for Remote Workflow: {0}, Version: unknown', inputs.workflow_id)
@@ -55,8 +67,46 @@ on:
         type: boolean
         required: false
         default: false
+      use_release_artifacts:
+        description: |
+          Fetch artifacts from a GitHub Release instead of the artifacts from a
+          GitHub CI run. Both otc_version and otc_sumo_version are required if
+          this is set to true.
+        type: boolean
+        required: false
+        default: false
 
 jobs:
+  determine_workflow:
+    runs-on: ubuntu-latest
+    name: Determine workflow_id
+    outputs:
+      workflow_id: ${{ steps.workflow.outputs.id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Determine the latest successful run of the "Dev builds" workflow for
+      # the "main" branch. This is skipped if inputs.workflow_id is set.
+      - name: Determine latest successful workflow run
+        id: latest-workflow
+        if: inputs.workflow_id == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          R="SumoLogic/sumologic-otel-collector"
+          WFN="Dev builds"
+          W=$(gh run list -R "$R" -w "$WFN" -s success -b main --json databaseId -q '.[0].databaseId')
+          echo "id=$W" >> "$GITHUB_OUTPUT"
+
+      - name: Set output workflow
+        id: workflow
+        run: |
+            echo "id=${{ inputs.workflow_id || steps.latest-workflow.outputs.id }}" >> $GITHUB_OUTPUT
+
+      - name: Output Remote Workflow URL
+        run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ steps.workflow.outputs.id }}
+
   # Determines the latest version which will be used to fetch artifacts from a
   # GitHub Release and as the version of the packages being built. This is
   # skipped if the otc_version and otc_sumo_version inputs have been set.
@@ -70,10 +120,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Output Remote Workflow URL
-        if: inputs.workflow_id != ''
-        run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ inputs.workflow_id }}
-
+      # Determine the latest release version if either otc_version or
+      # otc_sumo_version are empty.
       - name: Determine latest release version
         id: release
         if: >
@@ -114,7 +162,7 @@ jobs:
         run: |
             echo "otc_version=${{ inputs.otc_version || steps.version-core.outputs.version }}" >> $GITHUB_OUTPUT
             echo "otc_sumo_version=${{ inputs.otc_sumo_version || steps.sumo-version.outputs.version }}" >> $GITHUB_OUTPUT
-      
+
       - name: Output App Version
         run: echo ::notice title=App Version::${{ steps.versions.outputs.otc_version }}-sumo-${{ steps.versions.outputs.otc_sumo_version }}
 
@@ -125,13 +173,15 @@ jobs:
     name: ${{ matrix.target }}
     uses: ./.github/workflows/_reusable_build_package.yml
     needs:
+      - determine_workflow
       - determine_version
     with:
       otc_version: ${{ needs.determine_version.outputs.otc_version }}
       otc_sumo_version: ${{ needs.determine_version.outputs.otc_sumo_version }}
       otc_build_number: ${{ github.run_number }}
       cmake_target: ${{ matrix.target }}
-      workflow_id: ${{ inputs.workflow_id }}
+      workflow_id: ${{ needs.determine_workflow.outputs.workflow_id }}
+      use_release_artifacts: ${{ inputs.use_release_artifacts || false }}
       runs_on: ${{ matrix.runs_on }}
       goarch: ${{ matrix.goarch }}
       package_arch: ${{ matrix.package_arch }}
@@ -267,4 +317,3 @@ jobs:
             This release packages [${{ env.OTC_APP_VERSION }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/${{ env.OTC_APP_VERSION }}).
 
             The changelog below is for the package itself, rather than the Sumo Logic Distribution for OpenTelemetry Collector.
-

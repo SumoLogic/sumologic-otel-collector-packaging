@@ -3,7 +3,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 ifneq ($(OS),windows)
-	GOTESTPREFIX ?= sudo env PATH="${PATH}"
+	GOTESTPREFIX ?= sudo env PATH="${PATH}" GH_CI_TOKEN="${GITHUB_TOKEN}"
 endif
 
 LINT=golangci-lint
