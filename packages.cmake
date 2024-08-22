@@ -5,7 +5,9 @@ macro(build_cpack_config)
     "CPACK_PACKAGE_FILE_NAME"
     "PACKAGE_FILE_EXTENSION"
     "OTC_BINARY"
+    "OTC_CONFIG_BINARY"
     "SOURCE_OTC_BINARY"
+    "SOURCE_OTC_CONFIG_BINARY"
   )
 
   # Set a GitHub output with a name matching ${target_name}-pkg and a value
@@ -26,6 +28,7 @@ macro(build_cpack_config)
       require_variables(
         "GH_ARTIFACTS_DIR"
         "GH_OUTPUT_OTC_BIN"
+        "GH_OUTPUT_OTC_CONFIG_BIN"
       )
 
       file(MAKE_DIRECTORY "${GH_ARTIFACTS_DIR}")
@@ -36,6 +39,7 @@ macro(build_cpack_config)
           WORLD_WRITE WORLD_READ WORLD_EXECUTE
       )
       set_github_output("otc-bin" "${GH_OUTPUT_OTC_BIN}")
+      set_github_output("otc-config-bin" "${GH_OUTPUT_OTC_CONFIG_BIN}")
     else()
       message(FATAL_ERROR
         "Unsupported value for OTC_ARTIFACTS_SOURCE environment variable: $ENV{OTC_ARTIFACTS_SOURCE}"
@@ -56,6 +60,21 @@ macro(build_cpack_config)
         VERBATIM
       )
     endif()
+
+    # Create a target, if the target does not yet exist, for copying the
+    # otelcol-config binary from the gh-actions directory to the artifacts
+    # directory
+    if(TARGET "${SOURCE_OTC_CONFIG_BINARY}")
+      message(STATUS "Target already exists: ${SOURCE_OTC_CONFIG_BINARY}")
+    else()
+      message(STATUS "Creating target: ${SOURCE_OTC_CONFIG_BINARY}")
+      file(MAKE_DIRECTORY "${SOURCE_OTC_CONFIG_BINARY_DIR}")
+      add_custom_target("${SOURCE_OTC_CONFIG_BINARY}"
+        ALL
+        COMMAND ${CMAKE_COMMAND} -E copy ${GH_ARTIFACT_OTC_CONFIG_BINARY_PATH} ${SOURCE_OTC_CONFIG_BINARY_PATH}
+        VERBATIM
+      )
+    endif()
   else()
     # Create a target for downloading the otelcol-sumo binary from GitHub
     # Releases if the target does not exist yet
@@ -69,6 +88,21 @@ macro(build_cpack_config)
         "${OTC_BINARY}"
         "${OTC_GIT_TAG}"
         "${SOURCE_OTC_BINARY_DIR}"
+      )
+    endif()
+
+    # Create a target for downloading the otelcol-config binary from GitHub
+    # Releases if the target does not exist yet
+    if(TARGET "${SOURCE_OTC_CONFIG_BINARY}")
+      message(STATUS "Target already exists: ${SOURCE_OTC_CONFIG_BINARY}")
+    else()
+      message(STATUS "Creating target: ${SOURCE_OTC_CONFIG_BINARY}")
+      require_variables("OTC_GIT_TAG")
+      create_otelcol_sumo_target(
+        "${SOURCE_OTC_CONFIG_BINARY}"
+        "${OTC_CONFIG_BINARY}"
+        "${OTC_GIT_TAG}"
+        "${SOURCE_OTC_CONFIG_BINARY_DIR}"
       )
     endif()
   endif()

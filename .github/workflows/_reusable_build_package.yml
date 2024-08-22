@@ -149,7 +149,7 @@ jobs:
           echo path="$PACKAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Set simple otc-bin outputs
-        id: otc-bin
+        id: bin
         if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         env:
           OTC_BIN: >-
@@ -157,14 +157,20 @@ jobs:
             steps.cmake-linux.outputs.otc-bin ||
             steps.cmake-other.outputs.otc-bin
             }}
+          OTC_CONFIG_BIN: >-
+            ${{
+            steps.cmake-linux.outputs.otc-config-bin ||
+            steps.cmake-other.outputs.otc-config-bin
+            }}
         run: >
-          echo path="$OTC_BIN" >> $GITHUB_OUTPUT
+          echo otelcol_sumo_path="$OTC_BIN" >> $GITHUB_OUTPUT &&
+          echo otelcol_config_path="$OTC_CONFIG_BIN" >> $GITHUB_OUTPUT
 
       # Download the artifacts required to build the package target. If
       # inputs.workflow_id is empty then this will be skipped and CMake will
       # attempt to fetch the artifacts from a GitHub Release matching
       # otc_version and otc_sumo_version.
-      - name: Download artifacts from sumologic-otel-collector
+      - name: Download otelcol-sumo artifact from sumologic-otel-collector
         uses: dawidd6/action-download-artifact@v3.1.4
         if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         with:
@@ -173,7 +179,20 @@ jobs:
           run_id: ${{ inputs.workflow_id }}
           workflow: dev_builds.yml
           workflow_conclusion: success
-          name: ${{ steps.otc-bin.outputs.path }}
+          name: ${{ steps.bin.outputs.otelcol_sumo_path }}
+          path: ./build/gh-artifacts
+          if_no_artifact_found: fail
+
+      - name: Download otelcol-config artifact from sumologic-otel-collector
+        uses: dawidd6/action-download-artifact@v3.1.4
+        if: inputs.workflow_id != ''
+        with:
+          github_token: ${{ secrets.gh_artifacts_token }}
+          repo: SumoLogic/sumologic-otel-collector
+          run_id: ${{ inputs.workflow_id }}
+          workflow: dev_builds.yml
+          workflow_conclusion: success
+          name: ${{ steps.bin.outputs.otelcol_config_path }}
           path: ./build/gh-artifacts
           if_no_artifact_found: fail
 

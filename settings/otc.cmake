@@ -21,6 +21,7 @@ macro(set_otc_settings)
 
   # File names
   set(OTC_BINARY "otelcol-sumo")
+  set(OTC_CONFIG_BINARY "otelcol-config")
   set(OTC_SUMOLOGIC_CONFIG "sumologic.yaml")
   set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
 
@@ -47,20 +48,29 @@ macro(set_otc_settings)
 
   # File names
   set(SOURCE_OTC_BINARY "otelcol-sumo-${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
+  set(SOURCE_OTC_CONFIG_BINARY "otelcol-config-${OTC_VERSION}-sumo-${OTC_SUMO_VERSION}")
   set(GH_OUTPUT_OTC_BIN "otelcol-sumo")
+  set(GH_OUTPUT_OTC_CONFIG_BIN "otelcol-config")
   if(fips)
     set(SOURCE_OTC_BINARY "${SOURCE_OTC_BINARY}-fips")
+    set(SOURCE_OTC_CONFIG_BINARY "${SOURCE_OTC_CONFIG_BINARY}-fips")
     set(GH_OUTPUT_OTC_BIN "${GH_OUTPUT_OTC_BIN}-fips")
+    set(GH_OUTPUT_OTC_CONFIG_BIN "${GH_OUTPUT_OTC_CONFIG_BIN}-fips")
   endif()
   set(SOURCE_OTC_BINARY "${SOURCE_OTC_BINARY}-${goos}_${goarch}")
+  set(SOURCE_OTC_CONFIG_BINARY "${SOURCE_OTC_CONFIG_BINARY}-${goos}_${goarch}")
   set(GH_OUTPUT_OTC_BIN "${GH_OUTPUT_OTC_BIN}-${goos}_${goarch}")
+  set(GH_OUTPUT_OTC_CONFIG_BIN "${GH_OUTPUT_OTC_CONFIG_BIN}-${goos}_${goarch}")
 
   # Directories
   set(SOURCE_OTC_BINARY_DIR "${ARTIFACTS_DIR}/${SOURCE_OTC_BINARY}")
+  set(SOURCE_OTC_CONFIG_BINARY_DIR "${ARTIFACTS_DIR}/${SOURCE_OTC_CONFIG_BINARY}")
 
   # File paths
   set(SOURCE_OTC_BINARY_PATH "${SOURCE_OTC_BINARY_DIR}/${OTC_BINARY}")
+  set(SOURCE_OTC_CONFIG_BINARY_PATH "${SOURCE_OTC_CONFIG_BINARY_DIR}/${OTC_CONFIG_BINARY}")
   set(GH_ARTIFACT_OTC_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_BIN}")
+  set(GH_ARTIFACT_OTC_CONFIG_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_CONFIG_BIN}")
   set(ACL_LOG_FILE_PATHS "/var/log")
 
   ##
@@ -93,5 +103,6 @@ macro(set_otc_settings)
   # OTC packages.
   set(target_dependencies
     "${SOURCE_OTC_BINARY}"
+    "${SOURCE_OTC_CONFIG_BINARY}"
   )
 endmacro()
