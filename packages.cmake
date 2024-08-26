@@ -1,3 +1,11 @@
+# A property to store each package publish target
+set_property(GLOBAL PROPERTY _all_publish_targets)
+function(append_to_publish_targets)
+    get_property(tmp GLOBAL PROPERTY _all_publish_targets)
+    list(APPEND tmp ${ARGV})
+    set_property(GLOBAL PROPERTY _all_publish_targets "${tmp}")
+endfunction()
+
 # Build CPackConfig, create a target for building the package and add the target
 # to the list of all package targets
 macro(build_cpack_config)
@@ -107,9 +115,46 @@ macro(build_cpack_config)
     endif()
   endif()
 
+  set(_package_file "${CPACK_PACKAGE_FILE_NAME}.${PACKAGE_FILE_EXTENSION}")
+  set(_package_output "${CMAKE_BINARY_DIR}/${_package_file}")
+
+  # Print out all of the Linux distributions that the package will be uploaded
+  # for in Packagecloud
+  print_packagecloud_distros()
+
   # Build CPackConfig
   include(CPack)
+
+  # Add a target for each packagecloud distro the package should be published to
+  set(_pc_user "sumologic")
+  set(_pc_repo "ci-builds")
+  foreach(_pc_distro ${packagecloud_distros})
+    create_packagecloud_publish_target(${_pc_user} ${_pc_repo} ${_pc_distro} ${_package_output})
+  endforeach()
+
+  # set(_pc_repo "stable")
+  # foreach(_pc_distro ${packagecloud_distros})
+  #   create_packagecloud_publish_target(${_pc_user} ${_pc_repo} ${_pc_distro} ${_package_output})
+  # endforeach()
+
+  # Add a publish-package target to publish the package built above
+  get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
+  add_custom_target(publish-package
+    DEPENDS ${_all_publish_targets})
 endmacro()
+
+# Create a Packagecloud publish target for uploading a package to a specific
+# repository for a specific distribution.
+function(create_packagecloud_publish_target _pc_user _pc_repo _pc_distro _pkg_name)
+    set(_pc_output "${_pkg_name}-${_pc_repo}/${_pc_distro}")
+    separate_arguments(_packagecloud_push_cmd UNIX_COMMAND "packagecloud push --skip-exists ${_pc_user}/${_pc_repo}/${_pc_distro} ${_pkg_name}")
+    add_custom_command(OUTPUT ${_pc_output}
+        COMMAND ${_packagecloud_push_cmd}
+        DEPENDS ${_pkg_name}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        VERBATIM)
+    append_to_publish_targets(${_pc_output})
+endfunction()
 
 # Sets a GitHub output parameter by appending a statement to the file defined by
 # the GITHUB_OUTPUT environment variable. It enables the passing of data from
