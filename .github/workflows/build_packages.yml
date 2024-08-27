@@ -226,6 +226,19 @@ jobs:
             goarch: amd64
             package_arch: x64
             build_tool: wix
+          # fips targets
+          - target: otc_fips_linux_amd64_deb
+            runs_on: ubuntu-latest
+            build_tool: cmake
+          - target: otc_fips_linux_amd64_rpm
+            runs_on: ubuntu-latest
+            build_tool: cmake
+          - target: otc_fips_linux_arm64_deb
+            runs_on: ubuntu-latest
+            build_tool: cmake
+          - target: otc_fips_linux_arm64_rpm
+            runs_on: ubuntu-latest
+            build_tool: cmake
           - target: otc_fips_windows_amd64_wix
             runs_on: windows-2019
             goarch: amd64
