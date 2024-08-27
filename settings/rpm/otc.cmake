@@ -30,4 +30,6 @@ macro(set_otc_rpm_settings)
   set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/after-install")
   set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/before-remove")
   set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${RPM_HOOK_TEMPLATES_OUTPUT_DIR}/after-remove")
+
+  set(CPACK_RPM_PACKAGE_CONFLICTS "otelcol-sumo-fips")
 endmacro()

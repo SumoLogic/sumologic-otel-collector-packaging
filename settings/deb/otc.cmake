@@ -21,4 +21,6 @@ macro(set_otc_deb_settings)
     "${DEB_HOOK_TEMPLATES_OUTPUT_DIR}/prerm"
     "${DEB_HOOK_TEMPLATES_OUTPUT_DIR}/postrm"
   )
+
+  set(CPACK_DEBIAN_PACKAGE_CONFLICTS "otelcol-sumo-fips")
 endmacro()
