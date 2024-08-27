@@ -691,7 +691,6 @@ function setup_config() {
         echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
         mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
-        write_sumologic_extension
         write_opamp_extension
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
@@ -751,7 +750,6 @@ function setup_config() {
     if [[ ( -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ) || -n "${API_BASE_URL}" || -n "${FIELDS}" || "${EPHEMERAL}" == "true" ]]; then
         create_user_config_file "${COMMON_CONFIG_PATH}"
         add_extension_to_config "${COMMON_CONFIG_PATH}"
-        write_sumologic_extension
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
             write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
@@ -796,7 +794,6 @@ function setup_config_darwin() {
 
     create_user_config_file "${config_path}"
     add_extension_to_config "${config_path}"
-    write_sumologic_extension
 
     if [[ "${EPHEMERAL}" == "true" ]]; then
         write_ephemeral_true
@@ -1193,11 +1190,6 @@ function add_extension_to_config() {
 
     echo "extensions:" \
         | tee -a "${file}" > /dev/null 2>&1
-}
-
-# write sumologic extension to user configuration file
-function write_sumologic_extension() {
-    otelcol-config --write-kv '.extensions.sumologic = {}'
 }
 
 # write installation token to user configuration file
