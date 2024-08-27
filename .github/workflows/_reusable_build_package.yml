@@ -230,10 +230,10 @@ jobs:
 
       - name: Publish package to Packagecloud
         if: runner.os == 'Linux'
-        working-directory: build
-        env:
-          PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
-        run: make publish-package
+        uses: ./ci/github-actions/make
+        with:
+          target: publish-package
+          packagecloud-token: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
   test_package:
     runs-on: ${{ inputs.runs_on }}

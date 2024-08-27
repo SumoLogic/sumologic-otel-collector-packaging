@@ -4,10 +4,15 @@ inputs:
   target:
     required: true
     type: string
+  packagecloud-token:
+    required: false
+    type: string
 
 runs:
   using: 'docker'
   image: '../../../Dockerfile'
+  env:
+    PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud-token }}
   args:
     - make
     - ${{ inputs.target }}
