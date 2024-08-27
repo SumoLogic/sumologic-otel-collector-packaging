@@ -232,7 +232,7 @@ jobs:
         if: runner.os == 'Linux'
         env:
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
-        run: make push-package
+        run: make publish-package
 
   test_package:
     runs-on: ${{ inputs.runs_on }}
