@@ -1,4 +1,7 @@
 FROM alpine:3.17
+
+ARG TARGETPLATFORM
+
 LABEL org.opencontainers.image.authors="Sumo Logic <opensource-collection-team@sumologic.com>"
 
 RUN apk add --no-cache \
@@ -9,8 +12,16 @@ RUN apk add --no-cache \
     git \
     make \
     rpm \
-    rpm-dev
+    rpm-dev \
+    curl \
+    bash \
+    tar \
+    gzip
 
-COPY entrypoint.sh /entrypoint.sh
+COPY docker/install-deps.sh /install-deps.sh
+
+RUN /install-deps.sh "$TARGETARCH"
+
+COPY docker/entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

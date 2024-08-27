@@ -1,6 +1,10 @@
 # Require CMake >= 3.24.1
 cmake_minimum_required(VERSION 3.24.1 FATAL_ERROR)
 
+# Required and optional programs. Attempts to find required and optional
+# programs used to build the packages.
+find_program(PACKAGECLOUD_PROGRAM packagecloud REQUIRED)
+
 # Set version information
 include("${CMAKE_SOURCE_DIR}/version.cmake")
 
@@ -11,6 +15,7 @@ include(CPackComponent)
 # Set directory variables
 set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 set(COMPONENTS_DIR "${CMAKE_SOURCE_DIR}/components")
+set(DISTRIBUTIONS_DIR "${CMAKE_SOURCE_DIR}/distributions")
 set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/external_projects")
 set(SETTINGS_DIR "${CMAKE_SOURCE_DIR}/settings")
 set(TARGETS_DIR "${CMAKE_SOURCE_DIR}/targets")
@@ -24,6 +29,7 @@ include("${CMAKE_SOURCE_DIR}/components.cmake")
 include("${CMAKE_SOURCE_DIR}/external_projects.cmake")
 include("${CMAKE_SOURCE_DIR}/templates.cmake")
 include("${CMAKE_SOURCE_DIR}/packages.cmake")
+include("${CMAKE_SOURCE_DIR}/distributions.cmake")
 include("${CMAKE_SOURCE_DIR}/settings.cmake")
 
 # Add module paths

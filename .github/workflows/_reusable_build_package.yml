@@ -59,6 +59,8 @@ on:
         required: false
       gh_ci_token:
         required: true
+      packagecloud_token:
+        required: true
 
 defaults:
   run:
@@ -74,6 +76,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download packagecloud-go tool
+        run: |
+          baseURL="https://github.com/amdprophet/packagecloud-go/releases/download"
+          version="0.1.5"
+          file="packagecloud-go_${version}_linux_amd64.tar.gz"
+          curl -Lo /tmp/packagecloud-go.tar.gz $baseURL/$version/$file
+
+      - name: Install packagecloud-go tool
+        run: |
+          tar -C /tmp -zxf /tmp/packagecloud-go.tar.gz
+          sudo mv /tmp/packagecloud /usr/local/bin
 
       - name: Workflow URL for sumologic-otel-collector
         if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
@@ -213,6 +227,13 @@ jobs:
           name: ${{ steps.package.outputs.path }}
           path: ./build/${{ steps.package.outputs.path }}
           if-no-files-found: error
+
+      - name: Publish package to Packagecloud
+        if: runner.os == 'Linux'
+        uses: ./ci/github-actions/make
+        with:
+          target: publish-package
+          packagecloud-token: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
   test_package:
     runs-on: ${{ inputs.runs_on }}
