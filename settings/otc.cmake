@@ -92,7 +92,7 @@ macro(set_otc_settings)
   render_common_hook_templates()
 
   # CPack configuration
-  set(CPACK_PACKAGE_NAME "otelcol-sumo")
+  set(CPACK_PACKAGE_NAME "${package_name}")
   set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${package_arch}")
   set(CPACK_RESOURCE_FILE_LICENSE "${ASSETS_DIR}/LICENSE")
   set(CPACK_PACKAGE_DESCRIPTION_FILE "${ASSETS_DIR}/description")

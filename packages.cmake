@@ -132,11 +132,6 @@ macro(build_cpack_config)
     create_packagecloud_publish_target(${_pc_user} ${_pc_repo} ${_pc_distro} ${_package_output})
   endforeach()
 
-  # set(_pc_repo "stable")
-  # foreach(_pc_distro ${packagecloud_distros})
-  #   create_packagecloud_publish_target(${_pc_user} ${_pc_repo} ${_pc_distro} ${_package_output})
-  # endforeach()
-
   # Add a publish-package target to publish the package built above
   get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
   add_custom_target(publish-package
