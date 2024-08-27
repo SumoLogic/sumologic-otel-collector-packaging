@@ -1,7 +1,6 @@
 FROM alpine:3.17
 
 ARG TARGETPLATFORM
-ARG PACKAGECLOUDGO_VERSION=0.1.3
 
 LABEL org.opencontainers.image.authors="Sumo Logic <opensource-collection-team@sumologic.com>"
 

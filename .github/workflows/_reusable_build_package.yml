@@ -78,7 +78,7 @@ jobs:
       - name: Download packagecloud-go tool
         run: |
           baseURL="https://github.com/amdprophet/packagecloud-go/releases/download"
-          version="0.1.3"
+          version="0.1.5"
           file="packagecloud-go_${version}_linux_amd64.tar.gz"
           curl -Lo /tmp/packagecloud-go.tar.gz $baseURL/$version/$file
 
@@ -227,6 +227,8 @@ jobs:
           if-no-files-found: error
 
       - name: Publish package to Packagecloud
+        if: runner.os == 'Linux'
+        run: make push-package
 
   test_package:
     runs-on: ${{ inputs.runs_on }}
