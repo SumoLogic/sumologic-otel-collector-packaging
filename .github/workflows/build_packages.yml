@@ -198,6 +198,7 @@ jobs:
       microsoft_certname: ${{ secrets.MICROSOFT_CERTNAME }}
       microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
       gh_ci_token: ${{ secrets.GH_CI_TOKEN }}
+      packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
     strategy:
       matrix:

@@ -59,6 +59,8 @@ on:
         required: false
       gh_ci_token:
         required: true
+      packagecloud_token:
+        required: true
 
 defaults:
   run:
@@ -228,6 +230,7 @@ jobs:
 
       - name: Publish package to Packagecloud
         if: runner.os == 'Linux'
+        PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         run: make push-package
 
   test_package:
