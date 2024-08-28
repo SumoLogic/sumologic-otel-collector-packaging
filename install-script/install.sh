@@ -111,8 +111,6 @@ USER_OPAMP_API_URL=""
 USER_TOKEN=""
 USER_FIELDS=""
 
-ACL_LOG_FILE_PATHS="/var/log/ /srv/log/"
-
 SYSTEM_USER="otelcol-sumo"
 
 INDENTATION=""
@@ -936,33 +934,6 @@ function get_extension_indentation() {
     echo "${indentation}${indentation}"
 }
 
-function get_user_config() {
-    local file
-    readonly file="${1}"
-
-    if [[ ! -f "${file}" ]]; then
-        return
-    fi
-
-    # extract installation_token and strip quotes
-    # fallback to deprecated install_token
-    grep -m 1 installation_token "${file}" \
-        | sed 's/.*installation_token:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || grep -m 1 install_token "${file}" \
-        | sed 's/.*install_token:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || echo ""
-}
-
 # remove quotes and double quotes from yaml `value`` for `key: value` form
 function unescape_yaml() {
     local fields
@@ -1551,7 +1522,6 @@ check_dependencies
 
 readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE FILE_STORAGE CONFIG_DIRECTORY UNINSTALL
 readonly USER_CONFIG_DIRECTORY USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
-readonly ACL_LOG_FILE_PATHS
 readonly INSTALL_HOSTMETRICS
 readonly REMOTELY_MANAGED
 readonly CURL_MAX_TIME
