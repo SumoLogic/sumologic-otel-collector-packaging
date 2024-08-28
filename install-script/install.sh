@@ -21,8 +21,6 @@ ARG_SHORT_FIPS='f'
 ARG_LONG_FIPS='fips'
 ARG_SHORT_YES='y'
 ARG_LONG_YES='yes'
-ARG_SHORT_SKIP_SYSTEMD='d'
-ARG_LONG_SKIP_SYSTEMD='skip-systemd'
 ARG_SHORT_SKIP_CONFIG='s'
 ARG_LONG_SKIP_CONFIG='skip-config'
 ARG_SHORT_UNINSTALL='u'
@@ -58,7 +56,7 @@ PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
 
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
-readonly ARG_SHORT_SKIP_SYSTEMD ARG_LONG_SKIP_SYSTEMD ARG_SHORT_UNINSTALL ARG_LONG_UNINSTALL
+readonly ARG_SHORT_UNINSTALL ARG_LONG_UNINSTALL
 readonly ARG_SHORT_PURGE ARG_LONG_PURGE ARG_SHORT_DOWNLOAD ARG_LONG_DOWNLOAD
 readonly ARG_SHORT_CONFIG_BRANCH ARG_LONG_CONFIG_BRANCH ARG_SHORT_BINARY_BRANCH ARG_LONG_CONFIG_BRANCH
 readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH ARG_SHORT_SKIP_CONFIG ARG_LONG_SKIP_CONFIG
@@ -92,7 +90,6 @@ HOME_DIRECTORY=""
 CONFIG_DIRECTORY=""
 USER_CONFIG_DIRECTORY=""
 USER_ENV_DIRECTORY=""
-SYSTEMD_CONFIG=""
 UNINSTALL=""
 SUMO_BINARY_PATH=""
 SKIP_TOKEN=""
@@ -128,9 +125,6 @@ KEEP_DOWNLOADS=false
 
 CURL_MAX_TIME=1800
 
-# set by check_dependencies therefore cannot be set by set_defaults
-SYSTEMD_DISABLED=false
-
 ############################ Functions
 
 function usage() {
@@ -154,7 +148,6 @@ Supported arguments:
 
   -${ARG_SHORT_API}, --${ARG_LONG_API} <url>                       API URL, forces the collector to use non-default API
   -${ARG_SHORT_OPAMP_API}, --${ARG_LONG_OPAMP_API} <url>            OpAmp API URL, forces the collector to use non-default OpAmp API
-  -${ARG_SHORT_SKIP_SYSTEMD}, --${ARG_LONG_SKIP_SYSTEMD}                    Do not install systemd unit.
   -${ARG_SHORT_SKIP_CONFIG}, --${ARG_LONG_SKIP_CONFIG}                     Do not create default configuration.
   -${ARG_SHORT_VERSION}, --${ARG_LONG_VERSION} <version>               Version of Sumo Logic Distribution for OpenTelemetry Collector to install, e.g. 0.57.2-sumo-1.
                                         By default it gets latest version.
@@ -177,7 +170,6 @@ function set_defaults() {
     FILE_STORAGE="${HOME_DIRECTORY}/file_storage"
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
     CONFIG_DIRECTORY="/etc/otelcol-sumo"
-    SYSTEMD_CONFIG="/etc/systemd/system/otelcol-sumo.service"
     SUMO_BINARY_PATH="/usr/local/bin/otelcol-sumo"
     USER_CONFIG_DIRECTORY="${CONFIG_DIRECTORY}/conf.d"
     REMOTE_CONFIG_DIRECTORY="${CONFIG_DIRECTORY}/opamp.d"
@@ -235,9 +227,6 @@ function parse_options() {
       "--${ARG_LONG_FIPS}")
         set -- "$@" "-${ARG_SHORT_FIPS}"
         ;;
-      "--${ARG_LONG_SKIP_SYSTEMD}")
-        set -- "$@" "-${ARG_SHORT_SKIP_SYSTEMD}"
-        ;;
       "--${ARG_LONG_UNINSTALL}")
         set -- "$@" "-${ARG_SHORT_UNINSTALL}"
         ;;
@@ -269,7 +258,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_SKIP_SYSTEMD}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -293,7 +282,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_SKIP_SYSTEMD}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -313,7 +302,6 @@ function parse_options() {
       "${ARG_SHORT_VERSION}")       VERSION="${OPTARG}" ;;
       "${ARG_SHORT_FIPS}")          FIPS=true ;;
       "${ARG_SHORT_YES}")           CONTINUE=true ;;
-      "${ARG_SHORT_SKIP_SYSTEMD}")       SYSTEMD_DISABLED=true ;;
       "${ARG_SHORT_UNINSTALL}")     UNINSTALL=true ;;
       "${ARG_SHORT_PURGE}")         PURGE=true ;;
       "${ARG_SHORT_SKIP_TOKEN}")    SKIP_TOKEN=true ;;
@@ -422,10 +410,6 @@ function check_dependencies() {
             error=1
         fi
     done
-
-    if [[ ! -d /run/systemd/system ]]; then
-        SYSTEMD_DISABLED=true
-    fi
 
     if [[ "${error}" == "1" ]] ; then
         exit 1
@@ -693,7 +677,7 @@ function setup_config() {
 
         write_opamp_extension
 
-        if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
+        if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
             write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
         fi
 
@@ -747,11 +731,11 @@ function setup_config() {
     fi
 
     ## Check if there is anything to update in configuration
-    if [[ ( -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ) || -n "${API_BASE_URL}" || -n "${FIELDS}" || "${EPHEMERAL}" == "true" ]]; then
+    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || -n "${FIELDS}" || "${EPHEMERAL}" == "true" ]]; then
         create_user_config_file "${COMMON_CONFIG_PATH}"
         add_extension_to_config "${COMMON_CONFIG_PATH}"
 
-        if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" && "${SYSTEMD_DISABLED}" == "true" ]]; then
+        if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
             write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
         fi
 
@@ -862,40 +846,8 @@ function uninstall_darwin() {
 
 # uninstall otelcol-sumo on linux
 function uninstall_linux() {
-    local MSG
-    MSG="Going to remove Otelcol binary"
-
-    if [[ "${PURGE}" == "true" ]]; then
-        MSG="${MSG}, user, file storage and configurations"
-    fi
-
-    echo "${MSG}."
-    ask_to_continue
-
-    # disable systemd service
-    if [[ -f "${SYSTEMD_CONFIG}" ]]; then
-        systemctl stop otelcol-sumo || true
-        systemctl disable otelcol-sumo || true
-    fi
-
-    # remove binary
-    rm -f "${SUMO_BINARY_PATH}"
-
-    if [[ "${PURGE}" == "true" ]]; then
-        # remove configuration and data
-        rm -rf "${CONFIG_DIRECTORY}" "${FILE_STORAGE}" "${SYSTEMD_CONFIG}"
-
-        # remove user and group only if getent exists (it was required in order to create the user)
-        if command -v "getent" &> /dev/null; then
-            # remove user
-            if getent passwd "${SYSTEM_USER}" > /dev/null; then
-                userdel -r -f "${SYSTEM_USER}"
-                groupdel "${SYSTEM_USER}" 2>/dev/null || true
-            fi
-        fi
-    fi
-
-    echo "Uninstallation completed"
+    echo "linux uninstall unimplemented"
+    exit 1
 }
 
 function escape_sed() {
@@ -1516,27 +1468,6 @@ function get_package_from_url() {
     fi
 }
 
-function set_acl_on_log_paths() {
-    if command -v setfacl &> /dev/null; then
-        for log_path in ${ACL_LOG_FILE_PATHS}; do
-            if [ -d "$log_path" ]; then
-                echo -e "Running: setfacl -R -m d:u:${SYSTEM_USER}:r-x,u:${SYSTEM_USER}:r-x,g:${SYSTEM_USER}:r-x ${log_path}"
-                setfacl -R -m d:u:${SYSTEM_USER}:r-x,d:g:${SYSTEM_USER}:r-x,u:${SYSTEM_USER}:r-x,g:${SYSTEM_USER}:r-x "${log_path}"
-            fi
-        done
-    else
-        echo ""
-        echo "setfacl command not found, skipping ACL creation for system log file paths."
-        echo -e "You can fix it manually by installing setfacl and executing the following commands:"
-        for log_path in ${ACL_LOG_FILE_PATHS}; do
-            if [ -d "$log_path" ]; then
-                echo -e "-> setfacl -R -m d:u:${SYSTEM_USER}:r-x,d:g:${SYSTEM_USER}:r-x,u:${SYSTEM_USER}:r-x,g:${SYSTEM_USER}:r-x ${log_path}"
-            fi
-        done
-        echo ""
-    fi
-}
-
 function plutil_create_key() {
     local file key type value
     readonly file="${1}"
@@ -1618,7 +1549,7 @@ set_tmpdir
 install_missing_dependencies
 check_dependencies
 
-readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE FILE_STORAGE CONFIG_DIRECTORY SYSTEMD_CONFIG UNINSTALL
+readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE FILE_STORAGE CONFIG_DIRECTORY UNINSTALL
 readonly USER_CONFIG_DIRECTORY USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
 readonly ACL_LOG_FILE_PATHS
 readonly INSTALL_HOSTMETRICS
@@ -1632,19 +1563,10 @@ if [[ "${UNINSTALL}" == "true" ]]; then
 fi
 
 # Attempt to find a token from an existing installation
-case "${OS_TYPE}" in
-darwin)
-  USER_TOKEN="$(plutil_extract_key "${LAUNCHD_CONFIG}" "${LAUNCHD_TOKEN_KEY}")"
-  ;;
-*)
-  USER_TOKEN="$(get_user_config "${COMMON_CONFIG_PATH}")"
-
-  # If Systemd is not disabled, try to extract token from systemd env file
-  if [[ -z "${USER_TOKEN}" && "${SYSTEMD_DISABLED}" == "false" ]]; then
-      USER_TOKEN="$(get_user_env_config "${TOKEN_ENV_FILE}")"
-  fi
-  ;;
-esac
+USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+if [[ -z "${USER_TOKEN}" ]]; then
+    USER_TOKEN="$(get_user_env_config "${TOKEN_ENV_FILE}")"
+fi
 readonly USER_TOKEN
 
 # Exit if installation token is not set and there is no user configuration
@@ -1694,13 +1616,6 @@ if [[ -n "${BINARY_BRANCH}" && -z "${GITHUB_TOKEN}" ]]; then
     exit 1
 fi
 set -u
-
-# Disable systemd if token is not specified at all
-if [[ -z "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
-    SYSTEMD_DISABLED=true
-fi
-
-readonly SYSTEMD_DISABLED
 
 if [ "${FIPS}" == "true" ]; then
     case "${OS_TYPE}" in
@@ -1907,23 +1822,6 @@ if [[ "${SKIP_CONFIG}" == "false" ]]; then
     setup_config
 fi
 
-if [[ "${SYSTEMD_DISABLED}" == "true" ]]; then
-    COMMAND_FLAGS=""
-
-    if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-        COMMAND_FLAGS="--remote-config \"opamp:${CONFIG_PATH}\""
-    else
-        COMMAND_FLAGS="--config=${CONFIG_PATH} --config \"glob:${CONFIG_DIRECTORY}/conf.d/*.yaml\""
-    fi
-
-    echo ""
-    echo Warning: running as a service is not supported on your operation system.
-    echo "Please use 'sudo otelcol-sumo ${COMMAND_FLAGS}' to run Sumo Logic Distribution for OpenTelemetry Collector"
-    exit 0
-fi
-
-echo 'We are going to set up a systemd service'
-
 if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
     echo 'Writing installation token to env file'
     write_installation_token_env "${SUMOLOGIC_INSTALLATION_TOKEN}" "${TOKEN_ENV_FILE}"
@@ -1944,56 +1842,6 @@ else
     fi
     readonly ADDITIONAL_OPTIONS
     useradd "${ADDITIONAL_OPTIONS}" -rUs /bin/false -d "${HOME_DIRECTORY}" "${SYSTEM_USER}"
-fi
-
-echo 'Creating ACL grants on log paths'
-set_acl_on_log_paths
-
-if [[ "${SKIP_CONFIG}" == "false" ]]; then
-    echo 'Changing ownership for config and storage'
-    chown -R "${SYSTEM_USER}":"${SYSTEM_USER}" "${HOME_DIRECTORY}" "${CONFIG_DIRECTORY}"/*
-    chown -R "${SYSTEM_USER}":"${SYSTEM_USER}" "${USER_ENV_DIRECTORY}"
-
-    if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-        chown -R "${SYSTEM_USER}":"${SYSTEM_USER}" "${REMOTE_CONFIG_DIRECTORY}"
-    fi
-fi
-
-SYSTEMD_CONFIG_URL="https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/${CONFIG_BRANCH}/examples/systemd/otelcol-sumo.service"
-
-TMP_SYSTEMD_CONFIG="${TMPDIR}/otelcol-sumo.service"
-TMP_SYSTEMD_CONFIG_BAK="${TMP_SYSTEMD_CONFIG}.bak"
-echo 'Getting service configuration'
-curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -fL "${SYSTEMD_CONFIG_URL}" --output "${TMP_SYSTEMD_CONFIG}" --progress-bar
-sed -i.bak -e "s%/etc/otelcol-sumo%${CONFIG_DIRECTORY}%" "${TMP_SYSTEMD_CONFIG}"
-sed -i.bak -e "s%/etc/otelcol-sumo/env%${USER_ENV_DIRECTORY}%" "${TMP_SYSTEMD_CONFIG}"
-
-if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-    sed -i.bak -e "s% --config.*$% --remote-config \"opamp:${CONFIG_PATH}\"%" "${TMP_SYSTEMD_CONFIG}"
-fi
-
-# clean up bak file
-rm -f "${TMP_SYSTEMD_CONFIG_BAK}"
-
-mv "${TMP_SYSTEMD_CONFIG}" "${SYSTEMD_CONFIG}"
-
-if command -v sestatus && sestatus; then
-    echo "SELinux is enabled, relabeling binary and systemd unit file"
-
-    if command -v semanage &> /dev/null; then
-        # Check if there's already an fcontext record for the collector bin.
-        if semanage fcontext -l | grep otelcol-sumo &> /dev/null; then
-            # Modify the existing fcontext record.
-            semanage fcontext -m -t bin_t /usr/local/bin/otelcol-sumo
-        else
-            # Add an fcontext record.
-            semanage fcontext -a -t bin_t /usr/local/bin/otelcol-sumo
-        fi
-        restorecon -v "${SUMO_BINARY_PATH}"
-        restorecon -v "${SYSTEMD_CONFIG}"
-    else
-        echo "semanage command not found, skipping SELinux relabeling"
-    fi
 fi
 
 echo 'Reloading systemd'
