@@ -41,6 +41,9 @@ jobs:
         with:
           go-version: stable
 
+      - name: Install otelcol-config
+        run: go install github.com/SumoLogic/sumologic-otel-collector/pkg/tools/otelcol-config@latest
+
       - name: Run install script tests
         if: steps.changed-files.outputs.any_changed == 'true'
         working-directory: install-script/test
