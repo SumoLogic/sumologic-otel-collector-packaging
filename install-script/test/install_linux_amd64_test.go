@@ -31,7 +31,6 @@ func TestInstallScriptLinuxAmd64(t *testing.T) {
 				checkBinaryIsFIPS,
 				checkConfigNotCreated,
 				checkUserConfigNotCreated,
-				checkSystemdConfigNotCreated,
 				checkUserNotExists,
 			},
 		},

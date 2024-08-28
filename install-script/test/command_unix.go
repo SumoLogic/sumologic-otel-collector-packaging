@@ -16,7 +16,6 @@ import (
 type installOptions struct {
 	installToken       string
 	autoconfirm        bool
-	skipSystemd        bool
 	tags               map[string]string
 	skipConfig         bool
 	skipInstallToken   bool
@@ -46,10 +45,6 @@ func (io *installOptions) string() []string {
 
 	if io.fips {
 		opts = append(opts, "--fips")
-	}
-
-	if io.skipSystemd {
-		opts = append(opts, "--skip-systemd")
 	}
 
 	if io.skipConfig {

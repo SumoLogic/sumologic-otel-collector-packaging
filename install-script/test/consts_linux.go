@@ -1,10 +1,8 @@
 package sumologic_scripts_tests
 
 const (
-	envDirectoryPath     string = etcPath + "/env"
-	systemdDirectoryPath string = "/run/systemd/system"
-	systemdPath          string = "/etc/systemd/system/otelcol-sumo.service"
-	tokenEnvFilePath     string = envDirectoryPath + "/token.env"
+	envDirectoryPath string = etcPath + "/env"
+	tokenEnvFilePath string = envDirectoryPath + "/token.env"
 
 	// TODO: fix mismatch between package permissions & expected permissions
 	commonConfigPathFilePermissions uint32 = 0550

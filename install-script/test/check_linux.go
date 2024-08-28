@@ -90,35 +90,6 @@ func checkOutputUserAddWarnings(c check) {
 	require.NotContains(c.test, errOutput, "useradd", "unexpected useradd output")
 }
 
-func checkSystemdAvailability(c check) bool {
-	return assert.DirExists(&testing.T{}, systemdDirectoryPath, "systemd is not supported")
-}
-
-func checkSystemdConfigCreated(c check) {
-	require.FileExists(c.test, systemdPath, "systemd configuration has not been created properly")
-}
-
-func checkSystemdConfigNotCreated(c check) {
-	require.NoFileExists(c.test, systemdPath, "systemd configuration has been created")
-}
-
-func checkSystemdEnvDirExists(c check) {
-	require.DirExists(c.test, etcPath+"/env", "systemd env directory does not exist")
-}
-
-func checkSystemdEnvDirPermissions(c check) {
-	PathHasPermissions(c.test, etcPath+"/env", configPathDirPermissions)
-}
-
-func checkRemoteFlagInSystemdFile(c check) {
-	contents, err := getSystemdConfig(systemdPath)
-
-	require.NoError(c.test, err)
-
-	assert.Contains(c.test, contents, "--remote-config")
-	assert.NotContains(c.test, contents, "--config")
-}
-
 func checkTokenEnvFileCreated(c check) {
 	require.FileExists(c.test, tokenEnvFilePath, "env token file has not been created")
 }
@@ -256,13 +227,6 @@ func preActionMockStructure(c check) {
 
 	content := []byte("#!/bin/sh\necho hello world\n")
 	err = os.WriteFile(binaryPath, content, 0755)
-	require.NoError(c.test, err)
-}
-
-func preActionMockSystemdStructure(c check) {
-	preActionMockStructure(c)
-
-	_, err := os.Create(systemdPath)
 	require.NoError(c.test, err)
 }
 
