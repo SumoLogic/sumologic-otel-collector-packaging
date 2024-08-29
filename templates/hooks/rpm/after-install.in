@@ -1,13 +1,16 @@
 #!/bin/sh
+# -*- mode: sh; -*- vim: ft=sh :
 
 @otc_linux_functions@
 
 case "$1" in
     1) # initial install
     set_file_ownership
+    set_capabilities
     ;;
     2) # upgrade
     set_file_ownership
+    set_capabilities
     ;;
 
 esac

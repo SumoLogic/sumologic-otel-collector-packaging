@@ -1,4 +1,5 @@
 #!/bin/sh
+# -*- mode: sh; -*- vim: ft=sh :
 
 case "$1" in
     purge)

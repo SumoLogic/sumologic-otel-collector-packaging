@@ -15,6 +15,7 @@ function(render_common_hook_templates)
     "OTC_CONFIG_PATH"
     "OTC_USER_ENV_DIR"
     "OTC_CONFIG_FRAGMENT_DIR"
+    "OTC_BIN_PATH"
   )
 
   set(file_names

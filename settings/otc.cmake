@@ -37,6 +37,7 @@ macro(set_otc_settings)
   set(OTC_LOG_DIR "var/log/otelcol-sumo")
 
   # File paths
+  set(OTC_BIN_PATH "${OTC_BIN_DIR}/${OTC_BINARY}")
   set(OTC_SUMOLOGIC_CONFIG_PATH "${OTC_CONFIG_DIR}/${OTC_SUMOLOGIC_CONFIG}")
 
   ##
