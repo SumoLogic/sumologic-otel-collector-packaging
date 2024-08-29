@@ -1,4 +1,16 @@
 receivers:
+  redis/localhost:
+    endpoint: localhost:6379
+    collection_interval: 1m
+    username: admin
+    password: password
+    metrics:
+      redis.cmd.calls:
+        enabled: true
+      redis.replication.replica_offset:
+        enabled: true
+      redis.role:
+        enabled: true
   filelog/redis/localhost:
     storage: file_storage
     include_file_name: false
@@ -24,8 +36,19 @@ processors:
       - key: _contentType
         value: OpenTelemetry
         action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
       - key: db.cluster.name
         value: test
+        action: insert
+  resource/redis_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: redis/redis
+        action: insert
+      - key: _sourceName
+        value: redis
         action: insert
   resource/redis_resource_attributes/logs/localhost:
     attributes:
@@ -34,14 +57,25 @@ processors:
         action: insert
 service:
   pipelines:
+    metrics/redis/localhost:
+      receivers:
+        - redis/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/redis_resource_attributes/metrics/localhost
+        - resource/redis_resource_attributes/localhost
+      exporters:
+        - sumologic
     logs/redis/localhost:
       receivers:
         - filelog/redis/localhost
       processors:
         - memory_limiter
-        - resource/redis_resource_attributes/localhost
-        - batch
         - resourcedetection/system
+        - batch
+        - resource/redis_resource_attributes/localhost
         - resource/redis_resource_attributes/logs/localhost
       exporters:
         - sumologic
