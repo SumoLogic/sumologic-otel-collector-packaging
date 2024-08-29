@@ -1,4 +1,10 @@
 receivers:
+  jmx/cassandrametrics/localhost:
+    jar_path: /etc/otelcol-sumo/opentelemetry-jmx-metrics.jar
+    endpoint: localhost:11211
+    target_system: cassandra
+    collection_interval: 1m
+    log_level: info
   filelog/cassandra/localhost:
     storage: file_storage
     include_file_name: false
@@ -24,6 +30,9 @@ processors:
       - key: _contentType
         value: OpenTelemetry
         action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
       - key: db.cluster.name
         value: test
         action: insert
@@ -32,16 +41,35 @@ processors:
       - key: _source
         value: cassandra/filelog
         action: insert
+  resource/cassandra_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: cassandra/jmx
+        action: insert
+      - key: _sourceName
+        value: cassandra
+        action: insert
 service:
   pipelines:
+    metrics/cassandra/localhost:
+      receivers:
+        - jmx/cassandrametrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/cassandra_resource_attributes/localhost
+        - resource/cassandra_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
     logs/cassandra/localhost:
       receivers:
         - filelog/cassandra/localhost
       processors:
         - memory_limiter
+        - resourcedetection/system
         - resource/cassandra_resource_attributes/localhost
         - batch
-        - resourcedetection/system
         - resource/cassandra_resource_attributes/logs/localhost
       exporters:
         - sumologic
