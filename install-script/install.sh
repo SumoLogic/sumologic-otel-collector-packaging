@@ -82,11 +82,10 @@ set -u
 
 API_BASE_URL=""
 OPAMP_API_URL=""
-FIELDS=""
+FIELDS=()
 VERSION=""
 FIPS=false
 CONTINUE=false
-HOME_DIRECTORY=""
 CONFIG_DIRECTORY=""
 USER_CONFIG_DIRECTORY=""
 USER_ENV_DIRECTORY=""
@@ -109,12 +108,6 @@ LAUNCHD_TOKEN_KEY=""
 USER_API_URL=""
 USER_OPAMP_API_URL=""
 USER_TOKEN=""
-USER_FIELDS=""
-
-SYSTEM_USER="otelcol-sumo"
-
-INDENTATION=""
-EXT_INDENTATION=""
 
 CONFIG_BRANCH=""
 BINARY_BRANCH=""
@@ -136,7 +129,7 @@ Supported arguments:
   -${ARG_SHORT_SKIP_TOKEN}, --${ARG_LONG_SKIP_TOKEN}         Skips requirement for installation token.
                                         This option do not disable default configuration creation.
   -${ARG_SHORT_TAG}, --${ARG_LONG_TAG} <key=value>                 Sets tag for collector. This argument can be use multiple times. One per tag.
-  -${ARG_SHORT_DOWNLOAD}, --${ARG_LONG_DOWNLOAD}                   Download new binary only and skip configuration part.
+  -${ARG_SHORT_DOWNLOAD}, --${ARG_LONG_DOWNLOAD}                   Download new binary only and skip configuration part. (Mac OS only)
 
   -${ARG_SHORT_UNINSTALL}, --${ARG_LONG_UNINSTALL}                       Removes Sumo Logic Distribution for OpenTelemetry Collector from the system and
                                         disable Systemd service eventually.
@@ -164,8 +157,6 @@ EOF
 }
 
 function set_defaults() {
-    HOME_DIRECTORY="/var/lib/otelcol-sumo"
-    FILE_STORAGE="${HOME_DIRECTORY}/file_storage"
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
     CONFIG_DIRECTORY="/etc/otelcol-sumo"
     SUMO_BINARY_PATH="/usr/local/bin/otelcol-sumo"
@@ -174,11 +165,7 @@ function set_defaults() {
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
     CONFIG_PATH="${CONFIG_DIRECTORY}/sumologic.yaml"
-    CONFIG_BAK_PATH="${CONFIG_PATH}.bak"
     COMMON_CONFIG_PATH="${USER_CONFIG_DIRECTORY}/common.yaml"
-    COMMON_CONFIG_BAK_PATH="${USER_CONFIG_DIRECTORY}/common.yaml.bak"
-    INDENTATION="  "
-    EXT_INDENTATION="${INDENTATION}${INDENTATION}"
 
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
@@ -318,67 +305,15 @@ function parse_options() {
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
-      "${ARG_SHORT_TAG}")
-        if [[ "${OPTARG}" != ?*"="* ]]; then
-            echo "Invalid tag: '${OPTARG}'. Should be in 'key=value' format"
-            usage
-            exit 1
-        fi
-
-        value="$(echo -e "${OPTARG}" | sed 's/.*=//')"
-        key="$(echo -e "${OPTARG}" | sed 's/\(.*\)=.*/\1/')"
-        line="${key}=$(escape_yaml_value "${value}")"
-
-        # Cannot use `\n` and have to use `\\` as break line due to OSx sed implementation
-        FIELDS="${FIELDS}\\
-$(escape_sed "${line}")" ;;
-    "?")                            ;;
-      *)                            usage; exit 1 ;;
+      "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
     esac
 
-    # Exit loop as we iterated over all arguments
-    if [[ "${OPTIND}" -gt $# ]]; then
-      break
-    fi
   done
 }
 
 # Get github rate limit
 function github_rate_limit() {
     curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -X GET https://api.github.com/rate_limit -v 2>&1 | grep x-ratelimit-remaining | grep -oE "[0-9]+"
-}
-
-# This function is applicable to very few platforms/distributions.
-function install_missing_dependencies() {
-    local REQUIRED_COMMANDS
-    local REQUIRED_PACKAGES
-    REQUIRED_COMMANDS=()
-    REQUIRED_PACKAGES=()
-    if [[ -n "${BINARY_BRANCH}" ]]; then  # unzip is only necessary for downloading from GHA artifacts
-        REQUIRED_COMMANDS+=(unzip)
-        REQUIRED_PACKAGES+=(unzip)
-    fi
-    if [[ -f "/etc/redhat-release" ]]; then # this will install semanage, which is necessary for SELinux relabeling
-        REQUIRED_COMMANDS+=(semanage)
-        REQUIRED_PACKAGES+=(policycoreutils-python-utils)
-    fi
-    if [ "${#REQUIRED_COMMANDS[@]}" == 0 ]; then
-        # not all bash versions handle empty array expansion correctly
-        # therefore we guard against this explicitly here
-        return
-    fi
-    for i in "${!REQUIRED_COMMANDS[@]}"; do
-        cmd=${REQUIRED_COMMANDS[i]}
-        pkg=${REQUIRED_PACKAGES[i]}
-        if ! command -v "${cmd}" &> /dev/null; then
-            # Attempt to install it via yum if on a RHEL distribution.
-            if [[ -f "/etc/redhat-release" ]]; then
-                echo "Command '${cmd}' not found. Attempting to install '${pkg}'..."
-                # This only works if the tool/command matches the system package name.
-                yum install -y "${pkg}"
-            fi
-        fi
-    done
 }
 
 # Ensure TMPDIR is set to a directory where we can safely store temporary files
@@ -640,33 +575,7 @@ function print_breaking_changes() {
 function setup_config() {
     echo 'We are going to get and set up a default configuration for you'
 
-    echo -e "Creating file_storage directory (${FILE_STORAGE})"
-    mkdir -p "${FILE_STORAGE}"
-
-    echo -e "Creating configuration directory (${CONFIG_DIRECTORY})"
-    mkdir -p "${CONFIG_DIRECTORY}"
-
-    echo -e "Creating user configurations directory (${USER_CONFIG_DIRECTORY})"
-    mkdir -p "${USER_CONFIG_DIRECTORY}"
-
-    echo -e "Creating user env directory (${USER_ENV_DIRECTORY})"
-    mkdir -p "${USER_ENV_DIRECTORY}"
-
-    echo 'Changing permissions for config files and storage'
-    chmod 551 "${CONFIG_DIRECTORY}"  # config directory world traversable, as is the /etc/ standard
-
-    echo 'Changing permissions for user env directory'
-    chmod 550 "${USER_ENV_DIRECTORY}"
-    chmod g+s "${USER_ENV_DIRECTORY}"
-
     echo "Generating configuration and saving as ${CONFIG_PATH}"
-
-    CONFIG_URL="https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/${CONFIG_BRANCH}/examples/sumologic.yaml"
-    if ! curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -f -s "${CONFIG_URL}" -o "${CONFIG_PATH}"; then
-        echo "Cannot obtain configuration for '${CONFIG_BRANCH}' branch. Either '${CONFIG_URL}' is invalid, or the network connection is unstable."
-        exit 1
-    fi
-
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         echo "Warning: remote management is currently in beta."
 
@@ -691,18 +600,7 @@ function setup_config() {
             write_opamp_endpoint "${OPAMP_API_URL}"
         fi
 
-        if [[ -n "${FIELDS}" ]]; then
-            write_tags "${FIELDS}"
-        fi
-
-        rm -f "${CONFIG_BAK_PATH}"
-
-        # Finish setting permissions after we're done creating config files
-        chmod -R 440 "${CONFIG_DIRECTORY}"/*  # all files only readable by the owner
-        find "${CONFIG_DIRECTORY}/" -mindepth 1 -type d -exec chmod 550 {} \;  # directories also traversable
-
-        # Remote configuration directory must be writable
-        chmod 750 "${REMOTE_CONFIG_DIRECTORY}"
+        write_tags "${FIELDS[@]}"
 
         # Return/stop function execution
         return
@@ -710,29 +608,18 @@ function setup_config() {
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
         echo -e "Installing ${OS_TYPE} hostmetrics configuration"
-        HOSTMETRICS_CONFIG_URL="https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/${CONFIG_BRANCH}/examples/conf.d/${OS_TYPE}.yaml"
-        if ! curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -f -s "${HOSTMETRICS_CONFIG_URL}" -o "${CONFIG_DIRECTORY}/conf.d/hostmetrics.yaml"; then
-            echo "Cannot obtain hostmetrics configuration for '${CONFIG_BRANCH}' branch. Either '${HOSTMETRICS_CONFIG_URL}' is invalid, or the network connection is unstable."
-            exit 1
-        fi
+        otelcol-config --enable-hostmetrics
         if [[ "${OS_TYPE}" == "linux" ]]; then
             echo -e "Setting the CAP_DAC_READ_SEARCH Linux capability on the collector binary to allow it to read host metrics from /proc directory: setcap 'cap_dac_read_search=ep' \"${SUMO_BINARY_PATH}\""
             echo -e "You can remove it with the following command: sudo setcap -r \"${SUMO_BINARY_PATH}\""
             echo -e "Without this capability, the collector will not be able to collect some of the host metrics."
+            # TODO(echlebek): remove this when it's supported in packaging
             setcap 'cap_dac_read_search=ep' "${SUMO_BINARY_PATH}"
         fi
     fi
 
-    # Ensure that configuration is created
-    if [[ -f "${COMMON_CONFIG_PATH}" ]]; then
-        echo "User configuration (${COMMON_CONFIG_PATH}) already exist)"
-    fi
-
     ## Check if there is anything to update in configuration
-    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || -n "${FIELDS}" || "${EPHEMERAL}" == "true" ]]; then
-        create_user_config_file "${COMMON_CONFIG_PATH}"
-        add_extension_to_config "${COMMON_CONFIG_PATH}"
-
+    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" ]]; then
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
             write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
         fi
@@ -752,16 +639,8 @@ function setup_config() {
             write_opamp_endpoint "${OPAMP_API_URL}"
         fi
 
-        if [[ -n "${FIELDS}" && -z "${USER_FIELDS}" ]]; then
-            write_tags "${FIELDS}"
-        fi
-
-        # clean up bak file
-        rm -f "${COMMON_CONFIG_BAK_PATH}"
+        write_tags "${FIELDS[@]}"
     fi
-    # Finish setting permissions after we're done creating config files
-    chmod -R 440 "${CONFIG_DIRECTORY}"/*  # all files only readable by the owner
-    find "${CONFIG_DIRECTORY}/" -mindepth 1 -type d -exec chmod 550 {} \;  # directories also traversable
 }
 
 function setup_config_darwin() {
@@ -786,14 +665,13 @@ function setup_config_darwin() {
         write_api_url "${API_BASE_URL}"
     fi
 
-    if [[ -n "${FIELDS}" ]]; then
-        write_tags "${FIELDS}"
-    fi
+    write_tags "${FIELDS[@]}"
 
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         echo "Warning: remote management is currently in beta."
 
         echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
+        # TODO(echlebek): remove this once packaging does it
         mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
         write_opamp_extension
@@ -807,9 +685,6 @@ function setup_config_darwin() {
         chown _otelcol-sumo:_otelcol-sumo "${REMOTE_CONFIG_DIRECTORY}"
     fi
 
-    # clean up bak files
-    rm -f "${CONFIG_BAK_PATH}"
-    rm -f "${COMMON_CONFIG_BAK_PATH}"
 }
 
 # uninstall otelcol-sumo
@@ -858,136 +733,6 @@ function escape_sed() {
         | sed -e 's|/|\\/|g'
 }
 
-function get_indentation() {
-    local file
-    readonly file="${1}"
-
-    local default
-    readonly default="${2}"
-
-    if [[ ! -f "${file}" ]]; then
-        echo "${default}"
-        return
-    fi
-
-    local indentation
-
-    # take indentation same as first extension
-    indentation="$(sed -e '/^extensions/,/^[a-z]/!d' "${file}" \
-        | grep -m 1 -E '^\s+[a-z]' \
-        | grep -m 1 -oE '^\s+' \
-    || echo "")"
-    if [[ -n "${indentation}" ]]; then
-        echo "${indentation}"
-        return
-    fi
-
-    # otherwise take indentation from any other package
-    indentation="$(grep -m 1 -E '^\s+[a-z]' "${file}" \
-        | grep -m 1 -oE '^\s+' \
-    || echo "")"
-    if [[ -n "${indentation}" ]]; then
-        echo "${indentation}"
-        return
-    fi
-
-    # return default indentation
-    echo "${default}"
-}
-
-function get_extension_indentation() {
-    local file
-    readonly file="${1}"
-
-    local indentation="${2}"
-    readonly indentation
-
-    if [[ ! -f "${file}" ]]; then
-        echo "${indentation}${indentation}"
-        return
-    fi
-
-    local ext_indentation
-
-    # take indentation same as properties of sumologic extension
-    ext_indentation="$(sed -e "/^${indentation}sumologic:/,/^${indentation}[a-z]/!d" "${file}" \
-        | grep -m 1 -E "^${indentation}\s+[a-z]" \
-        | grep -m 1 -oE '^\s+' \
-    || echo "")"
-
-    if [[ -n "${ext_indentation}" ]]; then
-        echo "${ext_indentation}"
-        return
-    fi
-
-    # otherwise take indentation from properties of any other package
-    ext_indentation="$(grep -m 1 -E "^${indentation}\s+[a-z]" "${file}" \
-        | grep -m 1 -oE '^\s+' \
-    || echo "")"
-
-    if [[ -n "${ext_indentation}" ]]; then
-        echo "${ext_indentation}"
-        return
-    fi
-
-    # otherwise use double indentation
-    echo "${indentation}${indentation}"
-}
-
-# remove quotes and double quotes from yaml `value`` for `key: value` form
-function unescape_yaml() {
-    local fields
-    readonly fields="${1}"
-
-    # Process the string line by line
-    echo -e "${fields}" | while IFS= read -r line; do
-        # strip `\` from the end of the line
-        line="$(echo "${line}" | sed 's/\\$//')"
-        # extract key
-        key="$(echo -e "${line}" | sed 's/\(.*\):.*/\1/')"
-
-        # extract value
-        value="$(echo -e "${line}" | sed 's/.*:[[:blank:]]*//')"
-        # remove quote, double quote and escapes
-        value="$(unescape_yaml_value "${value}")"
-        if [[ -n "${key}" && -n "${value}" ]]; then
-            echo "${key}: ${value}"
-        fi
-    done
-}
-
-# escape yaml value by replacing `'` with `''` and adding surrounding `'`
-function escape_yaml_value() {
-    local value
-    readonly value="${1}"
-
-    echo "'$(echo -e "${value}" | sed "s/'/''/")'"
-}
-
-function unescape_yaml_value() {
-    local value
-    readonly value="${1}"
-
-    if echo -e "${value}" | grep -oqE "^'"; then
-        # remove `'` from beginning and end of the string
-        # replace `''` with `'`
-        echo -e "${value}" \
-        | sed "s/'[[:blank:]]*$//" \
-        | sed "s/^[[:blank:]]*'//" \
-        | sed "s/''/'/"
-    elif echo -e "${value}" | grep -oqE '^"'; then
-        # remove `"` from beginning and end of the string
-        # remove `'` from beginning and end of the string
-        # replace `\"` with `"`
-        echo -e "${value}" \
-        | sed 's/"[[:blank:]]*$//' \
-        | sed 's/^[[:blank:]]*"//' \
-        | sed 's/\"/"/'
-    else
-        echo -e "${value}"
-    fi
-}
-
 function get_user_env_config() {
     local file
     readonly file="${1}"
@@ -1015,104 +760,11 @@ function get_user_env_config() {
 }
 
 function get_user_api_url() {
-    local file
-    readonly file="${1}"
-
-    if [[ ! -f "${file}" ]]; then
-        return
-    fi
-
-    # extract api_base_url and strip quotes
-    grep -m 1 api_base_url "${file}" \
-        | sed 's/.*api_base_url:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || echo ""
+    otelcol-config --read-kv .extensions.sumologic.api_base_url
 }
 
 function get_user_opamp_endpoint() {
-    local file
-    readonly file="${1}"
-
-    if [[ ! -f "${file}" ]]; then
-        return
-    fi
-
-    # extract endpoint and strip quotes
-    grep -m 1 endpoint "${file}" \
-        | sed 's/.*endpoint:[[:blank:]]*//' \
-        | sed 's/[[:blank:]]*$//' \
-        | sed 's/^"//' \
-        | sed "s/^'//" \
-        | sed 's/"$//' \
-        | sed "s/'\$//" \
-    || echo ""
-}
-
-function get_user_tags() {
-    local file
-    readonly file="${1}"
-
-    local indentation
-    readonly indentation="${2}"
-
-    local ext_indentation
-    readonly ext_indentation="${3}"
-
-    if [[ ! -f "${file}" ]]; then
-        return
-    fi
-
-    local fields
-    fields="$(sed -e '/^extensions/,/^[a-z]/!d' "${file}" \
-        | sed -e "/^${indentation}sumologic/,/^${indentation}[a-z]/!d" \
-        | sed -e "/^${ext_indentation}collector_fields/,/^${ext_indentation}[a-z]/!d;" \
-        | grep -vE "^${ext_indentation}\\S" \
-        | sed -e 's/^[[:blank:]]*//' \
-        || echo "")"
-    unescape_yaml "${fields}" \
-        | sort \
-        || echo ""
-}
-
-function get_fields_to_compare() {
-    local fields
-    # replace \/ with /
-    fields="$(echo "${FIELDS}" | sed -e 's|\\/|/|')"
-    declare -r fields
-
-    unescape_yaml "${fields}" \
-        | grep -vE '^$' \
-        | sort \
-    || echo ""
-}
-
-function create_user_config_file() {
-    local file
-    readonly file="${1}"
-
-    if [[ -f "${file}" ]]; then
-        return
-    fi
-
-    touch "${file}"
-    chmod 440 "${file}"
-}
-
-# write extensions section to user configuration file
-function add_extension_to_config() {
-    local file
-    readonly file="${1}"
-
-    if grep -q 'extensions:$' "${file}"; then
-        return
-    fi
-
-    echo "extensions:" \
-        | tee -a "${file}" > /dev/null 2>&1
+    otelcol-config --read-kv .extensions.opamp.endpoint
 }
 
 # write installation token to user configuration file
@@ -1217,10 +869,7 @@ function write_opamp_endpoint() {
 
 # write tags to user configuration file
 function write_tags() {
-    local fields
-    readonly fields="${1}"
-
-    for field in $fields
+    for field in "${1[@]}"
     do
         otelcol-config --add-tag "$field"
     done
@@ -1231,109 +880,7 @@ function write_opamp_extension() {
     otelcol-config --enable-remote-control
 }
 
-function get_binary_from_branch() {
-    local branch
-    readonly branch="${1}"
-
-    local name
-    readonly name="${2}"
-
-
-    local actions_url actions_output artifacts_link artifact_id
-    readonly actions_url="https://api.github.com/repos/SumoLogic/sumologic-otel-collector/actions/runs?status=success&branch=${branch}&event=push&per_page=1"
-    echo -e "Getting artifacts from latest CI run for branch \"${branch}\":\t\t${actions_url}"
-    actions_output="$(curl -f -sS \
-      --connect-timeout 5 \
-      --max-time 30 \
-      --retry 5 \
-      --retry-delay 0 \
-      --retry-max-time 150 \
-      -H "Accept: application/vnd.github+json" \
-      -H "Authorization: token ${GITHUB_TOKEN}" \
-      "${actions_url}")"
-    readonly actions_output
-
-    # get latest action run
-    artifacts_link="$(echo "${actions_output}" | grep '"url"' | grep -oE '"https.*collector/actions.*"' -m 1)"
-    # strip first and last double-quote from $artifacts_link
-    artifacts_link=${artifacts_link%\"}
-    artifacts_link="${artifacts_link#\"}"
-    artifacts_link="${artifacts_link}/artifacts"
-    readonly artifacts_link
-
-    echo -e "Getting artifact id for CI run:\t\t${artifacts_link}"
-    artifact_id="$(curl -f -sS \
-    --connect-timeout 5 \
-    --max-time 30 \
-    --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 150 \
-    -H "Accept: application/vnd.github+json" \
-    -H "Authorization: token ${GITHUB_TOKEN}" \
-    "${artifacts_link}" \
-        | grep -E '"(id|name)"' \
-        | grep -B 1 "\"${name}\"" -m 1 \
-        | grep -oE "[0-9]+" -m 1)"
-    readonly artifact_id
-
-    local artifact_url download_path curl_args
-    readonly artifact_url="https://api.github.com/repos/SumoLogic/sumologic-otel-collector/actions/artifacts/${artifact_id}/zip"
-    readonly download_path="${DOWNLOAD_CACHE_DIR}/${name}.zip"
-    echo -e "Downloading binary from: ${artifact_url}"
-    curl_args=(
-        "-fL"
-        "--connect-timeout" "5"
-        "--max-time" "${CURL_MAX_TIME}"
-        "--retry" "5"
-        "--retry-delay" "0"
-        "--retry-max-time" "150"
-        "--output" "${download_path}"
-        "--progress-bar"
-    )
-    if [ "${KEEP_DOWNLOADS}" == "true" ]; then
-        curl_args+=("-z" "${download_path}")
-    fi
-    curl "${curl_args[@]}" \
-        -H "Accept: application/vnd.github+json" \
-        -H "Authorization: token ${GITHUB_TOKEN}" \
-        "${artifact_url}"
-
-    unzip -p "$download_path" "${name}" >"${TMPDIR}"/otelcol-sumo
-    if [ "${KEEP_DOWNLOADS}" == "false" ]; then
-        rm -f "${download_path}"
-    fi
-}
-
-function get_binary_from_url() {
-    local url download_filename download_path curl_args
-    readonly url="${1}"
-    echo -e "Downloading:\t\t${url}"
-
-    download_filename=$(basename "${url}")
-    readonly download_filename
-    readonly download_path="${DOWNLOAD_CACHE_DIR}/${download_filename}"
-    curl_args=(
-        "-fL"
-        "--connect-timeout" "5"
-        "--max-time" "${CURL_MAX_TIME}"
-        "--retry" "5"
-        "--retry-delay" "0"
-        "--retry-max-time" "150"
-        "--output" "${download_path}"
-        "--progress-bar"
-    )
-    if [ "${KEEP_DOWNLOADS}" == "true" ]; then
-        curl_args+=("-z" "${download_path}")
-    fi
-    curl "${curl_args[@]}" "${url}"
-
-    cp -f "${download_path}" "${TMPDIR}"/otelcol-sumo
-
-    if [ "${KEEP_DOWNLOADS}" == "false" ]; then
-        rm -f "${download_path}"
-    fi
-}
-
+# NB: this function is only for Darwin
 function get_package_from_branch() {
     local branch
     readonly branch="${1}"
@@ -1505,6 +1052,59 @@ function plutil_replace_key() {
     fi
 }
 
+function get_package_manager() {
+    if which dnf > /dev/null 2>&1; then
+        echo "dnf"
+    elif which yum > /dev/null 2>&1; then
+        echo "yum"
+    elif which apt-get > /dev/null 2>&1; then
+        echo "apt-get"
+    else
+        echo "package manager not found [dnf, yum, apt-get]"
+        exit 1
+    fi
+}
+
+function install_linux_package() {
+    local package_with_version
+    readonly package_with_version="${1}"
+
+    case $(get_package_manager) in
+        yum | dnf)
+            yum --disablerepo="*" --enablerepo="sumologic_stable" -y update
+            yum install "${package_with_version}"
+            ;;
+        apt-get)
+            apt-get update -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
+            apt-get install "${package_with_version}"
+            ;;
+    esac
+}
+
+function check_deprecated_linux_flags() {
+    if [[ "${OS_TYPE}" == "darwin" ]]; then
+        return
+    fi
+
+    if [[ -n "${DOWNLOAD_ONLY}" ]]; then
+        echo "--download-only is only supported on darwin, use 'install.sh --upgrade' to upgrade otelcol-sumo"
+        exit 1
+    fi
+
+    if [[ -n "${BINARY_BRANCH}" ]]; then
+        echo "--binary-branch is only supported on darwin, use --version, --channel, and --channel-token on linux"
+        exit 1
+    fi
+
+    if [[ -n "${CONFIG_BRANCH}" ]]; then
+        echo "warning: --config-branch is deprecated"
+    fi
+
+    if [[ "${PURGE}" == "true" ]]; then
+        echo "warning: purge is deprecated"
+    fi
+}
+
 ############################ Main code
 
 OS_TYPE="$(get_os_type)"
@@ -1517,10 +1117,10 @@ echo -e "Detected architecture:\t${ARCH_TYPE}"
 set_defaults
 parse_options "$@"
 set_tmpdir
-install_missing_dependencies
 check_dependencies
+check_deprecated_linux_flags
 
-readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE FILE_STORAGE CONFIG_DIRECTORY UNINSTALL
+readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE CONFIG_DIRECTORY UNINSTALL
 readonly USER_CONFIG_DIRECTORY USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
 readonly INSTALL_HOSTMETRICS
 readonly REMOTELY_MANAGED
@@ -1554,10 +1154,6 @@ if [[ -z "${DOWNLOAD_ONLY}" ]]; then
     fi
 
     if [[ -f "${COMMON_CONFIG_PATH}" ]]; then
-        INDENTATION="$(get_indentation "${COMMON_CONFIG_PATH}" "${INDENTATION}")"
-        EXT_INDENTATION="$(get_extension_indentation "${COMMON_CONFIG_PATH}" "${INDENTATION}")"
-        readonly INDENTATION EXT_INDENTATION
-
         USER_API_URL="$(get_user_api_url "${COMMON_CONFIG_PATH}")"
         if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
             echo "You are trying to install with different api base url than in your configuration file!"
@@ -1570,13 +1166,6 @@ if [[ -z "${DOWNLOAD_ONLY}" ]]; then
             exit 1
         fi
 
-        USER_FIELDS="$(get_user_tags "${COMMON_CONFIG_PATH}" "${INDENTATION}" "${EXT_INDENTATION}")"
-        FIELDS_TO_COMPARE="$(get_fields_to_compare "${FIELDS}")"
-
-        if [[ -n "${USER_FIELDS}" && -n "${FIELDS_TO_COMPARE}" && "${USER_FIELDS}" != "${FIELDS_TO_COMPARE}" ]]; then
-            echo "You are trying to install with different tags than in your configuration file!"
-            exit 1
-        fi
     fi
 fi
 
@@ -1739,17 +1328,14 @@ fi
 
 echo -e "Version to install:\t${VERSION}"
 
-CONFIG_BRANCH="v${VERSION}"
-readonly CONFIG_BRANCH BINARY_BRANCH
-
 # Check if otelcol is already in newest version
-if [[ "${INSTALLED_VERSION}" == "${VERSION}" && -z "${BINARY_BRANCH}" ]]; then
+if [[ "${INSTALLED_VERSION}" == "${VERSION}" ]]; then
     echo -e "OpenTelemetry collector is already in newest (${VERSION}) version"
 else
 
     # add newline before breaking changes and changelog
     echo ""
-    if [[ -n "${INSTALLED_VERSION}" && -z "${BINARY_BRANCH}" ]]; then
+    if [[ -n "${INSTALLED_VERSION}" ]]; then
         # Take versions from installed up to the newest
         BETWEEN_VERSIONS="$(get_versions_from "${VERSIONS}" "${INSTALLED_VERSION}")"
         readonly BETWEEN_VERSIONS
@@ -1760,32 +1346,24 @@ else
     # add newline after breaking changes and changelog
     echo ""
 
-    # Add -fips to the suffix if necessary
-    binary_suffix="${OS_TYPE}_${ARCH_TYPE}"
-    if [ "${FIPS}" == "true" ]; then
+    package_with_version="${VERSION}"
+    if [[ -n "${package_with_version}" ]]; then
+        if [[ "${FIPS}" == "true" ]]; then
         echo "Getting FIPS-compliant binary"
-        binary_suffix="fips-${binary_suffix}"
+            package_with_version=otelcol-sumo-fips
+        else
+            package_with_version=otelcol-sumo
+        fi
     fi
 
-    if [[ -n "${BINARY_BRANCH}" ]]; then
-        get_binary_from_branch "${BINARY_BRANCH}" "otelcol-sumo-${binary_suffix}"
-    else
-        LINK="https://github.com/SumoLogic/sumologic-otel-collector/releases/download/v${VERSION}/otelcol-sumo-${VERSION}-${binary_suffix}"
-        readonly LINK
-
-        get_binary_from_url "${LINK}"
+    # Add -fips to the suffix if necessary
+    if [[ "${FIPS}" == "true" && "${package_with_version}" != *"-fips" ]]; then
+        package_with_version="${package_with_version}-fips"
     fi
 
-    echo -e "Moving otelcol-sumo to /usr/local/bin"
-    mv "${TMPDIR}"/otelcol-sumo "${SUMO_BINARY_PATH}"
-    echo -e "Setting ${SUMO_BINARY_PATH} to be executable"
-    chmod +x "${SUMO_BINARY_PATH}"
+    install_linux_package "${package_with_version}"
 
     verify_installation
-fi
-
-if [[ "${DOWNLOAD_ONLY}" == "true" ]]; then
-    exit 0
 fi
 
 if [[ "${SKIP_CONFIG}" == "false" ]]; then
@@ -1795,23 +1373,6 @@ fi
 if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
     echo 'Writing installation token to env file'
     write_installation_token_env "${SUMOLOGIC_INSTALLATION_TOKEN}" "${TOKEN_ENV_FILE}"
-    chmod -R 440 "${TOKEN_ENV_FILE}"
-fi
-
-echo 'Creating user and group'
-if getent passwd "${SYSTEM_USER}" > /dev/null; then
-    echo 'User and group already created'
-else
-    ADDITIONAL_OPTIONS=""
-    if [[ -d "${HOME_DIRECTORY}" ]]; then
-        # do not create home directory as it already exists
-        ADDITIONAL_OPTIONS="-M"
-    else
-        # create home directory
-        ADDITIONAL_OPTIONS="-m"
-    fi
-    readonly ADDITIONAL_OPTIONS
-    useradd "${ADDITIONAL_OPTIONS}" -rUs /bin/false -d "${HOME_DIRECTORY}" "${SYSTEM_USER}"
 fi
 
 echo 'Reloading systemd'

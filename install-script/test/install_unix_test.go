@@ -401,15 +401,6 @@ func TestInstallScript(t *testing.T) {
 			preChecks:  []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkUserNotExists},
 			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
 		},
-		{
-			name: "don't keep downloads",
-			options: installOptions{
-				skipInstallToken:  true,
-				dontKeepDownloads: true,
-			},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigNotCreated},
-		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			runTest(t, &spec)
