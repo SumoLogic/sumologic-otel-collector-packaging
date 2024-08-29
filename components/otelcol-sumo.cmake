@@ -79,6 +79,21 @@ macro(install_otc_config_fragment_directory)
   )
 endmacro()
 
+# e.g. /etc/otelcol-sumo/conf.d-available
+macro(install_otc_config_fragments_available_directory)
+  require_variables(
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
+  )
+  install(
+    DIRECTORY
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
+    DIRECTORY_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
 # e.g. /etc/otelcol-sumo/conf.d/examples
 macro(install_otc_config_examples)
   require_variables(
@@ -282,11 +297,11 @@ endmacro()
 macro(install_otc_darwin_hostmetrics_yaml)
   require_variables(
     "ASSETS_DIR"
-    "OTC_CONFIG_FRAGMENTS_DIR"
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
   )
   install(
     FILES "${ASSETS_DIR}/conf.d/darwin.yaml"
-    DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
     RENAME "hostmetrics.yaml"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
@@ -300,11 +315,11 @@ endmacro()
 macro(install_otc_linux_hostmetrics_yaml)
   require_variables(
     "ASSETS_DIR"
-    "OTC_CONFIG_FRAGMENTS_DIR"
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
   )
   install(
     FILES "${ASSETS_DIR}/conf.d/linux.yaml"
-    DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
     RENAME "hostmetrics.yaml"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
