@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	latestAppVersion = os.Getenv("OTELCOL_SUMO_RELEASE")
+	latestAppVersion = "0.104.0"
 )
 
 func authenticateGithub() string {
@@ -71,7 +71,6 @@ func getLatestAppReleaseVersion() (string, error) {
 }
 
 func init() {
-	latestAppVersion = os.Getenv("OTELCOL_SUMO_RELEASE")
 	if latestAppVersion == "" {
 		latestReleaseVersion, err := getLatestAppReleaseVersion()
 		if err != nil {

@@ -40,8 +40,9 @@ func runTest(t *testing.T, spec *testSpec) {
 	t.Log("Starting HTTP server")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, "200 OK\n")
-		require.NoError(t, err)
+		if _, err := io.WriteString(w, "200 OK\n"); err != nil {
+			panic(err)
+		}
 	})
 
 	listener, err := net.Listen("tcp", ":3333")
@@ -53,7 +54,7 @@ func runTest(t *testing.T, spec *testSpec) {
 	go func() {
 		err := httpServer.Serve(listener)
 		if err != nil && err != http.ErrServerClosed {
-			require.NoError(t, err)
+			panic(err)
 		}
 	}()
 	defer func() {
