@@ -739,10 +739,10 @@ function uninstall_linux() {
 
     case $(get_package_manager) in
         yum | dnf)
-            yum remove "${package_with_version}"
+            yum remove -y "${package_with_version}"
             ;;
         apt-get)
-            apt-get remove "${package_with_version}"
+            apt-get remove -y "${package_with_version}"
             ;;
     esac
 }
