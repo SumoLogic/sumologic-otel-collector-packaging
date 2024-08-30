@@ -53,6 +53,7 @@ func (io *installOptions) string() []string {
 
 	if io.uninstall {
 		opts = append(opts, "--uninstall")
+		opts = append(opts, "--purge")
 	}
 
 	if io.installHostmetrics {
