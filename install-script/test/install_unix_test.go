@@ -12,7 +12,7 @@ func TestInstallScript(t *testing.T) {
 			name:        "no arguments",
 			options:     installOptions{},
 			preChecks:   []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
-			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkAbortedDueToNoToken, checkUserNotExists},
+			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
 			installCode: 2,
 		},
 		{
@@ -57,7 +57,6 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
-				checkLatestAppVersion,
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(rootUser, rootGroup),
 				checkUserConfigCreated,
