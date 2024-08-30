@@ -728,21 +728,23 @@ function uninstall_darwin() {
 
 # uninstall otelcol-sumo on linux
 function uninstall_linux() {
-    package_with_version="${VERSION}"
-    if [[ -n "${package_with_version}" ]]; then
-        if [[ "${FIPS}" == "true" ]]; then
-            package_with_version=otelcol-sumo-fips
-        else
-            package_with_version=otelcol-sumo
-        fi
-    fi
+    #package_with_version="${VERSION}"
+    #if [[ -n "${package_with_version}" ]]; then
+    #    if [[ "${FIPS}" == "true" ]]; then
+    #        package_with_version=otelcol-sumo-fips
+    #    else
+    #        package_with_version=otelcol-sumo
+    #    fi
+    #fi
 
     case $(get_package_manager) in
         yum | dnf)
-            yum remove -y "${package_with_version}"
+            #yum remove -y "${package_with_version}"
+            yum remove -y otelcol-sumo
             ;;
         apt-get)
-            apt-get remove -y "${package_with_version}"
+            #apt-get remove -y "${package_with_version}"
+            apt-get remove -y otelcol-sumo
             ;;
     esac
 }
