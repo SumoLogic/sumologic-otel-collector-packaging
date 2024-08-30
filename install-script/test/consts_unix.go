@@ -11,7 +11,7 @@ const (
 	configPath            string = etcPath + "/sumologic.yaml"
 	confDPath             string = etcPath + "/conf.d"
 	opampDPath            string = etcPath + "/opamp.d"
-	userConfigPath        string = confDPath + "/common.yaml"
+	userConfigPath        string = confDPath + "/00-otelcol-config-settings.yaml"
 	hostmetricsConfigPath string = confDPath + "/hostmetrics.yaml"
 	cacheDirectory        string = "/var/cache/otelcol-sumo/"
 	logDirPath            string = "/var/log/otelcol-sumo"

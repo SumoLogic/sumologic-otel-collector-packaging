@@ -8,7 +8,7 @@ const (
 	uninstallScriptPath        string = appSupportDirPath + "/uninstall.sh"
 
 	// TODO: fix mismatch between darwin permissions & linux binary install permissions
-	// common.yaml must be writable as the install scripts mutate it
+	// 00-otelcol-config-settings.yaml must be writable as the install scripts mutate it
 	commonConfigPathFilePermissions uint32 = 0660
 	configPathDirPermissions        uint32 = 0770
 	configPathFilePermissions       uint32 = 0440
