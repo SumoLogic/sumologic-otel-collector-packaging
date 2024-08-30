@@ -28,6 +28,8 @@ type installOptions struct {
 	ephemeral          bool
 	timeout            float64
 	opampEndpoint      string
+	downloadOnly       bool
+	dontKeepDownloads  bool
 }
 
 func (io *installOptions) string() []string {
