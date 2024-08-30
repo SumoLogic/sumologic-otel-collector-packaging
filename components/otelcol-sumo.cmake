@@ -94,16 +94,16 @@ macro(install_otc_config_fragments_available_directory)
   )
 endmacro()
 
-# e.g. /etc/otelcol-sumo/conf.d/examples
+# e.g. /etc/otelcol-sumo/conf.d-available/examples
 macro(install_otc_config_examples)
   require_variables(
-    "OTC_CONFIG_FRAGMENTS_DIR"
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
     "ASSETS_DIR"
   )
 
   install(
     DIRECTORY
-    DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}/examples"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}/examples"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
       GROUP_READ GROUP_WRITE GROUP_EXECUTE
@@ -115,7 +115,7 @@ macro(install_otc_config_examples)
   foreach(example ${examples})
     install(
       FILES "${example}"
-      DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}/examples"
+      DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}/examples"
       PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE
         GROUP_READ GROUP_WRITE GROUP_EXECUTE
