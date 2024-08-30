@@ -13,7 +13,7 @@ func TestInstallScript(t *testing.T) {
 			options:     installOptions{},
 			preChecks:   []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
 			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkAbortedDueToNoToken, checkUserNotExists},
-			installCode: 1,
+			installCode: 2,
 		},
 		{
 			name: "skip config",

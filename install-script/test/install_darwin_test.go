@@ -22,7 +22,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 			options:     installOptions{},
 			preChecks:   notInstalledChecks,
 			postChecks:  append(notInstalledChecks, checkAbortedDueToNoToken),
-			installCode: 1,
+			installCode: 2,
 		},
 		{
 			name: "download only",

@@ -177,7 +177,8 @@ function set_defaults() {
 
 function parse_options() {
   if (( $# == 0 )); then
-      set -- "$@" "-${ARG_SHORT_HELP}"
+      usage
+      exit 2
   fi
 
   # Transform long options to short ones
@@ -260,7 +261,7 @@ function parse_options() {
         set -- "$@" "-${ARG_SHORT_EPHEMERAL}"
         ;;
       -*)
-        echo "Unknown option ${arg}"; usage; exit 1 ;;
+        echo "Unknown option ${arg}"; usage; exit 2 ;;
       *)
         set -- "$@" "$arg" ;;
     esac
@@ -278,7 +279,7 @@ function parse_options() {
     if [[ $? != 0 && ${OPTIND} -le $# ]]; then
       echo "Invalid argument:" "${@:${OPTIND}:1}"
       usage
-      exit 1
+      exit 2
     fi
 
     # Validate opt and set arguments
