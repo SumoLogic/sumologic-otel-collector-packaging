@@ -1151,7 +1151,9 @@ if [[ "${UNINSTALL}" == "true" ]]; then
 fi
 
 # Attempt to find a token from an existing installation
-USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+if command -v otelcol-config &> /dev/null; then
+    USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+fi
 if [[ -z "${USER_TOKEN}" ]]; then
     USER_TOKEN="$(get_user_env_config "${TOKEN_ENV_FILE}")"
 fi
