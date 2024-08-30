@@ -10,6 +10,7 @@ macro(set_common_deb_settings)
   set(CPACK_GENERATOR "DEB")
   set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${package_arch}")
   set(PACKAGE_FILE_EXTENSION "deb")
+  set(CPACK_DEBIAN_PACKAGE_RELEASE "${BUILD_NUMBER}")
 
   set(CPACK_PACKAGE_FILE_NAME "${package_name}_${PROJECT_VERSION}-${BUILD_NUMBER}_${package_arch}")
   if (DEFINED goarm)
