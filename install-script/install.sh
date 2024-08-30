@@ -176,7 +176,7 @@ function set_defaults() {
 }
 
 function parse_options() {
-  if (( $# == 0 )); then
+  if [[ $# == 0 && -z "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
       usage
       exit 2
   fi
