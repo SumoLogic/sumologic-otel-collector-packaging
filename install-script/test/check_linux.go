@@ -161,11 +161,6 @@ func checkUserExists(c check) {
 	require.NoError(c.test, err, "user has not been created")
 }
 
-func checkUserNotExists(c check) {
-	_, err := user.Lookup(systemUser)
-	require.Error(c.test, err, "user has been created")
-}
-
 func checkVarLogACL(c check) {
 	if !checkACLAvailability(c) {
 		return
