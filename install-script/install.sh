@@ -888,7 +888,8 @@ function write_opamp_endpoint() {
 
 # write tags to user configuration file
 function write_tags() {
-    for field in "${1[@]}"
+    arr=("$@")
+    for field in "${arr[@]}";
     do
         otelcol-config --add-tag "$field"
     done
