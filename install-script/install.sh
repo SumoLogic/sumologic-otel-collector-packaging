@@ -87,7 +87,6 @@ VERSION=""
 FIPS=false
 CONTINUE=false
 CONFIG_DIRECTORY=""
-USER_CONFIG_DIRECTORY=""
 USER_ENV_DIRECTORY=""
 UNINSTALL=""
 SUMO_BINARY_PATH=""
@@ -160,12 +159,10 @@ function set_defaults() {
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
     CONFIG_DIRECTORY="/etc/otelcol-sumo"
     SUMO_BINARY_PATH="/usr/local/bin/otelcol-sumo"
-    USER_CONFIG_DIRECTORY="${CONFIG_DIRECTORY}/conf.d"
     REMOTE_CONFIG_DIRECTORY="${CONFIG_DIRECTORY}/opamp.d"
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
     CONFIG_PATH="${CONFIG_DIRECTORY}/sumologic.yaml"
-    COMMON_CONFIG_PATH="${USER_CONFIG_DIRECTORY}/common.yaml"
 
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
@@ -653,18 +650,6 @@ function setup_config() {
 }
 
 function setup_config_darwin() {
-    local config_path
-    config_path="${COMMON_CONFIG_PATH}"
-
-    if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-        config_path="${CONFIG_PATH}"
-    fi
-
-    readonly config_path
-
-    create_user_config_file "${config_path}"
-    add_extension_to_config "${config_path}"
-
     if [[ "${EPHEMERAL}" == "true" ]]; then
         write_ephemeral_true
     fi
@@ -1139,7 +1124,7 @@ check_dependencies
 check_deprecated_linux_flags
 
 readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE CONFIG_DIRECTORY UNINSTALL
-readonly USER_CONFIG_DIRECTORY USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
+readonly USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
 readonly INSTALL_HOSTMETRICS
 readonly REMOTELY_MANAGED
 readonly CURL_MAX_TIME
@@ -1173,19 +1158,16 @@ if [[ -z "${DOWNLOAD_ONLY}" ]]; then
         exit 1
     fi
 
-    if [[ -f "${COMMON_CONFIG_PATH}" ]]; then
-        USER_API_URL="$(get_user_api_url "${COMMON_CONFIG_PATH}")"
-        if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
-            echo "You are trying to install with different api base url than in your configuration file!"
-            exit 1
-        fi
+    USER_API_URL="$(get_user_api_url)"
+    if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
+        echo "You are trying to install with different api base url than in your configuration file!"
+        exit 1
+    fi
 
-        USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
-        if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
-            echo "You are trying to install with different opamp endpoint than in your configuration file!"
-            exit 1
-        fi
-
+    USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
+    if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
+        echo "You are trying to install with different opamp endpoint than in your configuration file!"
+        exit 1
     fi
 fi
 
