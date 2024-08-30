@@ -1097,10 +1097,12 @@ function install_linux_package() {
 
     case $(get_package_manager) in
         yum | dnf)
+            curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.rpm.sh | bash
             yum --disablerepo="*" --enablerepo="sumologic_stable" -y update
             yum install "${package_with_version}"
             ;;
         apt-get)
+            curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.deb.sh | bash
             apt-get update -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
             apt-get install "${package_with_version}"
             ;;
