@@ -731,7 +731,6 @@ function uninstall_linux() {
     package_with_version="${VERSION}"
     if [[ -n "${package_with_version}" ]]; then
         if [[ "${FIPS}" == "true" ]]; then
-        echo "Getting FIPS-compliant binary"
             package_with_version=otelcol-sumo-fips
         else
             package_with_version=otelcol-sumo
@@ -743,8 +742,7 @@ function uninstall_linux() {
             yum remove "${package_with_version}"
             ;;
         apt-get)
-            apt-get update -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
-            apt-get install "${package_with_version}"
+            apt-get remove "${package_with_version}"
             ;;
     esac
 }
