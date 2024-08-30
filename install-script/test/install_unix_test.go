@@ -42,7 +42,6 @@ func TestInstallScript(t *testing.T) {
 			name: "override default config",
 			options: installOptions{
 				skipInstallToken: true,
-				autoconfirm:      true,
 			},
 			preActions: []checkFunc{preActionMockConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigCreated, checkUserConfigNotCreated, checkUserNotExists},
@@ -346,26 +345,6 @@ func TestInstallScript(t *testing.T) {
 			preActions: []checkFunc{preActionMockUserConfig, preActionWriteEmptyUserConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated, checkUserNotExists},
 			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkTags},
-		},
-		{
-			name: "uninstallation without autoconfirm fails",
-			options: installOptions{
-				uninstall: true,
-			},
-			installCode: 1,
-			preActions:  []checkFunc{preActionMockStructure},
-			preChecks:   []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkUserNotExists},
-			postChecks:  []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated},
-		},
-		{
-			name: "uninstallation with autoconfirm",
-			options: installOptions{
-				autoconfirm: true,
-				uninstall:   true,
-			},
-			preActions: []checkFunc{preActionMockStructure},
-			preChecks:  []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkUserNotExists},
-			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigCreated, checkUserConfigCreated, checkUninstallationOutput},
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {

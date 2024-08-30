@@ -12,8 +12,7 @@ func tearDown(t *testing.T) {
 	ch := check{
 		test: t,
 		installOptions: installOptions{
-			uninstall:   true,
-			autoconfirm: true,
+			uninstall: true,
 		},
 	}
 

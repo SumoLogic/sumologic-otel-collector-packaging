@@ -167,10 +167,6 @@ func runScript(ch check) (int, []string, []string, error) {
 		// otherwise ensure there is no error
 		require.NoError(ch.test, err)
 
-		if ch.installOptions.autoconfirm {
-			continue
-		}
-
 	}
 
 	// Handle stderr separately
