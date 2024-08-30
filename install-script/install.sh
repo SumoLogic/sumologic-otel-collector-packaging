@@ -730,13 +730,13 @@ function uninstall_darwin() {
 function uninstall_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum remove -y otelcol-sumo
+            yum remove --quiet -y otelcol-sumo
             ;;
         apt-get)
             if [[ "${PURGE}" == "true" ]]; then
-                apt-get purge -y otelcol-sumo
+                apt-get purge --quiet -y otelcol-sumo
             else
-                apt-get remove -y otelcol-sumo
+                apt-get remove --quiet -y otelcol-sumo
             fi
             ;;
     esac
