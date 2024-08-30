@@ -728,23 +728,16 @@ function uninstall_darwin() {
 
 # uninstall otelcol-sumo on linux
 function uninstall_linux() {
-    #package_with_version="${VERSION}"
-    #if [[ -n "${package_with_version}" ]]; then
-    #    if [[ "${FIPS}" == "true" ]]; then
-    #        package_with_version=otelcol-sumo-fips
-    #    else
-    #        package_with_version=otelcol-sumo
-    #    fi
-    #fi
-
     case $(get_package_manager) in
         yum | dnf)
-            #yum remove -y "${package_with_version}"
             yum remove -y otelcol-sumo
             ;;
         apt-get)
-            #apt-get remove -y "${package_with_version}"
-            apt-get remove -y otelcol-sumo
+            if [[ "${PURGE}" == "true" ]]; then
+                apt-get purge -y otelcol-sumo
+            else
+                apt-get remove -y otelcol-sumo
+            fi
             ;;
     esac
 }
@@ -1126,10 +1119,6 @@ function check_deprecated_linux_flags() {
 
     if [[ -n "${CONFIG_BRANCH}" ]]; then
         echo "warning: --config-branch is deprecated"
-    fi
-
-    if [[ "${PURGE}" == "true" ]]; then
-        echo "warning: purge is deprecated"
     fi
 }
 
