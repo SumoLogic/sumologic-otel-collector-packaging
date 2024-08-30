@@ -230,7 +230,7 @@ for f in "${all_collector_files[@]}"; do
     continue
   fi
 
-  if [[ " $(dirname "${collector_file}") " == " etc/otelcol-sumo/conf.d/examples " ]]; then
+  if [[ " $(dirname "${collector_file}") " == " etc/otelcol-sumo/conf.d-available/examples " ]]; then
     continue
   fi
 
