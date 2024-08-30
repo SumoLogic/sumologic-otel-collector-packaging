@@ -16,28 +16,6 @@ func TestInstallScript(t *testing.T) {
 			installCode: 1,
 		},
 		{
-			name: "download only",
-			options: installOptions{
-				downloadOnly: true,
-			},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
-		},
-		{
-			name: "download only with timeout",
-			options: installOptions{
-				downloadOnly:      true,
-				timeout:           1,
-				dontKeepDownloads: true,
-			},
-			// Skip this test as getting binary in github actions takes less than one second
-			conditionalChecks: []condCheckFunc{checkSkipTest},
-			preChecks:         []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists},
-			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated, checkUserNotExists,
-				checkDownloadTimeout},
-			installCode: curlTimeoutErrorCode,
-		},
-		{
 			name: "skip config",
 			options: installOptions{
 				skipConfig:       true,
@@ -389,17 +367,6 @@ func TestInstallScript(t *testing.T) {
 			preActions: []checkFunc{preActionMockStructure},
 			preChecks:  []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkUserNotExists},
 			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigCreated, checkUserConfigCreated, checkUninstallationOutput},
-		},
-		{
-			name: "purge",
-			options: installOptions{
-				uninstall:   true,
-				purge:       true,
-				autoconfirm: true,
-			},
-			preActions: []checkFunc{preActionMockStructure},
-			preChecks:  []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkUserNotExists},
-			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {

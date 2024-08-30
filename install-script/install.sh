@@ -176,6 +176,10 @@ function set_defaults() {
 }
 
 function parse_options() {
+  if (( $# == 0 )); then
+      set -- "$@" "-${ARG_SHORT_HELP}"
+  fi
+
   # Transform long options to short ones
   for arg in "$@"; do
 
@@ -308,6 +312,10 @@ function parse_options() {
       "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
     esac
 
+    # Exit loop as we iterated over all arguments
+    if [[ "${OPTIND}" -gt $# ]]; then
+      break
+    fi
   done
 }
 
@@ -719,8 +727,25 @@ function uninstall_darwin() {
 
 # uninstall otelcol-sumo on linux
 function uninstall_linux() {
-    echo "linux uninstall unimplemented"
-    exit 1
+    package_with_version="${VERSION}"
+    if [[ -n "${package_with_version}" ]]; then
+        if [[ "${FIPS}" == "true" ]]; then
+        echo "Getting FIPS-compliant binary"
+            package_with_version=otelcol-sumo-fips
+        else
+            package_with_version=otelcol-sumo
+        fi
+    fi
+
+    case $(get_package_manager) in
+        yum | dnf)
+            yum remove "${package_with_version}"
+            ;;
+        apt-get)
+            apt-get update -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
+            apt-get install "${package_with_version}"
+            ;;
+    esac
 }
 
 function escape_sed() {
@@ -1354,11 +1379,6 @@ else
         else
             package_with_version=otelcol-sumo
         fi
-    fi
-
-    # Add -fips to the suffix if necessary
-    if [[ "${FIPS}" == "true" && "${package_with_version}" != *"-fips" ]]; then
-        package_with_version="${package_with_version}-fips"
     fi
 
     install_linux_package "${package_with_version}"

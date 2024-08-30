@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	latestAppVersion string
+	latestAppVersion = os.Getenv("OTELCOL_SUMO_RELEASE")
 )
 
 func authenticateGithub() string {
@@ -71,14 +71,17 @@ func getLatestAppReleaseVersion() (string, error) {
 }
 
 func init() {
-	latestReleaseVersion, err := getLatestAppReleaseVersion()
-	if err != nil {
-		fmt.Printf("error fetching release: %v", err)
-		os.Exit(1)
+	latestAppVersion = os.Getenv("OTELCOL_SUMO_RELEASE")
+	if latestAppVersion == "" {
+		latestReleaseVersion, err := getLatestAppReleaseVersion()
+		if err != nil {
+			fmt.Printf("error fetching release: %v", err)
+			os.Exit(1)
+		}
+		if latestReleaseVersion == "" {
+			fmt.Println("No app release versions found")
+			os.Exit(1)
+		}
+		latestAppVersion = latestReleaseVersion
 	}
-	if latestReleaseVersion == "" {
-		fmt.Println("No app release versions found")
-		os.Exit(1)
-	}
-	latestAppVersion = latestReleaseVersion
 }

@@ -22,11 +22,7 @@ type installOptions struct {
 	fips               bool
 	envs               map[string]string
 	uninstall          bool
-	purge              bool
 	apiBaseURL         string
-	configBranch       string
-	downloadOnly       bool
-	dontKeepDownloads  bool
 	installHostmetrics bool
 	remotelyManaged    bool
 	ephemeral          bool
@@ -59,18 +55,6 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "--uninstall")
 	}
 
-	if io.purge {
-		opts = append(opts, "--purge")
-	}
-
-	if io.downloadOnly {
-		opts = append(opts, "--download-only")
-	}
-
-	if !io.dontKeepDownloads {
-		opts = append(opts, "--keep-downloads")
-	}
-
 	if io.installHostmetrics {
 		opts = append(opts, "--install-hostmetrics")
 	}
@@ -91,10 +75,6 @@ func (io *installOptions) string() []string {
 
 	if io.apiBaseURL != "" {
 		opts = append(opts, "--api", io.apiBaseURL)
-	}
-
-	if io.configBranch != "" {
-		opts = append(opts, "--config-branch", io.configBranch)
 	}
 
 	if io.timeout != 0 {

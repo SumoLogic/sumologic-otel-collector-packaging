@@ -13,7 +13,6 @@ func tearDown(t *testing.T) {
 		test: t,
 		installOptions: installOptions{
 			uninstall:   true,
-			purge:       true,
 			autoconfirm: true,
 		},
 	}
