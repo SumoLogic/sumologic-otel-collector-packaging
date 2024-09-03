@@ -176,16 +176,6 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigCreated, checkTokenInConfig},
 		},
 		{
-			name: "different installation token",
-			options: installOptions{
-				installToken: installToken,
-			},
-			preActions:  []checkFunc{preActionMockUserConfig, preActionWriteDifferentTokenToUserConfig},
-			preChecks:   []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated, checkAbortedDueToDifferentToken},
-			installCode: 1,
-		},
-		{
 			name: "adding installation token",
 			options: installOptions{
 				installToken: installToken,

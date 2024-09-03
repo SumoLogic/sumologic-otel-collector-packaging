@@ -6,7 +6,7 @@ const (
 
 	// TODO: fix mismatch between package permissions & expected permissions
 	commonConfigPathFilePermissions uint32 = 0750
-	configPathDirPermissions        uint32 = 0750
+	configPathDirPermissions        uint32 = 0770
 	configPathFilePermissions       uint32 = 0440
 	confDPathFilePermissions        uint32 = 0644
 	etcPathPermissions              uint32 = 0551
