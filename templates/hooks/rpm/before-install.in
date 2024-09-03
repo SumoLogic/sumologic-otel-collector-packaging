@@ -1,4 +1,5 @@
 #!/bin/sh
+# -*- mode: sh; -*- vim: ft=sh :
 
 @common_linux_functions@
 

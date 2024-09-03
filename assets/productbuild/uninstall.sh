@@ -42,6 +42,7 @@ collector_files=(
   "/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
   "/etc/otelcol-sumo/sumologic.yaml"
   "/etc/otelcol-sumo/conf.d"
+  "/etc/otelcol-sumo/conf.d-available"
   "/etc/otelcol-sumo"
   "/usr/local/bin/otelcol-config"
   "/usr/local/bin/otelcol-sumo"
@@ -52,7 +53,7 @@ collector_files=(
 
 # A list of files & directories to remove for hostmetrics
 hostmetrics_files=(
-  "/etc/otelcol-sumo/conf.d/hostmetrics.yaml"
+  "/etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
 )
 
 function package_is_registered() {
