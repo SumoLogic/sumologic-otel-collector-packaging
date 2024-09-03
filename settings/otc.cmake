@@ -29,6 +29,7 @@ macro(set_otc_settings)
   set(OTC_BIN_DIR "usr/local/bin")
   set(OTC_CONFIG_DIR "etc/otelcol-sumo")
   set(OTC_CONFIG_FRAGMENTS_DIR "${OTC_CONFIG_DIR}/conf.d")
+  set(OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR "${OTC_CONFIG_DIR}/conf.d-available")
   set(OTC_USER_ENV_DIR "${OTC_CONFIG_DIR}/env")
   set(OTC_STATE_DIR "var/lib/otelcol-sumo")
   set(OTC_FILESTORAGE_STATE_DIR "${OTC_STATE_DIR}/file_storage")
@@ -37,6 +38,7 @@ macro(set_otc_settings)
   set(OTC_LOG_DIR "var/log/otelcol-sumo")
 
   # File paths
+  set(OTC_BIN_PATH "${OTC_BIN_DIR}/${OTC_BINARY}")
   set(OTC_SUMOLOGIC_CONFIG_PATH "${OTC_CONFIG_DIR}/${OTC_SUMOLOGIC_CONFIG}")
 
   ##

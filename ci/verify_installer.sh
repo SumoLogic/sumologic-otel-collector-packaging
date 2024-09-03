@@ -47,7 +47,8 @@ expected_collector_files=(
   "etc/otelcol-sumo"
   "etc/otelcol-sumo/conf.d"
   "etc/otelcol-sumo/conf.d/common.yaml"
-  "etc/otelcol-sumo/conf.d/examples"
+  "etc/otelcol-sumo/conf.d-available"
+  "etc/otelcol-sumo/conf.d-available/examples"
   "etc/otelcol-sumo/sumologic.yaml"
   "Library/Application Support/otelcol-sumo"
   "Library/Application Support/otelcol-sumo/uninstall.sh"
@@ -61,7 +62,7 @@ expected_collector_files=(
 
 # a list of files that the hostmetrics package should install
 expected_hostmetrics_files=(
-  "etc/otelcol-sumo/conf.d/hostmetrics.yaml"
+  "etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
 )
 
 function install_package() {
@@ -229,7 +230,7 @@ for f in "${all_collector_files[@]}"; do
     continue
   fi
 
-  if [[ " $(dirname "${collector_file}") " == " etc/otelcol-sumo/conf.d/examples " ]]; then
+  if [[ " $(dirname "${collector_file}") " == " etc/otelcol-sumo/conf.d-available/examples " ]]; then
     continue
   fi
 

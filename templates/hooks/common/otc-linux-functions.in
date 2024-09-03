@@ -1,3 +1,4 @@
+# -*- mode: sh; -*- vim: ft=sh :
 # shellcheck disable=SC2148
 
 set_file_ownership()
@@ -10,4 +11,16 @@ set_file_ownership()
           @OTC_CONFIG_DIR@ \
           @OTC_USER_ENV_DIR@ \
           @OTC_CONFIG_FRAGMENTS_DIR@
+}
+
+set_capabilities()
+{
+    echo -e "Setting the CAP_DAC_READ_SEARCH Linux capability on the " \
+        "collector binary to allow it to read host metrics from /proc " \
+        "directory: setcap 'cap_dac_read_search=ep' \"@OTC_BIN_PATH@\""
+    echo -e "You can remove it with the following command: " \
+        "sudo setcap -r \"@OTC_BIN_PATH@\""
+    echo -e "Without this capability, the collector will not be able to " \
+        "collect some of the host metrics."
+    setcap 'cap_dac_read_search=ep' "@OTC_BIN_PATH@"
 }
