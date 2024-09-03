@@ -60,16 +60,13 @@ func checkConfigNotCreated(c check) {
 
 func checkConfigOverrided(c check) {
 	conf, err := getConfig(configPath)
-	require.NoError(c.test, err)
+	if err != nil {
+		c.test.Fatal(err)
+	}
 
-	require.Condition(c.test, func() (success bool) {
-		switch conf.Extensions.Sumologic.InstallationToken {
-		case "${SUMOLOGIC_INSTALLATION_TOKEN}":
-			return true
-		default:
-			return false
-		}
-	}, "invalid value for installation token")
+	if got, want := conf.Extensions.Sumologic.InstallationToken, "${SUMOLOGIC_INSTALLATION_TOKEN}"; got != want {
+		c.test.Errorf("bad installation token: got %q, want %q", got, want)
+	}
 }
 
 func checkUserConfigCreated(c check) {

@@ -5,8 +5,8 @@ const (
 	tokenEnvFilePath string = envDirectoryPath + "/token.env"
 
 	// TODO: fix mismatch between package permissions & expected permissions
-	commonConfigPathFilePermissions uint32 = 0550
-	configPathDirPermissions        uint32 = 0550
+	commonConfigPathFilePermissions uint32 = 0750
+	configPathDirPermissions        uint32 = 0750
 	configPathFilePermissions       uint32 = 0440
 	confDPathFilePermissions        uint32 = 0644
 	etcPathPermissions              uint32 = 0551
