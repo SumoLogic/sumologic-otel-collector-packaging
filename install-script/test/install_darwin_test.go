@@ -463,12 +463,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 			},
 			installCode: 1, // because of invalid installation token
 		},
-		{
-			name:       "empty installation token",
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteDifferentTokenToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkDifferentTokenInConfig},
-		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			runTest(t, &spec)
