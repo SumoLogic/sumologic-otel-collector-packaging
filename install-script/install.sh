@@ -174,6 +174,7 @@ function set_defaults() {
 
 function parse_options() {
   if [[ $# == 0 && -z "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
+      echo "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable."
       usage
       exit 2
   fi
