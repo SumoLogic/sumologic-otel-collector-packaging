@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.24.1 FATAL_ERROR)
 
 # Required and optional programs. Attempts to find required and optional
 # programs used to build the packages.
-find_program(PACKAGECLOUD_PROGRAM packagecloud REQUIRED)
+find_program(PACKAGECLOUD_PROGRAM packagecloud)
 
 # Set version information
 include("${CMAKE_SOURCE_DIR}/version.cmake")

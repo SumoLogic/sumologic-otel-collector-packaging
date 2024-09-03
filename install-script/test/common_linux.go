@@ -4,8 +4,6 @@ package sumologic_scripts_tests
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func tearDown(t *testing.T) {
@@ -17,5 +15,8 @@ func tearDown(t *testing.T) {
 	}
 
 	_, _, _, err := runScript(ch)
-	require.NoError(t, err)
+	if err != nil {
+		t.Log(err)
+	}
+	return
 }

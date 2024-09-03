@@ -1,29 +1,34 @@
 macro(default_otc_linux_install)
-  create_otc_components()
   install_otc_config_directory()
   install_otc_config_fragment_directory()
+  install_otc_config_fragments_available_directory()
   install_otc_config_examples()
   install_otc_user_env_directory()
+  install_otc_opampd_directory()
   install_otc_state_directory()
   install_otc_filestorage_state_directory()
   install_otc_sumologic_yaml()
   install_otc_common_yaml()
+  install_otc_linux_hostmetrics_yaml()
+  install_otc_ephemeral_yaml()
   install_otc_token_env()
   install_otc_binary()
   install_otc_config_binary()
 endmacro()
 
 macro(default_otc_darwin_install)
-  create_otc_components()
   install_otc_config_directory()
   install_otc_config_fragment_directory()
+  install_otc_config_fragments_available_directory()
   install_otc_config_examples()
+  install_otc_opampd_directory()
   install_otc_state_directory()
   install_otc_filestorage_state_directory()
   install_otc_log_directory()
   install_otc_sumologic_yaml()
   install_otc_common_yaml()
   install_otc_darwin_hostmetrics_yaml()
+  install_otc_ephemeral_yaml()
   install_otc_binary()
   install_otc_config_binary()
   install_otc_uninstall_script()
@@ -40,12 +45,6 @@ macro(create_otc_components)
     REQUIRED
     GROUP "otelcol-sumo-group"
   )
-
-  cpack_add_component("otelcol-sumo-hostmetrics"
-    DISPLAY_NAME "Collect Host Metrics"
-    GROUP "otelcol-sumo-group"
-    DISABLED
-  )
 endmacro()
 
 # e.g. /etc/otelcol-sumo
@@ -58,7 +57,7 @@ macro(install_otc_config_directory)
     DESTINATION "${OTC_CONFIG_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
-      GROUP_READ GROUP_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
       WORLD_EXECUTE
     COMPONENT otelcol-sumo
   )
@@ -117,8 +116,8 @@ macro(install_otc_config_examples)
       FILES "${example}"
       DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}/examples"
       PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_WRITE GROUP_EXECUTE
+        OWNER_READ OWNER_WRITE
+        GROUP_READ GROUP_WRITE
       COMPONENT otelcol-sumo
     )
   endforeach(example)
@@ -139,6 +138,21 @@ macro(install_otc_user_env_directory)
   )
 endmacro()
 
+# e.g. /etc/otelcol-sumo/opamp.d
+macro(install_otc_opampd_directory)
+  require_variables(
+    "OTC_OPAMPD_DIR"
+  )
+  install(
+    DIRECTORY
+    DESTINATION "${OTC_OPAMPD_DIR}"
+    DIRECTORY_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
 # e.g. /var/lib/otelcol-sumo
 macro(install_otc_state_directory)
   require_variables(
@@ -149,7 +163,7 @@ macro(install_otc_state_directory)
     DESTINATION "${OTC_STATE_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
-      GROUP_READ GROUP_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -164,7 +178,7 @@ macro(install_otc_filestorage_state_directory)
     DESTINATION "${OTC_FILESTORAGE_STATE_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
-      GROUP_READ GROUP_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -254,8 +268,8 @@ macro(install_otc_sumologic_yaml)
     FILES "${ASSETS_DIR}/sumologic.yaml"
     DESTINATION "${OTC_CONFIG_DIR}"
     PERMISSIONS
-      OWNER_READ
-      GROUP_READ
+      OWNER_READ OWNER_WRITE
+      GROUP_READ GROUP_WRITE
     RENAME "${OTC_SUMOLOGIC_CONFIG}"
     COMPONENT otelcol-sumo
   )
@@ -293,7 +307,7 @@ macro(install_otc_common_yaml)
   )
 endmacro()
 
-# e.g. /etc/otelcol-sumo/conf.d/hostmetrics.yaml
+# e.g. /etc/otelcol-sumo/conf.d-available/hostmetrics.yaml
 macro(install_otc_darwin_hostmetrics_yaml)
   require_variables(
     "ASSETS_DIR"
@@ -305,13 +319,12 @@ macro(install_otc_darwin_hostmetrics_yaml)
     RENAME "hostmetrics.yaml"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ
-      WORLD_READ
-    COMPONENT otelcol-sumo-hostmetrics
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo
   )
 endmacro()
 
-# e.g. /etc/otelcol-sumo/conf.d/hostmetrics.yaml
+# e.g. /etc/otelcol-sumo/conf.d-available/hostmetrics.yaml
 macro(install_otc_linux_hostmetrics_yaml)
   require_variables(
     "ASSETS_DIR"
@@ -323,9 +336,24 @@ macro(install_otc_linux_hostmetrics_yaml)
     RENAME "hostmetrics.yaml"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ
-      WORLD_READ
-    COMPONENT otelcol-sumo-hostmetrics
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /etc/otelcol-sumo/conf.d-available/ephemeral.yaml
+macro(install_otc_ephemeral_yaml)
+  require_variables(
+    "ASSETS_DIR"
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
+  )
+  install(
+    FILES "${ASSETS_DIR}/conf.d/ephemeral.yaml"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo
   )
 endmacro()
 
@@ -333,10 +361,12 @@ endmacro()
 macro(install_otc_service_systemd)
   require_variables(
     "ASSETS_DIR"
+    "OTC_SYSTEMD_CONFIG"
     "OTC_SYSTEMD_DIR"
   )
+  install_otc_service_script()
   install(
-    FILES "${ASSETS_DIR}/services/systemd/otelcol-sumo.service"
+    FILES "${ASSETS_DIR}/services/systemd/${OTC_SYSTEMD_CONFIG}"
     DESTINATION "${OTC_SYSTEMD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
@@ -350,14 +380,34 @@ endmacro()
 macro(install_otc_service_launchd)
   require_variables(
     "ASSETS_DIR"
+    "OTC_LAUNCHD_CONFIG"
     "OTC_LAUNCHD_DIR"
   )
+  install_otc_service_script()
   install(
-    FILES "${ASSETS_DIR}/services/launchd/com.sumologic.otelcol-sumo.plist"
+    FILES "${ASSETS_DIR}/services/launchd/${OTC_LAUNCHD_CONFIG}"
     DESTINATION "${OTC_LAUNCHD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
       GROUP_READ
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /usr/share/otelcol-sumo/otelcol-sumo.sh
+macro(install_otc_service_script)
+  require_variables(
+    "ASSETS_DIR"
+    "OTC_SERVICE_SCRIPT"
+    "OTC_SHARE_DIR"
+  )
+  install(
+    FILES "${ASSETS_DIR}/${OTC_SERVICE_SCRIPT}"
+    DESTINATION "${OTC_SHARE_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()

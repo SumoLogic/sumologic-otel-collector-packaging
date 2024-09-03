@@ -21,10 +21,10 @@ ARG_SHORT_FIPS='f'
 ARG_LONG_FIPS='fips'
 ARG_SHORT_YES='y'
 ARG_LONG_YES='yes'
-ARG_SHORT_SKIP_CONFIG='s'
-ARG_LONG_SKIP_CONFIG='skip-config'
 ARG_SHORT_UNINSTALL='u'
 ARG_LONG_UNINSTALL='uninstall'
+ARG_SHORT_UPGRADE='g'
+ARG_LONG_UPGRADE='upgrade'
 ARG_SHORT_PURGE='p'
 ARG_LONG_PURGE='purge'
 ARG_SHORT_SKIP_TOKEN='k'
@@ -51,22 +51,19 @@ ARG_LONG_EPHEMERAL='ephemeral'
 ARG_SHORT_TIMEOUT='m'
 ARG_LONG_TIMEOUT='download-timeout'
 
-PACKAGE_GITHUB_ORG="SumoLogic"
-PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
-
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
 readonly ARG_SHORT_UNINSTALL ARG_LONG_UNINSTALL
+readonly ARG_SHORT_UPGRADE ARG_LONG_UPGRADE
 readonly ARG_SHORT_PURGE ARG_LONG_PURGE ARG_SHORT_DOWNLOAD ARG_LONG_DOWNLOAD
 readonly ARG_SHORT_CONFIG_BRANCH ARG_LONG_CONFIG_BRANCH ARG_SHORT_BINARY_BRANCH ARG_LONG_CONFIG_BRANCH
-readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH ARG_SHORT_SKIP_CONFIG ARG_LONG_SKIP_CONFIG
+readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH
 readonly ARG_SHORT_SKIP_TOKEN ARG_LONG_SKIP_TOKEN ARG_SHORT_FIPS ARG_LONG_FIPS ENV_TOKEN
 readonly ARG_SHORT_INSTALL_HOSTMETRICS ARG_LONG_INSTALL_HOSTMETRICS
 readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
 readonly ARG_SHORT_EPHEMERAL ARG_LONG_EPHEMERAL
 readonly ARG_SHORT_TIMEOUT ARG_LONG_TIMEOUT
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
-readonly PACKAGE_GITHUB_ORG PACKAGE_GITHUB_REPO
 
 ############################ Variables (see set_defaults function for default values)
 
@@ -89,10 +86,8 @@ CONTINUE=false
 CONFIG_DIRECTORY=""
 USER_ENV_DIRECTORY=""
 UNINSTALL=""
+UPGRADE=""
 SUMO_BINARY_PATH=""
-SKIP_TOKEN=""
-SKIP_CONFIG=false
-CONFIG_PATH=""
 COMMON_CONFIG_PATH=""
 PURGE=""
 DOWNLOAD_ONLY=""
@@ -115,6 +110,13 @@ KEEP_DOWNLOADS=false
 
 CURL_MAX_TIME=1800
 
+PACKAGE_GITHUB_ORG="SumoLogic"
+PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
+
+PACKAGECLOUD_ORG="${PACKAGECLOUD_ORG:-sumologic}"
+PACKAGECLOUD_REPO="${PACKAGECLOUD_REPO:-stable}"
+PACKAGECLOUD_MASTER_TOKEN="${PACKAGECLOUD_MASTER_TOKEN:-}"
+
 ############################ Functions
 
 function usage() {
@@ -130,6 +132,7 @@ Supported arguments:
   -${ARG_SHORT_TAG}, --${ARG_LONG_TAG} <key=value>                 Sets tag for collector. This argument can be use multiple times. One per tag.
   -${ARG_SHORT_DOWNLOAD}, --${ARG_LONG_DOWNLOAD}                   Download new binary only and skip configuration part. (Mac OS only)
 
+  -${ARG_SHORT_UPGRADE}, --${ARG_LONG_UPGRADE}                     Upgrades the collector using the system package manager.
   -${ARG_SHORT_UNINSTALL}, --${ARG_LONG_UNINSTALL}                       Removes Sumo Logic Distribution for OpenTelemetry Collector from the system and
                                         disable Systemd service eventually.
                                         Use with '--purge' to remove all configurations as well.
@@ -138,7 +141,6 @@ Supported arguments:
 
   -${ARG_SHORT_API}, --${ARG_LONG_API} <url>                       API URL, forces the collector to use non-default API
   -${ARG_SHORT_OPAMP_API}, --${ARG_LONG_OPAMP_API} <url>            OpAmp API URL, forces the collector to use non-default OpAmp API
-  -${ARG_SHORT_SKIP_CONFIG}, --${ARG_LONG_SKIP_CONFIG}                     Do not create default configuration.
   -${ARG_SHORT_VERSION}, --${ARG_LONG_VERSION} <version>               Version of Sumo Logic Distribution for OpenTelemetry Collector to install, e.g. 0.57.2-sumo-1.
                                         By default it gets latest version.
   -${ARG_SHORT_FIPS}, --${ARG_LONG_FIPS}                            Install the FIPS 140-2 compliant binary on Linux.
@@ -159,10 +161,8 @@ function set_defaults() {
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
     CONFIG_DIRECTORY="/etc/otelcol-sumo"
     SUMO_BINARY_PATH="/usr/local/bin/otelcol-sumo"
-    REMOTE_CONFIG_DIRECTORY="${CONFIG_DIRECTORY}/opamp.d"
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
-    CONFIG_PATH="${CONFIG_DIRECTORY}/sumologic.yaml"
 
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
@@ -173,12 +173,6 @@ function set_defaults() {
 }
 
 function parse_options() {
-  if [[ $# == 0 && -z "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
-      echo "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable."
-      usage
-      exit 2
-  fi
-
   # Transform long options to short ones
   for arg in "$@"; do
 
@@ -206,9 +200,6 @@ function parse_options() {
       "--${ARG_LONG_YES}")
         set -- "$@" "-${ARG_SHORT_YES}"
         ;;
-      "--${ARG_LONG_SKIP_CONFIG}")
-        set -- "$@" "-${ARG_SHORT_SKIP_CONFIG}"
-        ;;
       "--${ARG_LONG_VERSION}")
         set -- "$@" "-${ARG_SHORT_VERSION}"
         ;;
@@ -218,10 +209,14 @@ function parse_options() {
       "--${ARG_LONG_UNINSTALL}")
         set -- "$@" "-${ARG_SHORT_UNINSTALL}"
         ;;
+      "--${ARG_LONG_UPGRADE}")
+        set -- "$@" "-${ARG_SHORT_UPGRADE}"
+        ;;
       "--${ARG_LONG_PURGE}")
         set -- "$@" "-${ARG_SHORT_PURGE}"
         ;;
       "--${ARG_LONG_SKIP_TOKEN}")
+        echo "--${ARG_LONG_SKIP_TOKEN}" is deprecated and no longer affects the installation. An installation token is required.
         set -- "$@" "-${ARG_SHORT_SKIP_TOKEN}"
         ;;
       "--${DEPRECATED_ARG_LONG_SKIP_TOKEN}")
@@ -246,7 +241,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -270,7 +265,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -286,13 +281,12 @@ function parse_options() {
       "${ARG_SHORT_TOKEN}")         SUMOLOGIC_INSTALLATION_TOKEN="${OPTARG}" ;;
       "${ARG_SHORT_API}")           API_BASE_URL="${OPTARG}" ;;
       "${ARG_SHORT_OPAMP_API}")     OPAMP_API_URL="${OPTARG}" ;;
-      "${ARG_SHORT_SKIP_CONFIG}")   SKIP_CONFIG=true ;;
       "${ARG_SHORT_VERSION}")       VERSION="${OPTARG}" ;;
       "${ARG_SHORT_FIPS}")          FIPS=true ;;
       "${ARG_SHORT_YES}")           CONTINUE=true ;;
       "${ARG_SHORT_UNINSTALL}")     UNINSTALL=true ;;
+      "${ARG_SHORT_UPGRADE}")       UPGRADE=true ;;
       "${ARG_SHORT_PURGE}")         PURGE=true ;;
-      "${ARG_SHORT_SKIP_TOKEN}")    SKIP_TOKEN=true ;;
       "${ARG_SHORT_DOWNLOAD}")      DOWNLOAD_ONLY=true ;;
       "${ARG_SHORT_CONFIG_BRANCH}") CONFIG_BRANCH="${OPTARG}" ;;
       "${ARG_SHORT_BINARY_BRANCH}") BINARY_BRANCH="${OPTARG}" ;;
@@ -339,7 +333,7 @@ function check_dependencies() {
         error=1
     fi
 
-    REQUIRED_COMMANDS=(echo sed curl head grep sort mv chmod getopts hostname touch xargs)
+    REQUIRED_COMMANDS=(echo sed curl head grep sort mv getopts hostname touch xargs)
     if [[ -n "${BINARY_BRANCH}" ]]; then  # unzip is only necessary for downloading from GHA artifacts
         REQUIRED_COMMANDS+=(unzip)
     fi
@@ -356,7 +350,7 @@ function check_dependencies() {
     fi
 }
 
-function get_latest_package_version() {
+function get_latest_github_package_version() {
     local versions
     readonly versions="${1}"
 
@@ -374,47 +368,11 @@ function get_latest_package_version() {
     fi
 }
 
-function get_latest_version() {
-    local versions
-    readonly versions="${1}"
-
-    # get latest version directly from website if there is no versions from api
-    if [[ -z "${versions}" ]]; then
-        curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 5 --retry-max-time 150 -s https://github.com/SumoLogic/sumologic-otel-collector/releases \
-        | grep -Eo '/SumoLogic/sumologic-otel-collector/releases/tag/v[0-9]+\.[0-9]+\.[0-9]+-sumo-[0-9]+[^-]' \
-        | head -n 1 | sed 's%/SumoLogic/sumologic-otel-collector/releases/tag/v\([^"]*\)".*%\1%g'
-    else
-        # sed 's/ /\n/g' converts spaces to new lines
-        echo "${versions}" | sed 's/ /\n/g' | head -n 1
-    fi
-}
-
 # Get available versions of otelcol-sumo
 # skip prerelease and draft releases
 # sort it from last to first
 # remove v from beginning of version
-function get_versions() {
-    # returns empty in case we exceeded github rate limit
-    if [[ "$(github_rate_limit)" == "0" ]]; then
-        return
-    fi
-
-    curl \
-    --connect-timeout 5 \
-    --max-time 30 \
-    --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 150 \
-    -sH "Accept: application/vnd.github.v3+json" \
-    https://api.github.com/repos/SumoLogic/sumologic-otel-collector/releases \
-    | grep -E '(tag_name|"(draft|prerelease)")' \
-    | sed 'N;N;s/.*true.*//' \
-    | grep -o 'v.*"' \
-    | sort -rV \
-    | sed 's/^v//;s/"$//'
-}
-
-function get_package_versions() {
+function get_github_package_versions() {
     # returns empty in case we exceeded github rate limit. This can happen if we are running this script too many times in a short period.
     if [[ "$(github_rate_limit)" == "0" ]]; then
         return
@@ -433,28 +391,6 @@ function get_package_versions() {
     | grep -o 'v.*"' \
     | sort -rV \
     | sed 's/^v//;s/"$//'
-}
-
-# Get versions from provided one to the latest
-get_versions_from() {
-    local versions
-    readonly versions="${1}"
-
-    local from
-    readonly from="${2}"
-
-    # Return if there is no installed version
-    if [[ "${from}" == "" ]]; then
-        return 0
-    fi
-
-    local line
-    readonly line="$(( $(echo "${versions}" | sed 's/ /\n/g' | grep -n "${from}$" | sed 's/:.*//g') - 1 ))"
-
-    if [[ "${line}" -gt "0" ]]; then
-        echo "${versions}" | sed 's/ /\n/g' | head -n "${line}" | sort
-    fi
-    return 0
 }
 
 # Get OS type (linux or darwin)
@@ -515,15 +451,6 @@ function verify_installation() {
     echo -e "Installation succeded:\t$(${otel_command} --version)"
 }
 
-# Get installed version of otelcol-sumo
-function get_installed_version() {
-    if [[ -f "${SUMO_BINARY_PATH}" ]]; then
-        set +o pipefail
-        "${SUMO_BINARY_PATH}" --version | grep -o 'v[0-9].*$' | sed 's/v//'
-        set -o pipefail
-    fi
-}
-
 # Ask to continue and abort if not
 function ask_to_continue() {
     if [[ "${CONTINUE}" == true ]]; then
@@ -533,7 +460,7 @@ function ask_to_continue() {
     # Just fail if we're not running in uninteractive mode
     # TODO: Figure out a way to reliably ask for confirmation with stdin redirected
 
-    echo "Please use the --yes flag to continue"
+    echo "Please use the -y flag to continue"
     exit 1
 
     # local choice
@@ -548,46 +475,13 @@ function ask_to_continue() {
 
 }
 
-# Print information about breaking changes
-function print_breaking_changes() {
-    local versions
-    readonly versions="${1}"
-
-    local changelog
-    changelog="$(echo -e "$(curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -sS https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/main/CHANGELOG.md)")"
-    declare -r changelog
-
-    local is_breaking_change
-    local message
-    message=""
-
-    for version in ${versions}; do
-        # Print changelog for every version
-        is_breaking_change=$(echo -e "${changelog}" | grep -E '^## |^### Breaking|breaking changes' | sed -e '/## \[v'"${version}"'/,/## \[v/!d' | grep -E 'Breaking|breaking' || echo "")
-
-        if [[ -n "${is_breaking_change}" ]]; then
-            if [[ -n "${message}" ]]; then
-                message="${message}, "
-            fi
-            message="${message}v${version}"
-        fi
-    done
-
-    if [[ -n "${message}" ]]; then
-        echo "The following versions contain breaking changes: ${message}! Please make sure to read the linked Changelog file."
-    fi
-}
-
 # set up configuration
 function setup_config() {
     echo 'We are going to get and set up a default configuration for you'
 
-    echo "Generating configuration and saving as ${CONFIG_PATH}"
+    echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         echo "Warning: remote management is currently in beta."
-
-        echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
-        mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
         write_opamp_extension
 
@@ -607,26 +501,24 @@ function setup_config() {
             write_opamp_endpoint "${OPAMP_API_URL}"
         fi
 
-        write_tags "${FIELDS[@]}"
+        if [[ ${#FIELDS[@]} -gt 0 ]]; then
+            write_tags "${FIELDS[@]}"
+        fi
 
-        # Return/stop function execution
+        # Return/stop function execution early as remaining logic only applies
+        # to locally-managed installations
         return
     fi
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
         echo -e "Installing ${OS_TYPE} hostmetrics configuration"
         otelcol-config --enable-hostmetrics
-        if [[ "${OS_TYPE}" == "linux" ]]; then
-            echo -e "Setting the CAP_DAC_READ_SEARCH Linux capability on the collector binary to allow it to read host metrics from /proc directory: setcap 'cap_dac_read_search=ep' \"${SUMO_BINARY_PATH}\""
-            echo -e "You can remove it with the following command: sudo setcap -r \"${SUMO_BINARY_PATH}\""
-            echo -e "Without this capability, the collector will not be able to collect some of the host metrics."
-            # TODO(echlebek): remove this when it's supported in packaging
-            setcap 'cap_dac_read_search=ep' "${SUMO_BINARY_PATH}"
-        fi
     fi
 
     ## Check if there is anything to update in configuration
     if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" ]]; then
+        USER_TOKEN="$(get_user_token)"
+
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
             write_installation_token "${SUMOLOGIC_INSTALLATION_TOKEN}"
         fi
@@ -635,51 +527,54 @@ function setup_config() {
             write_ephemeral_true
         fi
 
-        # fill in api base url
         if [[ -n "${API_BASE_URL}" && -z "${USER_API_URL}" ]]; then
             write_api_url "${API_BASE_URL}"
         fi
 
-        # fill in opamp url
-        if [[ -n "${OPAMP_API_URL}" && -z "${USER_OPAMP_API_URL}" ]]; then
-            write_opamp_extension
-            write_opamp_endpoint "${OPAMP_API_URL}"
+        if [[ ${#FIELDS[@]} -gt 0 ]]; then
+            write_tags "${FIELDS[@]}"
         fi
-
-        write_tags "${FIELDS[@]}"
     fi
 }
 
 function setup_config_darwin() {
+    echo 'We are going to get and set up a default configuration for you'
+
+    echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
+    if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
+        echo "Warning: remote management is currently in beta."
+
+        write_opamp_extension
+
+        if [[ -n "${OPAMP_API_URL}" ]]; then
+            write_opamp_endpoint "${OPAMP_API_URL}"
+        fi
+    fi
+
     if [[ "${EPHEMERAL}" == "true" ]]; then
         write_ephemeral_true
     fi
 
-    # fill in api base url
-    if [[ -n "${API_BASE_URL}" ]]; then
+    if [[ -n "${API_BASE_URL}"  ]]; then
         write_api_url "${API_BASE_URL}"
+    elif [[ -n "${USER_API_URL}" ]]; then
+        write_api_url "${USER_API_URL}"
     fi
 
-    write_tags "${FIELDS[@]}"
+    if [[ ${#FIELDS[@]} -gt 0 ]]; then
+        write_tags "${FIELDS[@]}"
+    fi
 
+    # Return/stop function execution early as remaining logic only applies to
+    # locally-managed installations
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-        echo "Warning: remote management is currently in beta."
-
-        echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
-        # TODO(echlebek): remove this once packaging does it
-        mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
-
-        write_opamp_extension
-
-        write_remote_config_launchd "${LAUNCHD_CONFIG}"
-
-        # Remote configuration directory must be writable
-        chmod 750 "${REMOTE_CONFIG_DIRECTORY}"
-
-        # Remote configuration directory must be owned by the mac pkg service user
-        chown _otelcol-sumo:_otelcol-sumo "${REMOTE_CONFIG_DIRECTORY}"
+        return
     fi
 
+    if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
+        echo -e "Installing ${OS_TYPE} hostmetrics configuration"
+        otelcol-config --enable-hostmetrics
+    fi
 }
 
 # uninstall otelcol-sumo
@@ -694,6 +589,29 @@ function uninstall() {
     esac
 
     echo "Uninstallation completed"
+}
+
+function upgrade() {
+    case "${OS_TYPE}" in
+    "linux") upgrade_linux ;;
+    *)
+      echo "upgrading is not supported by this script for OS: ${OS_TYPE}"
+      exit 1
+      ;;
+    esac
+
+}
+
+function upgrade_linux() {
+    case $(get_package_manager) in
+        yum | dnf)
+            yum update --quiet -y
+            ;;
+        apt-get)
+            apt-get update --quiet && apt-get upgrade --quiet -y
+            ;;
+    esac
+
 }
 
 # uninstall otelcol-sumo on darwin
@@ -716,7 +634,7 @@ function uninstall_darwin() {
 function uninstall_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum remove --quiet -y otelcol-sumo
+            yum remove --quiet -yes otelcol-sumo
             ;;
         apt-get)
             if [[ "${PURGE}" == "true" ]]; then
@@ -726,16 +644,6 @@ function uninstall_linux() {
             fi
             ;;
     esac
-}
-
-function escape_sed() {
-    local text
-    readonly text="${1}"
-
-    # replaces `\` with `\\` and `/` with `\/`
-    echo "${text}" \
-        | sed -e 's/\\/\\\\/g' \
-        | sed -e 's|/|\\/|g'
 }
 
 function get_user_env_config() {
@@ -764,12 +672,37 @@ function get_user_env_config() {
     || echo ""
 }
 
+function get_launchd_token() {
+    local file
+    readonly file="${1}"
+
+    if [[ "${OS_TYPE}" != "darwin" ]]; then
+        return
+    fi
+
+    if [[ ! -f "${file}" ]]; then
+        return
+    fi
+
+    plutil_extract_key "${file}" "${LAUNCHD_TOKEN_KEY}"
+}
+
 function get_user_api_url() {
-    otelcol-config --read-kv .extensions.sumologic.api_base_url
+    if command -v otelcol-config &> /dev/null; then
+        KV=$(otelcol-config --read-kv .extensions.sumologic.api_base_url)
+        if [[ "${KV}" != "null" ]]; then
+            echo "${KV}"
+        fi
+    fi
 }
 
 function get_user_opamp_endpoint() {
-    otelcol-config --read-kv .extensions.opamp.endpoint
+    if command -v otelcol-config &> /dev/null; then
+        KV=$(otelcol-config --read-kv .extensions.opamp.endpoint)
+        if [[ "${KV}" != "null" ]]; then
+            echo "${KV}"
+        fi
+    fi
 }
 
 # write installation token to user configuration file
@@ -778,27 +711,6 @@ function write_installation_token() {
     readonly token="${1}"
 
     otelcol-config --set-installation-token "$token"
-}
-
-# write ${ENV_TOKEN}" to systemd env configuration file
-function write_installation_token_env() {
-    local token
-    readonly token="${1}"
-
-    local file
-    readonly file="${2}"
-
-    local token_name
-    token_name="${ENV_TOKEN}"
-    readonly token_name
-
-    # ToDo: ensure we override only ${ENV_TOKEN}" env value
-    if grep "${token_name}" "${file}" > /dev/null 2>&1; then
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "s/${token_name}=.*$/${token_name}=$(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-    else
-        echo "${token_name}=${token}" > "${file}"
-    fi
 }
 
 # write ${ENV_TOKEN} to launchd configuration file
@@ -824,31 +736,13 @@ function write_installation_token_launchd() {
         plutil_replace_key "${file}" "${LAUNCHD_ENV_KEY}" "xml" "<dict/>"
     fi
 
-    # Create SUMOLOGIC_INSTALLATION_TOKEN key if it does not exist
+    # Create SUMOLOGIC_INSTALLATION_TOKEN key if it does not exist otherwise
+    # replace the SUMOLOGIC_INSTALLATION_TOKEN key
     if ! plutil_key_exists "${file}" "${LAUNCHD_TOKEN_KEY}"; then
-        plutil_create_key "${file}" "${LAUNCHD_TOKEN_KEY}" "string" "${SUMOLOGIC_INSTALLATION_TOKEN}"
+        plutil_create_key "${file}" "${LAUNCHD_TOKEN_KEY}" "string" "${token}"
+    else
+        plutil_replace_key "${file}" "${LAUNCHD_TOKEN_KEY}" "string" "${token}"
     fi
-
-    # Replace SUMOLOGIC_INSTALLATION_TOKEN key if it has an incorrect type
-    if ! plutil_key_is_type "${LAUNCHD_CONFIG}" "${LAUNCHD_TOKEN_KEY}" "string"; then
-        plutil_replace_key "${LAUNCHD_CONFIG}" "${LAUNCHD_TOKEN_KEY}" "string" "${SUMOLOGIC_INSTALLATION_TOKEN}"
-    fi
-}
-
-function write_remote_config_launchd() {
-    local file
-    readonly file="${1}"
-
-    if [[ ! -f "${file}" ]]; then
-        echo "The LaunchDaemon configuration file is missing: ${file}"
-        exit 1
-    fi
-
-    # Delete existing ProgramArguments
-    plutil_delete_key "${file}" "ProgramArguments"
-
-    # Create new ProgramArguments with --remote-config
-    plutil_create_key "${file}" "ProgramArguments" "json" "[ \"/usr/local/bin/otelcol-sumo\", \"--remote-config\", \"opamp:${CONFIG_PATH}\" ]"
 }
 
 # write sumologic ephemeral: true to user configuration file
@@ -1005,17 +899,6 @@ function plutil_create_key() {
     fi
 }
 
-function plutil_delete_key() {
-    local file key
-    readonly file="${1}"
-    readonly key="${2}"
-
-    if ! plutil -remove "${key}" "${file}"; then
-        echo "plutil_delete_key error: key=${key}, file=${file}"
-        exit 1
-    fi
-}
-
 function plutil_extract_key() {
     local file key output
     readonly file="${1}"
@@ -1072,19 +955,41 @@ function get_package_manager() {
 }
 
 function install_linux_package() {
-    local package_with_version
-    readonly package_with_version="${1}"
+    local package_name
+    readonly package_name="${1}"
+
+    if [[ "${PACKAGECLOUD_MASTER_TOKEN}" != "" ]]; then
+      base_url="https://${PACKAGECLOUD_MASTER_TOKEN}:@packages.sumologic.com"
+    else
+      base_url="https://packages.sumologic.com"
+    fi
+    base_url+="/install/repositories/${PACKAGECLOUD_ORG}/${PACKAGECLOUD_REPO}"
+
+    repo_id="${PACKAGECLOUD_ORG}_${PACKAGECLOUD_REPO}"
 
     case $(get_package_manager) in
         yum | dnf)
-            curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.rpm.sh | bash
-            yum --quiet --disablerepo="*" --enablerepo="sumologic_stable" -y update
-            yum install --quiet "${package_with_version}"
+            curl -s "${base_url}/script.rpm.sh" | bash
+
+            local package_str
+            package_str="${package_name}"
+            if [[ -n "${VERSION}" ]]; then
+                package_str="${package_str}-${VERSION}"
+            fi
+            echo "Installing ${package_str}"
+            yum install --quiet -y "${package_str}"
             ;;
         apt-get)
-            curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.deb.sh | bash
-            apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
-            apt-get install --quiet "${package_with_version}"
+            curl -s "${base_url}/script.deb.sh" | bash
+            apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
+
+            local package_str
+            package_str="${package_name}"
+            if [[ -n "${VERSION}" ]]; then
+                package_str="${package_str}=${VERSION}"
+            fi
+            echo "Installing ${package_str}"
+            apt-get install --quiet -y "${package_str}"
             ;;
     esac
 }
@@ -1109,6 +1014,59 @@ function check_deprecated_linux_flags() {
     fi
 }
 
+function is_package_installed() {
+    case $(get_package_manager) in
+        yum | dnf)
+            # TODO: refine exact command
+            yum --cacheonly list --installed otelcol-sumo > /dev/null 2>&1
+            ;;
+        apt-get)
+            dpkg --status otelcol-sumo > /dev/null 2>&1
+            ;;
+    esac
+}
+
+# Try to infer if there is a binary, pre-packaging rework installation, the
+# kind of installation that was performed by downloading artifacts from Github,
+# before we moved to using distribution packages.
+function has_prepackaging_installation() {
+    if command -v otelcol-sumo > /dev/null 2>&1 && ! is_package_installed; then
+        true
+    else
+        false
+    fi
+}
+
+function backup_prepackaging_configuration() {
+    cp -r "${CONFIG_DIRECTORY}" "${TMPDIR}/otelcol-sumo-configuration-backup"
+}
+
+function restore_prepackaging_configuration() {
+    echo "restore_prepackaging_configuration(): not implemented yet"
+}
+
+function uninstall_prepackaging_installation() {
+    # Stop the service and remove its unit file
+    SYSTEMD_SERVICE_PATH="/etc/systemd/system/otelcol-sumo.service"
+    if [[ -f "${SYSTEMD_SERVICE_PATH}" ]]; then
+        systemctl --quiet stop otelcol-sumo || true
+        systemctl --quiet disable otelcol-sumo || true
+        rm -f "${SYSTEMD_SERVICE_PATH}"
+    fi
+
+    # Remove the old binary
+    rm -f "${SUMO_BINARY_PATH}"
+
+    # Remove old configuration and data
+    FILE_STORAGE="/var/lib/otelcol-sumo/file_storage"
+    rm -rf "${CONFIG_DIRECTORY}" "${FILE_STORAGE}"
+
+    # Remove the otelcol-sumo user and group
+    SYSTEM_USER="otelcol-sumo"
+    userdel --remove --force "${SYSTEM_USER}" 2>/dev/null || true
+    groupdel "${SYSTEM_USER}" 2>/dev/null || true
+}
+
 ############################ Main code
 
 OS_TYPE="$(get_os_type)"
@@ -1125,7 +1083,7 @@ check_dependencies
 check_deprecated_linux_flags
 
 readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE CONFIG_DIRECTORY UNINSTALL
-readonly USER_ENV_DIRECTORY CONFIG_DIRECTORY CONFIG_PATH COMMON_CONFIG_PATH
+readonly USER_ENV_DIRECTORY CONFIG_DIRECTORY COMMON_CONFIG_PATH
 readonly INSTALL_HOSTMETRICS
 readonly REMOTELY_MANAGED
 readonly CURL_MAX_TIME
@@ -1135,49 +1093,67 @@ if [[ "${UNINSTALL}" == "true" ]]; then
     uninstall
     exit 0
 fi
+if [[ "${UPGRADE}" == "true" ]]; then
+    upgrade
+    exit 0
+fi
+
+# get_installation_token returns the value of SUMOLOGIC_INSTALLATION_TOKEN
+# (set by a flag or environment variable) when it is not empty, otherwise it
+# will attempt to fetch the token from an existing installation and return it.
+function get_installation_token() {
+  local token=""
+
+  if [[ -z "${token}" ]]; then
+    token="${SUMOLOGIC_INSTALLATION_TOKEN}"
+  fi
+
+  if [[ -z "${token}" ]]; then
+    token="$(get_user_token)"
+  fi
+
+  echo "${token}"
+}
 
 # Attempt to find a token from an existing installation
-if command -v otelcol-config &> /dev/null; then
-    USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
-fi
-if [[ -z "${USER_TOKEN}" ]]; then
-    USER_TOKEN="$(get_user_env_config "${TOKEN_ENV_FILE}")"
-fi
-readonly USER_TOKEN
+function get_user_token() {
+  local token="${USER_TOKEN}"
 
-# Exit if installation token is not set and there is no user configuration
-if [[ -z "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SKIP_TOKEN}" != "true" && -z "${USER_TOKEN}" && -z "${DOWNLOAD_ONLY}" ]]; then
-    echo "Installation token has not been provided. Please set the '${ENV_TOKEN}' environment variable."
-    echo "You can ignore this requirement by adding '--${ARG_LONG_SKIP_TOKEN} argument."
-    exit 1
-fi
+  # Attempt to find a token from an existing installation
+  # Check the systemd env file for a token
+  if [[ -f "${TOKEN_ENV_FILE}" && -z "${token}" ]]; then
+    token="$(get_user_env_config "${TOKEN_ENV_FILE}")"
+  fi
 
-# verify if passed arguments are the same like in user's configuration
-if [[ -z "${DOWNLOAD_ONLY}" ]]; then
-    if [[ -n "${USER_TOKEN}" && -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${USER_TOKEN}" != "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
-        echo "You are trying to install with different token than in your configuration file!"
-        exit 1
+  # Check the launchd config for a token
+  if [[ -f "${LAUNCHD_CONFIG}" && -z "${token}" ]]; then
+    token="$(get_launchd_token "${LAUNCHD_CONFIG}")"
+  fi
+
+  # Check yaml configuration for a token
+  if [[ -z "${token}" ]]; then
+    if command -v otelcol-config &> /dev/null; then
+      local output=""
+      output=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+      if [[ "${output}" != "null" ]]; then
+        token="${output}"
+      fi
     fi
+  fi
 
-    USER_API_URL="$(get_user_api_url)"
-    if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
-        echo "You are trying to install with different api base url than in your configuration file!"
-        exit 1
-    fi
+  echo "${token}"
+}
 
-    USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
-    if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
-        echo "You are trying to install with different opamp endpoint than in your configuration file!"
-        exit 1
-    fi
+# Load & cache user token
+USER_TOKEN="$(get_user_token)"
+
+# Exit if installation token is not set by flag, environment variable, or from
+# existing installation configuration. Skip this check when DOWNLOAD_ONLY is set
+# which is only possible on macOS.
+if [[ -z "$(get_installation_token)" && -z "${DOWNLOAD_ONLY}" ]]; then
+  echo "Installation token has not been provided. Please set the '${ENV_TOKEN}' environment variable."
+  exit 1
 fi
-
-set +u
-if [[ -n "${BINARY_BRANCH}" && -z "${GITHUB_TOKEN}" ]]; then
-    echo "GITHUB_TOKEN env is required for '${ARG_LONG_BINARY_BRANCH}' option"
-    exit 1
-fi
-set -u
 
 if [ "${FIPS}" == "true" ]; then
     case "${OS_TYPE}" in
@@ -1195,6 +1171,34 @@ if [ "${FIPS}" == "true" ]; then
 fi
 
 if [[ "${OS_TYPE}" == "darwin" ]]; then
+    # verify if passed arguments are the same like in user's configuration
+    if [[ -z "${DOWNLOAD_ONLY}" ]]; then
+        USER_TOKEN="$(get_user_token)"
+        if [[ -n "${USER_TOKEN}" && -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${USER_TOKEN}" != "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
+            echo "You are trying to install with different token than in your configuration file!"
+            exit 1
+        fi
+
+        USER_API_URL="$(get_user_api_url)"
+        if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
+            echo "You are trying to install with different api base url than in your configuration file! (${USER_API_URL} != ${API_BASE_URL})"
+            exit 1
+        fi
+
+        USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
+        if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
+            echo "You are trying to install with different opamp endpoint than in your configuration file!"
+            exit 1
+        fi
+    fi
+
+    set +u
+    if [[ -n "${BINARY_BRANCH}" && -z "${GITHUB_TOKEN}" ]]; then
+        echo "GITHUB_TOKEN env is required for '${ARG_LONG_BINARY_BRANCH}' option"
+        exit 1
+    fi
+    set -u
+
     package_arch=""
     case "${ARCH_TYPE}" in
       "amd64") package_arch="intel" ;;
@@ -1206,88 +1210,52 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     esac
     readonly package_arch
 
-    if [[ "${SKIP_CONFIG}" == "true" ]]; then
-        echo "SKIP_CONFIG is not supported on darwin"
-        exit 1
-    fi
+    if [[ -z "${DARWIN_PKG_URL}" ]]; then
+        echo -e "Getting versions..."
+        # Get versions, but ignore errors as we fallback to other methods later
+        VERSIONS="$(get_github_package_versions || echo "")"
 
-    echo -e "Getting versions..."
-    # Get versions, but ignore errors as we fallback to other methods later
-    VERSIONS="$(get_package_versions || echo "")"
+        # Use user's version if set, otherwise get latest version from API (or website)
+        if [[ -z "${VERSION}" ]]; then
+            VERSION="$(get_latest_github_package_version "${VERSIONS}")"
+        fi
 
-    # Use user's version if set, otherwise get latest version from API (or website)
-    if [[ -z "${VERSION}" ]]; then
-        VERSION="$(get_latest_package_version "${VERSIONS}")"
-    fi
+        readonly VERSIONS VERSION
 
-    readonly VERSIONS VERSION
+        echo -e "Version to install:\t${VERSION}"
 
-    echo -e "Version to install:\t${VERSION}"
+        package_suffix="${package_arch}.pkg"
 
-    package_suffix="${package_arch}.pkg"
+        if [[ -n "${BINARY_BRANCH}" ]]; then
+            artifact_name="otelcol-sumo_.*-${package_suffix}"
+            get_package_from_branch "${BINARY_BRANCH}" "${artifact_name}"
+        else
+            artifact_name="otelcol-sumo_${VERSION}-${package_suffix}"
+            readonly artifact_name
 
-    if [[ -n "${BINARY_BRANCH}" ]]; then
-        artifact_name="otelcol-sumo_.*-${package_suffix}"
-        get_package_from_branch "${BINARY_BRANCH}" "${artifact_name}"
+            LINK="https://github.com/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases/download/v${VERSION}/${artifact_name}"
+            readonly LINK
+
+            get_package_from_url "${LINK}"
+        fi
     else
-        artifact_name="otelcol-sumo_${VERSION}-${package_suffix}"
-        readonly artifact_name
-
-        LINK="https://github.com/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases/download/v${VERSION}/${artifact_name}"
-        readonly LINK
-
-        get_package_from_url "${LINK}"
+        get_package_from_url "${DARWIN_PKG_URL}"
     fi
 
     pkg="${TMPDIR}/otelcol-sumo.pkg"
-    choices="${TMPDIR}/otelcol-sumo-choices.xml"
-    readonly pkg choices
 
     if [[ "${DOWNLOAD_ONLY}" == "true" ]]; then
         echo "Package downloaded to: ${pkg}"
         exit 0
     fi
 
-    # Extract choices xml from meta package, override the choices to enable
-    # optional choices, and then install using the new choice selections
-    installer -showChoiceChangesXML -pkg "${pkg}" -target / > "${choices}"
+    echo "Installing otelcol-sumo package"
+    installer -pkg "${pkg}" -target /
 
-    # Determine how many installation choices exist
-    choices_count=$(plutil -convert raw -o - "${choices}")
-    readonly choices_count
-
-    # Loop through each installation choice
-    for (( i=0; i < "${choices_count}"; i++ )); do
-        choice_id_key="${i}.choiceIdentifier"
-        choice_attr_key="${i}.choiceAttribute"
-        attr_setting_key="${i}.attributeSetting"
-
-        # Skip if choiceAttribute does not equal selected
-        choice_attr="$(plutil_extract_key "${choices}" "${choice_attr_key}")"
-        if [ "$choice_attr" != "selected" ]; then
-            continue
-        fi
-
-        # Get the choice identifier
-        choice_id="$(plutil_extract_key "${choices}" "${choice_id_key}")"
-
-        # Mark the choice as selected if the feature flag is true
-        case "${choice_id}" in
-        "otelcol-sumo-hostmetricsChoice")
-          if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
-              echo -e "Enabling ${OS_TYPE} hostmetrics install option"
-              plutil_replace_key "${choices}" "${attr_setting_key}" "integer" 1
-          fi
-          ;;
-        esac
-    done
-
-    installer -applyChoiceChangesXML "$choices" -pkg "$pkg" -target /
-
-    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" && "${SKIP_TOKEN}" != "true" ]]; then
-        echo "Writing installation token to launchd config"
-        write_installation_token_launchd "${SUMOLOGIC_INSTALLATION_TOKEN}" "${LAUNCHD_CONFIG}"
-    fi
+    # The token must be written to the launchd config on every install as
+    # upgrades replace the launchd config
+    echo "Writing installation token to launchd config"
+    write_installation_token_launchd "$(get_installation_token)" "${LAUNCHD_CONFIG}"
 
     setup_config_darwin
 
@@ -1297,81 +1265,62 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
 
     echo "Waiting for otelcol to start"
     while ! launchctl print system/otelcol-sumo | grep -q "state = running"; do
-        sleep 0.1
+        echo -n "  otelcol service "
+        launchctl print system/otelcol-sumo | grep "state = "
+        sleep 1
     done
     OTEL_EXITED_WITH_ERROR=false
     echo 'Checking otelcol status'
-    for i in {1..15}; do
+    for _ in {1..15}; do
         if launchctl print system/otelcol-sumo | grep -q "last exit code = 1"; then
             OTEL_EXITED_WITH_ERROR=true
             break;
         fi
-        sleep 1
+        sleep 0.4
     done
     if [[ "${OTEL_EXITED_WITH_ERROR}" == "true" ]]; then
         echo "Failed to launch otelcol"
         tail /var/log/otelcol-sumo/otelcol-sumo.log
         exit 1
     fi
+    echo "Successfully started otelcol"
     exit 0
 fi
 
-echo -e "Getting installed version..."
-INSTALLED_VERSION="$(get_installed_version)"
-echo -e "Installed version:\t${INSTALLED_VERSION:-none}"
-
-echo -e "Getting versions..."
-# Get versions, but ignore errors as we fallback to other methods later
-VERSIONS="$(get_versions || echo "")"
-
-# Use user's version if set, otherwise get latest version from API (or website)
-if [[ -z "${VERSION}" ]]; then
-    VERSION="$(get_latest_version "${VERSIONS}")"
-fi
-
-echo -e "Version to install:\t${VERSION}"
-
-# Check if otelcol is already in newest version
-if [[ "${INSTALLED_VERSION}" == "${VERSION}" ]]; then
-    echo -e "OpenTelemetry collector is already in newest (${VERSION}) version"
+package_name=""
+if [[ "${FIPS}" == "true" ]]; then
+  echo "Getting FIPS-compliant binary"
+  package_name=otelcol-sumo-fips
 else
-
-    # add newline before breaking changes and changelog
-    echo ""
-    if [[ -n "${INSTALLED_VERSION}" ]]; then
-        # Take versions from installed up to the newest
-        BETWEEN_VERSIONS="$(get_versions_from "${VERSIONS}" "${INSTALLED_VERSION}")"
-        readonly BETWEEN_VERSIONS
-        print_breaking_changes "${BETWEEN_VERSIONS}"
-    fi
-
-    echo -e "Changelog:\t\thttps://github.com/SumoLogic/sumologic-otel-collector/blob/main/CHANGELOG.md"
-    # add newline after breaking changes and changelog
-    echo ""
-
-    package_with_version="${VERSION}"
-    if [[ -n "${package_with_version}" ]]; then
-        if [[ "${FIPS}" == "true" ]]; then
-        echo "Getting FIPS-compliant binary"
-            package_with_version=otelcol-sumo-fips
-        else
-            package_with_version=otelcol-sumo
-        fi
-    fi
-
-    install_linux_package "${package_with_version}"
-
-    verify_installation
+  package_name=otelcol-sumo
 fi
 
-if [[ "${SKIP_CONFIG}" == "false" ]]; then
-    setup_config
+if has_prepackaging_installation; then
+   # Display a warning and information message here?
+   echo 'Pre-packaging installation detected'
+
+   # Backup current configuration
+   backup_prepackaging_configuration
+
+   # Remove current installation
+   uninstall_prepackaging_installation
+
+   # We can now proceed and install using the packages and attempt to restore
+   # the configuration later.
+   HAD_PREPACKAGING_INSTALLATION="true"
 fi
 
-if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
-    echo 'Writing installation token to env file'
-    write_installation_token_env "${SUMOLOGIC_INSTALLATION_TOKEN}" "${TOKEN_ENV_FILE}"
+install_linux_package "${package_name}"
+verify_installation
+setup_config
+
+# If an old, pre-packaging rework installation was removed during this run,
+# attempt the restore the configuration that was backed up during that removal.
+set +u
+if [[ -n "${HAD_PREPACKAGING_INSTALLATION}" ]]; then
+    restore_prepackaging_configuration
 fi
+set -u
 
 echo 'Reloading systemd'
 systemctl daemon-reload
@@ -1381,12 +1330,5 @@ systemctl enable otelcol-sumo
 
 echo 'Starting otelcol-sumo service'
 systemctl restart otelcol-sumo
-
-echo 'Waiting 10s before checking status'
-sleep 10
-if ! systemctl status otelcol-sumo --no-pager; then
-    echo "Failed to launch otelcol"
-    exit 1
-fi
 
 exit 0

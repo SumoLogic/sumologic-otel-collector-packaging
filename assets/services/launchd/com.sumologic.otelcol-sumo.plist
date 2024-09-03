@@ -6,12 +6,13 @@
     <string>otelcol-sumo</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/usr/local/bin/otelcol-sumo</string>
-      <string>--config</string>
-      <string>/etc/otelcol-sumo/sumologic.yaml</string>
-      <string>--config</string>
-      <string>glob:/etc/otelcol-sumo/conf.d/*.yaml</string>
+      <string>/usr/local/share/otelcol-sumo/otelcol-sumo.sh</string>
     </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>SUMOLOGIC_INSTALLATION_TOKEN</key>
+        <string></string>
+    </dict>
     <!-- Service user -->
     <key>UserName</key>
     <string>_otelcol-sumo</string>

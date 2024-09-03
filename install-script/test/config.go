@@ -31,6 +31,9 @@ func getConfig(path string) (config, error) {
 
 	yamlFile, err := os.ReadFile(path)
 	if err != nil {
+		if err == os.ErrNotExist {
+			return config{}, nil
+		}
 		return config{}, err
 	}
 

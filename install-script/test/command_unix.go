@@ -9,15 +9,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/stretchr/testify/require"
 )
 
 type installOptions struct {
 	installToken       string
 	autoconfirm        bool
 	tags               map[string]string
-	skipConfig         bool
 	skipInstallToken   bool
 	fips               bool
 	envs               map[string]string
@@ -30,6 +27,7 @@ type installOptions struct {
 	opampEndpoint      string
 	downloadOnly       bool
 	dontKeepDownloads  bool
+	version            string
 }
 
 func (io *installOptions) string() []string {
@@ -45,8 +43,8 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "--fips")
 	}
 
-	if io.skipConfig {
-		opts = append(opts, "--skip-config")
+	if io.downloadOnly {
+		opts = append(opts, "--download-only")
 	}
 
 	if io.skipInstallToken {
@@ -76,8 +74,19 @@ func (io *installOptions) string() []string {
 		}
 	}
 
-	if io.apiBaseURL != "" {
-		opts = append(opts, "--api", io.apiBaseURL)
+	// 1. If the apiBaseURL is empty, replace it with the mock API's URL.
+	// 2. If the apiBaseURL is equal to the emptyAPIBaseURL constant, don't set
+	//    the --api flag.
+	// 3. If none of the above are true, set the --api flag to the value of
+	//    apiBaseURL.
+	apiBaseURL := ""
+	if io.apiBaseURL == "" {
+		apiBaseURL = mockAPIBaseURL
+	} else if io.apiBaseURL != emptyAPIBaseURL {
+		apiBaseURL = io.apiBaseURL
+	}
+	if apiBaseURL != "" {
+		opts = append(opts, "--api", apiBaseURL)
 	}
 
 	if io.timeout != 0 {
@@ -86,6 +95,15 @@ func (io *installOptions) string() []string {
 
 	if io.opampEndpoint != "" {
 		opts = append(opts, "--opamp-api", io.opampEndpoint)
+	}
+
+	otc_version := os.Getenv("OTC_VERSION")
+	otc_build_number := os.Getenv("OTC_BUILD_NUMBER")
+
+	if io.version != "" {
+		opts = append(opts, "--version", io.version)
+	} else if otc_version != "" && otc_build_number != "" {
+		opts = append(opts, "--version", fmt.Sprintf("%s-%s", otc_version, otc_build_number))
 	}
 
 	return opts
@@ -124,22 +142,24 @@ func runScript(ch check) (int, []string, []string, error) {
 	cmd.Env = ch.installOptions.buildEnvs()
 	output := []string{}
 
+	ch.test.Logf("Running command: %s", strings.Join(ch.installOptions.string(), " "))
+
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 
 	defer in.Close()
 
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 	defer out.Close()
 
 	errOut, err := cmd.StderrPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 	defer errOut.Close()
 
@@ -148,7 +168,7 @@ func runScript(ch check) (int, []string, []string, error) {
 
 	// Start the process
 	if err = cmd.Start(); err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 
 	// Read the results from the process
@@ -167,8 +187,9 @@ func runScript(ch check) (int, []string, []string, error) {
 		}
 
 		// otherwise ensure there is no error
-		require.NoError(ch.test, err)
-
+		if err != nil {
+			return 0, nil, nil, err
+		}
 	}
 
 	// Handle stderr separately

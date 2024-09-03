@@ -4,7 +4,7 @@ set -euxo pipefail
 
 targetarch="$1"
 
-PACKAGECLOUD_GO_VERSION="0.1.5"
+PACKAGECLOUD_GO_VERSION="0.2.2"
 
 # Convert between Docker CPU architecture names and other names such as Go's
 # GOARCH.

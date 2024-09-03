@@ -10,43 +10,116 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
-func checkAbortedDueToNoToken(c check) {
-	require.Greater(c.test, len(c.output), 1)
-	require.Contains(c.test, c.output[len(c.output)-2], "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable.")
-	require.Contains(c.test, c.output[len(c.output)-1], "You can ignore this requirement by adding '--skip-installation-token argument.")
+type configRoot struct {
+	Extensions *configExtensions `yaml:"extensions,omitempty"`
 }
 
-func preActionMockConfig(c check) {
+type configExtensions struct {
+	Sumologic *sumologicExt `yaml:"sumologic,omitempty"`
+}
+
+type sumologicExt struct {
+	Ephemeral bool `yaml:"ephemeral,omitempty"`
+}
+
+func checkAbortedDueToNoToken(c check) bool {
+	if !assert.Greater(c.test, len(c.output), 1) {
+		return false
+	}
+	return assert.Contains(c.test, c.output, "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable.")
+}
+
+func checkEphemeralConfigFileCreated(p string) func(c check) bool {
+	return func(c check) bool {
+		return assert.FileExists(c.test, p, "ephemeral config file has not been created")
+	}
+}
+
+func checkEphemeralConfigFileNotCreated(p string) func(c check) bool {
+	return func(c check) bool {
+		return assert.NoFileExists(c.test, p, "ephemeral config file has been created")
+	}
+}
+
+func checkEphemeralEnabledInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
+			return false
+		}
+
+		var config configRoot
+
+		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+
+		return config.Extensions.Sumologic.Ephemeral
+	}
+}
+
+func checkEphemeralNotEnabledInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if err != nil {
+			// assume the error is due to the file not existing, which is valid
+			return true
+		}
+
+		var config configRoot
+
+		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+
+		return !config.Extensions.Sumologic.Ephemeral
+	}
+}
+
+func preActionMockConfig(c check) bool {
 	err := os.MkdirAll(etcPath, fs.FileMode(etcPathPermissions))
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	f, err := os.Create(configPath)
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	err = f.Chmod(fs.FileMode(configPathFilePermissions))
-	require.NoError(c.test, err)
+	return assert.NoError(c.test, err)
 }
 
-func preActionMockUserConfig(c check) {
+func preActionMockUserConfig(c check) bool {
 	err := os.MkdirAll(etcPath, fs.FileMode(etcPathPermissions))
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	err = os.MkdirAll(confDPath, fs.FileMode(configPathDirPermissions))
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	f, err := os.Create(userConfigPath)
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
-	err = f.Chmod(fs.FileMode(commonConfigPathFilePermissions))
-	require.NoError(c.test, err)
+	err = f.Chmod(fs.FileMode(confDPathFilePermissions))
+	return assert.NoError(c.test, err)
 }
 
-func PathHasOwner(t *testing.T, path string, ownerName string, groupName string) {
+func PathHasOwner(t *testing.T, path string, ownerName string, groupName string) bool {
 	info, err := os.Stat(path)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
 	// get the owning user and group
 	stat := info.Sys().(*syscall.Stat_t)
@@ -54,11 +127,17 @@ func PathHasOwner(t *testing.T, path string, ownerName string, groupName string)
 	gid := strconv.FormatUint(uint64(stat.Gid), 10)
 
 	usr, err := user.LookupId(uid)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
 	group, err := user.LookupGroupId(gid)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
-	require.Equal(t, ownerName, usr.Username, "%s should be owned by user '%s'", path, ownerName)
-	require.Equal(t, groupName, group.Name, "%s should be owned by group '%s'", path, groupName)
+	if !assert.Equal(t, ownerName, usr.Username, "%s should be owned by user '%s'", path, ownerName) {
+		return false
+	}
+	return assert.Equal(t, groupName, group.Name, "%s should be owned by group '%s'", path, groupName)
 }
