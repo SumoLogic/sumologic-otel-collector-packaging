@@ -49,6 +49,10 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "--skip-config")
 	}
 
+	if io.downloadOnly {
+		opts = append(opts, "--download-only")
+	}
+
 	if io.skipInstallToken {
 		opts = append(opts, "--skip-installation-token")
 	}
