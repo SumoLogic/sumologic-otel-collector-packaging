@@ -1286,11 +1286,4 @@ systemctl enable otelcol-sumo
 echo 'Starting otelcol-sumo service'
 systemctl restart otelcol-sumo
 
-echo 'Waiting 10s before checking status'
-sleep 10
-if ! systemctl status otelcol-sumo --no-pager; then
-    echo "Failed to launch otelcol"
-    exit 1
-fi
-
 exit 0
