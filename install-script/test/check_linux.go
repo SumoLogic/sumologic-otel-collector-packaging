@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,35 +17,6 @@ import (
 
 func checkACLAvailability(c check) bool {
 	return assert.FileExists(&testing.T{}, "/usr/bin/getfacl", "File ACLS is not supported")
-}
-
-func checkConfigFilesOwnershipAndPermissions(ownerName string, ownerGroup string) func(c check) {
-	return func(c check) {
-		etcPathGlob := filepath.Join(etcPath, "*")
-		etcPathNestedGlob := filepath.Join(etcPath, "*", "*")
-
-		for _, glob := range []string{etcPathGlob, etcPathNestedGlob} {
-			paths, err := filepath.Glob(glob)
-			require.NoError(c.test, err)
-			for _, path := range paths {
-				var permissions uint32
-				info, err := os.Stat(path)
-				require.NoError(c.test, err)
-				if info.IsDir() {
-					if path == opampDPath {
-						permissions = opampDPermissions
-					} else {
-						permissions = configPathDirPermissions
-					}
-				} else {
-					permissions = configPathFilePermissions
-				}
-				PathHasPermissions(c.test, path, permissions)
-				PathHasOwner(c.test, configPath, ownerName, ownerGroup)
-			}
-		}
-		PathHasPermissions(c.test, configPath, configPathFilePermissions)
-	}
 }
 
 func checkDifferentTokenInConfig(c check) {
