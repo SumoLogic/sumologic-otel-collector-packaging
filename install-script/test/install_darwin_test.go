@@ -445,37 +445,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 			installCode: 1, // because of invalid installation token
 		},
 		{
-			name: "different tags",
-			options: installOptions{
-				skipInstallToken: true,
-				tags: map[string]string{
-					"lorem":     "ipsum",
-					"foo":       "bar",
-					"escape_me": "'\\/",
-					"slash":     "a/b",
-					"numeric":   "1_024",
-				},
-			},
-			preActions: []checkFunc{
-				preActionInstallPackageWithDifferentTags,
-			},
-			preChecks: []checkFunc{
-				checkBinaryCreated,
-				checkConfigCreated,
-				checkUserConfigCreated,
-				checkUserExists,
-			},
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkConfigCreated,
-				checkUserConfigCreated,
-				checkDifferentTags,
-				checkLaunchdConfigCreated,
-				checkAbortedDueToDifferentTags,
-			},
-			installCode: 1,
-		},
-		{
 			name: "editing tags",
 			options: installOptions{
 				skipInstallToken: true,

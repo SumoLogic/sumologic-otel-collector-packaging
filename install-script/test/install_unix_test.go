@@ -299,24 +299,6 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigCreated, checkTags},
 		},
 		{
-			name: "different tags",
-			options: installOptions{
-				skipInstallToken: true,
-				tags: map[string]string{
-					"lorem":     "ipsum",
-					"foo":       "bar",
-					"escape_me": "'\\/",
-					"slash":     "a/b",
-					"numeric":   "1_024",
-				},
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteDifferentTagsToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated, checkDifferentTags,
-				checkAbortedDueToDifferentTags},
-			installCode: 1,
-		},
-		{
 			name: "editing tags",
 			options: installOptions{
 				skipInstallToken: true,

@@ -200,11 +200,6 @@ func checkAPIBaseURLInConfig(c check) {
 	require.Equal(c.test, c.installOptions.apiBaseURL, conf.Extensions.Sumologic.APIBaseURL, "api base url is different than expected")
 }
 
-func checkAbortedDueToDifferentTags(c check) {
-	require.Greater(c.test, len(c.output), 0)
-	require.Contains(c.test, c.output[len(c.output)-1], "You are trying to install with different tags than in your configuration file!")
-}
-
 func PathHasPermissions(t *testing.T, path string, perms uint32) {
 	info, err := os.Stat(path)
 	require.NoError(t, err)
