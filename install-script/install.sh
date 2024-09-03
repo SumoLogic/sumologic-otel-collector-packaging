@@ -264,9 +264,7 @@ function parse_options() {
   OPTIND=1
 
   while true; do
-    set +e
-    getopts ":${ARG_SHORT_HELP}:${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}:${ARG_SHORT_YES}:${ARG_SHORT_UPGRADE}:${ARG_SHORT_UNINSTALL}:${ARG_SHORT_PURGE}:${ARG_SHORT_SKIP_TOKEN}:${ARG_SHORT_DOWNLOAD}:${ARG_SHORT_KEEP_DOWNLOADS}:${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}:${ARG_SHORT_REMOTELY_MANAGED}:${ARG_SHORT_INSTALL_HOSTMETRICS}:${ARG_SHORT_TIMEOUT}:" opt
-    set -e
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
 
     # Invalid argument catched, print and exit
     if [[ $? != 0 && ${OPTIND} -le $# ]]; then
@@ -287,7 +285,7 @@ function parse_options() {
       "${ARG_SHORT_UNINSTALL}")     UNINSTALL=true ;;
       "${ARG_SHORT_UPGRADE}")       UPGRADE=true ;;
       "${ARG_SHORT_PURGE}")         PURGE=true ;;
-      "${ARG_SHORT_SKIP_TOKEN}")    SKIP_TOKEN=true ;;
+      "${ARG_SHORT_SKIP_TOKEN}")    SKIP_TOKEN=true;;
       "${ARG_SHORT_DOWNLOAD}")      DOWNLOAD_ONLY=true ;;
       "${ARG_SHORT_CONFIG_BRANCH}") CONFIG_BRANCH="${OPTARG}" ;;
       "${ARG_SHORT_BINARY_BRANCH}") BINARY_BRANCH="${OPTARG}" ;;
@@ -559,13 +557,6 @@ function setup_config() {
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
         echo -e "Installing ${OS_TYPE} hostmetrics configuration"
         otelcol-config --enable-hostmetrics
-        if [[ "${OS_TYPE}" == "linux" ]]; then
-            echo -e "Setting the CAP_DAC_READ_SEARCH Linux capability on the collector binary to allow it to read host metrics from /proc directory: setcap 'cap_dac_read_search=ep' \"${SUMO_BINARY_PATH}\""
-            echo -e "You can remove it with the following command: sudo setcap -r \"${SUMO_BINARY_PATH}\""
-            echo -e "Without this capability, the collector will not be able to collect some of the host metrics."
-            # TODO(echlebek): remove this when it's supported in packaging
-            setcap 'cap_dac_read_search=ep' "${SUMO_BINARY_PATH}"
-        fi
     fi
 
     ## Check if there is anything to update in configuration
