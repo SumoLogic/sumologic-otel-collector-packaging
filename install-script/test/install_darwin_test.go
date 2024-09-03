@@ -56,17 +56,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 			installCode: 1,
 		},
 		{
-			// Skip config is not supported on Darwin
-			name: "skip config",
-			options: installOptions{
-				skipConfig:       true,
-				skipInstallToken: true,
-			},
-			preChecks:   notInstalledChecks,
-			postChecks:  notInstalledChecks,
-			installCode: 1,
-		},
-		{
 			name: "skip installation token",
 			options: installOptions{
 				skipInstallToken: true,
@@ -473,6 +462,12 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkLaunchdConfigCreated,
 			},
 			installCode: 1, // because of invalid installation token
+		},
+		{
+			name:       "empty installation token",
+			preActions: []checkFunc{preActionMockUserConfig, preActionWriteDifferentTokenToUserConfig},
+			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
+			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkDifferentTokenInConfig},
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {

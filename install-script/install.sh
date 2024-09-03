@@ -21,10 +21,10 @@ ARG_SHORT_FIPS='f'
 ARG_LONG_FIPS='fips'
 ARG_SHORT_YES='y'
 ARG_LONG_YES='yes'
-ARG_SHORT_SKIP_CONFIG='s'
-ARG_LONG_SKIP_CONFIG='skip-config'
 ARG_SHORT_UNINSTALL='u'
 ARG_LONG_UNINSTALL='uninstall'
+ARG_SHORT_UPGRADE='g'
+ARG_LONG_UPGRADE='upgrade'
 ARG_SHORT_PURGE='p'
 ARG_LONG_PURGE='purge'
 ARG_SHORT_SKIP_TOKEN='k'
@@ -57,9 +57,10 @@ PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
 readonly ARG_SHORT_UNINSTALL ARG_LONG_UNINSTALL
+readonly ARG_SHORT_UPGRADE ARG_LONG_UPGRADE
 readonly ARG_SHORT_PURGE ARG_LONG_PURGE ARG_SHORT_DOWNLOAD ARG_LONG_DOWNLOAD
 readonly ARG_SHORT_CONFIG_BRANCH ARG_LONG_CONFIG_BRANCH ARG_SHORT_BINARY_BRANCH ARG_LONG_CONFIG_BRANCH
-readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH ARG_SHORT_SKIP_CONFIG ARG_LONG_SKIP_CONFIG
+readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH 
 readonly ARG_SHORT_SKIP_TOKEN ARG_LONG_SKIP_TOKEN ARG_SHORT_FIPS ARG_LONG_FIPS ENV_TOKEN
 readonly ARG_SHORT_INSTALL_HOSTMETRICS ARG_LONG_INSTALL_HOSTMETRICS
 readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
@@ -89,9 +90,9 @@ CONTINUE=false
 CONFIG_DIRECTORY=""
 USER_ENV_DIRECTORY=""
 UNINSTALL=""
+UPGRADE=""
 SUMO_BINARY_PATH=""
 SKIP_TOKEN=""
-SKIP_CONFIG=false
 CONFIG_PATH=""
 COMMON_CONFIG_PATH=""
 PURGE=""
@@ -130,6 +131,7 @@ Supported arguments:
   -${ARG_SHORT_TAG}, --${ARG_LONG_TAG} <key=value>                 Sets tag for collector. This argument can be use multiple times. One per tag.
   -${ARG_SHORT_DOWNLOAD}, --${ARG_LONG_DOWNLOAD}                   Download new binary only and skip configuration part. (Mac OS only)
 
+  -${ARG_SHORT_UPGRADE}, --${ARG_LONG_UPGRADE}                     Upgrades the collector using the system package manager.
   -${ARG_SHORT_UNINSTALL}, --${ARG_LONG_UNINSTALL}                       Removes Sumo Logic Distribution for OpenTelemetry Collector from the system and
                                         disable Systemd service eventually.
                                         Use with '--purge' to remove all configurations as well.
@@ -138,7 +140,6 @@ Supported arguments:
 
   -${ARG_SHORT_API}, --${ARG_LONG_API} <url>                       API URL, forces the collector to use non-default API
   -${ARG_SHORT_OPAMP_API}, --${ARG_LONG_OPAMP_API} <url>            OpAmp API URL, forces the collector to use non-default OpAmp API
-  -${ARG_SHORT_SKIP_CONFIG}, --${ARG_LONG_SKIP_CONFIG}                     Do not create default configuration.
   -${ARG_SHORT_VERSION}, --${ARG_LONG_VERSION} <version>               Version of Sumo Logic Distribution for OpenTelemetry Collector to install, e.g. 0.57.2-sumo-1.
                                         By default it gets latest version.
   -${ARG_SHORT_FIPS}, --${ARG_LONG_FIPS}                            Install the FIPS 140-2 compliant binary on Linux.
@@ -200,9 +201,6 @@ function parse_options() {
       "--${ARG_LONG_YES}")
         set -- "$@" "-${ARG_SHORT_YES}"
         ;;
-      "--${ARG_LONG_SKIP_CONFIG}")
-        set -- "$@" "-${ARG_SHORT_SKIP_CONFIG}"
-        ;;
       "--${ARG_LONG_VERSION}")
         set -- "$@" "-${ARG_SHORT_VERSION}"
         ;;
@@ -211,6 +209,9 @@ function parse_options() {
         ;;
       "--${ARG_LONG_UNINSTALL}")
         set -- "$@" "-${ARG_SHORT_UNINSTALL}"
+        ;;
+      "--${ARG_LONG_UPGRADE}")
+        set -- "$@" "-${ARG_SHORT_UPGRADE}"
         ;;
       "--${ARG_LONG_PURGE}")
         set -- "$@" "-${ARG_SHORT_PURGE}"
@@ -240,7 +241,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_SKIP_CONFIG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -264,7 +265,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_SKIP_CONFIG}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
+    getopts ":${ARG_SHORT_HELP}:${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}:${ARG_SHORT_YES}:${ARG_SHORT_UPGRADE}:${ARG_SHORT_UNINSTALL}:${ARG_SHORT_PURGE}:${ARG_SHORT_SKIP_TOKEN}:${ARG_SHORT_DOWNLOAD}:${ARG_SHORT_KEEP_DOWNLOADS}:${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}:${ARG_SHORT_REMOTELY_MANAGED}:${ARG_SHORT_INSTALL_HOSTMETRICS}:${ARG_SHORT_TIMEOUT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -280,11 +281,11 @@ function parse_options() {
       "${ARG_SHORT_TOKEN}")         SUMOLOGIC_INSTALLATION_TOKEN="${OPTARG}" ;;
       "${ARG_SHORT_API}")           API_BASE_URL="${OPTARG}" ;;
       "${ARG_SHORT_OPAMP_API}")     OPAMP_API_URL="${OPTARG}" ;;
-      "${ARG_SHORT_SKIP_CONFIG}")   SKIP_CONFIG=true ;;
       "${ARG_SHORT_VERSION}")       VERSION="${OPTARG}" ;;
       "${ARG_SHORT_FIPS}")          FIPS=true ;;
       "${ARG_SHORT_YES}")           CONTINUE=true ;;
       "${ARG_SHORT_UNINSTALL}")     UNINSTALL=true ;;
+      "${ARG_SHORT_UPGRADE}")       UPGRADE=true ;;
       "${ARG_SHORT_PURGE}")         PURGE=true ;;
       "${ARG_SHORT_SKIP_TOKEN}")    SKIP_TOKEN=true ;;
       "${ARG_SHORT_DOWNLOAD}")      DOWNLOAD_ONLY=true ;;
@@ -429,28 +430,6 @@ function get_package_versions() {
     | sed 's/^v//;s/"$//'
 }
 
-# Get versions from provided one to the latest
-get_versions_from() {
-    local versions
-    readonly versions="${1}"
-
-    local from
-    readonly from="${2}"
-
-    # Return if there is no installed version
-    if [[ "${from}" == "" ]]; then
-        return 0
-    fi
-
-    local line
-    readonly line="$(( $(echo "${versions}" | sed 's/ /\n/g' | grep -n "${from}$" | sed 's/:.*//g') - 1 ))"
-
-    if [[ "${line}" -gt "0" ]]; then
-        echo "${versions}" | sed 's/ /\n/g' | head -n "${line}" | sort
-    fi
-    return 0
-}
-
 # Get OS type (linux or darwin)
 function get_os_type() {
     local os_type
@@ -540,36 +519,6 @@ function ask_to_continue() {
     #     ;;
     # esac
 
-}
-
-# Print information about breaking changes
-function print_breaking_changes() {
-    local versions
-    readonly versions="${1}"
-
-    local changelog
-    changelog="$(echo -e "$(curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -sS https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/main/CHANGELOG.md)")"
-    declare -r changelog
-
-    local is_breaking_change
-    local message
-    message=""
-
-    for version in ${versions}; do
-        # Print changelog for every version
-        is_breaking_change=$(echo -e "${changelog}" | grep -E '^## |^### Breaking|breaking changes' | sed -e '/## \[v'"${version}"'/,/## \[v/!d' | grep -E 'Breaking|breaking' || echo "")
-
-        if [[ -n "${is_breaking_change}" ]]; then
-            if [[ -n "${message}" ]]; then
-                message="${message}, "
-            fi
-            message="${message}v${version}"
-        fi
-    done
-
-    if [[ -n "${message}" ]]; then
-        echo "The following versions contain breaking changes: ${message}! Please make sure to read the linked Changelog file."
-    fi
 }
 
 # set up configuration
@@ -690,6 +639,29 @@ function uninstall() {
     echo "Uninstallation completed"
 }
 
+function upgrade() {
+    case "${OS_TYPE}" in
+    "linux") upgrade_linux ;;
+    *)
+      echo "upgrading is not supported by this script for OS: ${OS_TYPE}"
+      exit 1
+      ;;
+    esac
+
+}
+
+function upgrade_linux() {
+    case $(get_package_manager) in
+        yum | dnf)
+            yum update --quiet
+            ;;
+        apt-get)
+            apt-get update --quiet && apt-get upgrade --quiet
+            ;;
+    esac
+
+}
+
 # uninstall otelcol-sumo on darwin
 function uninstall_darwin() {
     local UNINSTALL_SCRIPT_PATH
@@ -720,16 +692,6 @@ function uninstall_linux() {
             fi
             ;;
     esac
-}
-
-function escape_sed() {
-    local text
-    readonly text="${1}"
-
-    # replaces `\` with `\\` and `/` with `\/`
-    echo "${text}" \
-        | sed -e 's/\\/\\\\/g' \
-        | sed -e 's|/|\\/|g'
 }
 
 function get_user_env_config() {
@@ -772,27 +734,6 @@ function write_installation_token() {
     readonly token="${1}"
 
     otelcol-config --set-installation-token "$token"
-}
-
-# write ${ENV_TOKEN}" to systemd env configuration file
-function write_installation_token_env() {
-    local token
-    readonly token="${1}"
-
-    local file
-    readonly file="${2}"
-
-    local token_name
-    token_name="${ENV_TOKEN}"
-    readonly token_name
-
-    # ToDo: ensure we override only ${ENV_TOKEN}" env value
-    if grep "${token_name}" "${file}" > /dev/null 2>&1; then
-        # Do not expose token in sed command as it can be saw on processes list
-        echo "s/${token_name}=.*$/${token_name}=$(escape_sed "${token}")/" | sed -i.bak -f - "${file}"
-    else
-        echo "${token_name}=${token}" > "${file}"
-    fi
 }
 
 # write ${ENV_TOKEN} to launchd configuration file
@@ -1129,6 +1070,10 @@ if [[ "${UNINSTALL}" == "true" ]]; then
     uninstall
     exit 0
 fi
+if [[ "${UPGRADE}" == "true" ]]; then
+    upgrade
+    exit 0
+fi
 
 # Attempt to find a token from an existing installation
 if [[ -z "${USER_TOKEN}" ]]; then
@@ -1199,11 +1144,6 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
         ;;
     esac
     readonly package_arch
-
-    if [[ "${SKIP_CONFIG}" == "true" ]]; then
-        echo "SKIP_CONFIG is not supported on darwin"
-        exit 1
-    fi
 
     echo -e "Getting versions..."
     # Get versions, but ignore errors as we fallback to other methods later
@@ -1312,7 +1252,10 @@ fi
 
 echo -e "Getting installed version..."
 INSTALLED_VERSION="$(get_installed_version)"
-echo -e "Installed version:\t${INSTALLED_VERSION:-none}"
+if [[ -n "${INSTALLED_VERSION}" ]]; then
+    echo "otelcol-sumo is already installed! to upgrade, use the --upgrade flag."
+    exit 1
+fi
 
 echo -e "Getting versions..."
 # Get versions, but ignore errors as we fallback to other methods later
@@ -1325,47 +1268,23 @@ fi
 
 echo -e "Version to install:\t${VERSION}"
 
-# Check if otelcol is already in newest version
-if [[ "${INSTALLED_VERSION}" == "${VERSION}" ]]; then
-    echo -e "OpenTelemetry collector is already in newest (${VERSION}) version"
-else
+echo -e "Changelog:\t\thttps://github.com/SumoLogic/sumologic-otel-collector/blob/main/CHANGELOG.md"
+# add newline after breaking changes and changelog
+echo ""
 
-    # add newline before breaking changes and changelog
-    echo ""
-    if [[ -n "${INSTALLED_VERSION}" ]]; then
-        # Take versions from installed up to the newest
-        BETWEEN_VERSIONS="$(get_versions_from "${VERSIONS}" "${INSTALLED_VERSION}")"
-        readonly BETWEEN_VERSIONS
-        print_breaking_changes "${BETWEEN_VERSIONS}"
+package_with_version="${VERSION}"
+if [[ -n "${package_with_version}" ]]; then
+    if [[ "${FIPS}" == "true" ]]; then
+    echo "Getting FIPS-compliant binary"
+        package_with_version=otelcol-sumo-fips
+    else
+        package_with_version=otelcol-sumo
     fi
-
-    echo -e "Changelog:\t\thttps://github.com/SumoLogic/sumologic-otel-collector/blob/main/CHANGELOG.md"
-    # add newline after breaking changes and changelog
-    echo ""
-
-    package_with_version="${VERSION}"
-    if [[ -n "${package_with_version}" ]]; then
-        if [[ "${FIPS}" == "true" ]]; then
-        echo "Getting FIPS-compliant binary"
-            package_with_version=otelcol-sumo-fips
-        else
-            package_with_version=otelcol-sumo
-        fi
-    fi
-
-    install_linux_package "${package_with_version}"
-
-    verify_installation
 fi
 
-if [[ "${SKIP_CONFIG}" == "false" ]]; then
-    setup_config
-fi
-
-if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
-    echo 'Writing installation token to env file'
-    write_installation_token_env "${SUMOLOGIC_INSTALLATION_TOKEN}" "${TOKEN_ENV_FILE}"
-fi
+install_linux_package "${package_with_version}"
+verify_installation
+setup_config
 
 echo 'Reloading systemd'
 systemctl daemon-reload

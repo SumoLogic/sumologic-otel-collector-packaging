@@ -16,15 +16,6 @@ func TestInstallScript(t *testing.T) {
 			installCode: 1,
 		},
 		{
-			name: "skip config",
-			options: installOptions{
-				skipConfig:       true,
-				skipInstallToken: true,
-			},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigNotCreated, checkUserConfigNotCreated},
-		},
-		{
 			name: "skip installation token",
 			options: installOptions{
 				skipInstallToken: true,
@@ -256,12 +247,6 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkAPIBaseURLInConfig},
 		},
 		{
-			name:       "empty installation token",
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteDifferentTokenToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkDifferentTokenInConfig},
-		},
-		{
 			name: "configuration with tags",
 			options: installOptions{
 				skipInstallToken: true,
@@ -281,38 +266,6 @@ func TestInstallScript(t *testing.T) {
 				checkConfigFilesOwnershipAndPermissions(rootUser, rootGroup),
 				checkTags,
 			},
-		},
-		{
-			name: "same tags",
-			options: installOptions{
-				skipInstallToken: true,
-				tags: map[string]string{
-					"lorem":     "ipsum",
-					"foo":       "bar",
-					"escape_me": "'\\/",
-					"slash":     "a/b",
-					"numeric":   "1_024",
-				},
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteTagsToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigCreated, checkTags},
-		},
-		{
-			name: "editing tags",
-			options: installOptions{
-				skipInstallToken: true,
-				tags: map[string]string{
-					"lorem":     "ipsum",
-					"foo":       "bar",
-					"escape_me": "'\\/",
-					"slash":     "a/b",
-					"numeric":   "1_024",
-				},
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteEmptyUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkTags},
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {

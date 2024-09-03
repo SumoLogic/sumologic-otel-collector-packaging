@@ -17,7 +17,6 @@ type installOptions struct {
 	installToken       string
 	autoconfirm        bool
 	tags               map[string]string
-	skipConfig         bool
 	skipInstallToken   bool
 	fips               bool
 	envs               map[string]string
@@ -43,10 +42,6 @@ func (io *installOptions) string() []string {
 
 	if io.fips {
 		opts = append(opts, "--fips")
-	}
-
-	if io.skipConfig {
-		opts = append(opts, "--skip-config")
 	}
 
 	if io.downloadOnly {
