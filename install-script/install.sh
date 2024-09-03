@@ -594,7 +594,9 @@ function setup_config_darwin() {
         write_api_url "${API_BASE_URL}"
     fi
 
-    write_tags "${FIELDS[@]}"
+    if [[ ${#FIELDS[@]} -ne 0 ]]; then
+        write_tags "${FIELDS[@]}"
+    fi
 
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         echo "Warning: remote management is currently in beta."
