@@ -173,12 +173,6 @@ function set_defaults() {
 }
 
 function parse_options() {
-  if [[ $# == 0 && -z "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
-      echo "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable."
-      usage
-      exit 2
-  fi
-
   # Transform long options to short ones
   for arg in "$@"; do
 
@@ -1152,33 +1146,6 @@ if [[ -z "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SKIP_TOKEN}" != "true" && -z "$
     exit 1
 fi
 
-# verify if passed arguments are the same like in user's configuration
-if [[ -z "${DOWNLOAD_ONLY}" ]]; then
-    if [[ -n "${USER_TOKEN}" && -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${USER_TOKEN}" != "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
-        echo "You are trying to install with different token than in your configuration file!"
-        exit 1
-    fi
-
-    USER_API_URL="$(get_user_api_url)"
-    if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
-        echo "You are trying to install with different api base url than in your configuration file!"
-        exit 1
-    fi
-
-    USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
-    if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
-        echo "You are trying to install with different opamp endpoint than in your configuration file!"
-        exit 1
-    fi
-fi
-
-set +u
-if [[ -n "${BINARY_BRANCH}" && -z "${GITHUB_TOKEN}" ]]; then
-    echo "GITHUB_TOKEN env is required for '${ARG_LONG_BINARY_BRANCH}' option"
-    exit 1
-fi
-set -u
-
 if [ "${FIPS}" == "true" ]; then
     case "${OS_TYPE}" in
     linux)
@@ -1195,6 +1162,33 @@ if [ "${FIPS}" == "true" ]; then
 fi
 
 if [[ "${OS_TYPE}" == "darwin" ]]; then
+    # verify if passed arguments are the same like in user's configuration
+    if [[ -z "${DOWNLOAD_ONLY}" ]]; then
+        if [[ -n "${USER_TOKEN}" && -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${USER_TOKEN}" != "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
+            echo "You are trying to install with different token than in your configuration file!"
+            exit 1
+        fi
+
+        USER_API_URL="$(get_user_api_url)"
+        if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
+            echo "You are trying to install with different api base url than in your configuration file!"
+            exit 1
+        fi
+
+        USER_OPAMP_API_URL="$(get_user_opamp_endpoint "${COMMON_CONFIG_PATH}")"
+        if [[ -n "${USER_OPAMP_API_URL}" && -n "${OPAMP_API_URL}" && "${USER_OPAMP_API_URL}" != "${OPAMP_API_URL}" ]]; then
+            echo "You are trying to install with different opamp endpoint than in your configuration file!"
+            exit 1
+        fi
+    fi
+
+    set +u
+    if [[ -n "${BINARY_BRANCH}" && -z "${GITHUB_TOKEN}" ]]; then
+        echo "GITHUB_TOKEN env is required for '${ARG_LONG_BINARY_BRANCH}' option"
+        exit 1
+    fi
+    set -u
+
     package_arch=""
     case "${ARCH_TYPE}" in
       "amd64") package_arch="intel" ;;

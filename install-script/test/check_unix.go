@@ -15,8 +15,7 @@ import (
 
 func checkAbortedDueToNoToken(c check) {
 	require.Greater(c.test, len(c.output), 1)
-	require.Contains(c.test, c.output[len(c.output)-2], "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable.")
-	require.Contains(c.test, c.output[len(c.output)-1], "You can ignore this requirement by adding '--skip-installation-token argument.")
+	require.Contains(c.test, c.output, "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable.")
 }
 
 func preActionMockConfig(c check) {
