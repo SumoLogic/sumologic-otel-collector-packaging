@@ -3,22 +3,23 @@
 package sumologic_scripts_tests
 
 const (
-	binaryPath            string = "/usr/local/bin/otelcol-sumo"
-	libPath               string = "/var/lib/otelcol-sumo"
-	fileStoragePath       string = libPath + "/file_storage"
-	etcPath               string = "/etc/otelcol-sumo"
-	scriptPath            string = "../install.sh"
-	configPath            string = etcPath + "/sumologic.yaml"
-	confDPath             string = etcPath + "/conf.d"
-	opampDPath            string = etcPath + "/opamp.d"
-	userConfigPath        string = confDPath + "/00-otelcol-config-settings.yaml"
-	hostmetricsConfigPath string = confDPath + "/hostmetrics.yaml"
-	cacheDirectory        string = "/var/cache/otelcol-sumo/"
-	logDirPath            string = "/var/log/otelcol-sumo"
+	binaryPath            = "/usr/local/bin/otelcol-sumo"
+	libPath               = "/var/lib/otelcol-sumo"
+	fileStoragePath       = libPath + "/file_storage"
+	etcPath               = "/etc/otelcol-sumo"
+	scriptPath            = "../install.sh"
+	configPath            = etcPath + "/sumologic.yaml"
+	confDPath             = etcPath + "/conf.d"
+	opampDPath            = etcPath + "/opamp.d"
+	userConfigPath        = confDPath + "/00-otelcol-config-settings.yaml"
+	hostmetricsConfigPath = confDPath + "/hostmetrics.yaml"
+	cacheDirectory        = "/var/cache/otelcol-sumo/"
+	logDirPath            = "/var/log/otelcol-sumo"
+	sumoRemotePath        = "/etc/otelcol-sumo/sumologic-remote.yaml"
 
-	installToken    string = "token"
-	installTokenEnv string = "SUMOLOGIC_INSTALLATION_TOKEN"
-	apiBaseURL      string = "https://open-collectors.sumologic.com"
+	installToken    = "token"
+	installTokenEnv = "SUMOLOGIC_INSTALLATION_TOKEN"
+	apiBaseURL      = "https://open-collectors.sumologic.com"
 
-	curlTimeoutErrorCode int = 28
+	curlTimeoutErrorCode = 28
 )

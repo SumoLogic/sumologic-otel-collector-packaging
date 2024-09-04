@@ -59,7 +59,7 @@ func checkConfigNotCreated(c check) {
 }
 
 func checkConfigOverrided(c check) {
-	conf, err := getConfig(configPath)
+	conf, err := getConfig(userConfigPath)
 	if err != nil {
 		c.test.Fatal(err)
 	}
@@ -96,7 +96,7 @@ func checkNoBakFilesPresent(c check) {
 }
 
 func checkOpAmpEndpointSet(c check) {
-	conf, err := getConfig(configPath)
+	conf, err := getConfig(sumoRemotePath)
 	require.NoError(c.test, err, "error while reading configuration")
 
 	require.Equal(c.test, conf.Extensions.OpAmp.Endpoint, "wss://example.com")
