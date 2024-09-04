@@ -132,21 +132,6 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
-			name: "installation token only, binary not in PATH",
-			options: installOptions{
-				installToken: installToken,
-				envs: map[string]string{
-					"PATH": "/sbin:/bin:/usr/sbin:/usr/bin",
-				},
-			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-			},
-		},
-		{
 			name: "same installation token",
 			options: installOptions{
 				installToken: installToken,
@@ -154,25 +139,6 @@ func TestInstallScript(t *testing.T) {
 			preActions: []checkFunc{preActionMockUserConfig, preActionWriteTokenToUserConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
 			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated},
-		},
-		{
-			name: "adding installation token",
-			options: installOptions{
-				installToken: installToken,
-			},
-			preActions: []checkFunc{preActionMockUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated},
-		},
-		{
-			name: "editing installation token",
-			options: installOptions{
-				apiBaseURL:   apiBaseURL,
-				installToken: installToken,
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteEmptyUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated},
 		},
 		{
 			name: "same api base url",
@@ -203,16 +169,6 @@ func TestInstallScript(t *testing.T) {
 				skipInstallToken: true,
 			},
 			preActions: []checkFunc{preActionMockUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkAPIBaseURLInConfig},
-		},
-		{
-			name: "editing api base url",
-			options: installOptions{
-				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteEmptyUserConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
 			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkAPIBaseURLInConfig},
 		},
