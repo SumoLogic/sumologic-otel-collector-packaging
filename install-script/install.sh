@@ -1146,32 +1146,36 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     esac
     readonly package_arch
 
-    echo -e "Getting versions..."
-    # Get versions, but ignore errors as we fallback to other methods later
-    VERSIONS="$(get_package_versions || echo "")"
+    if [[ -z "${DARWIN_PKG_URL}" ]]; then
+        echo -e "Getting versions..."
+        # Get versions, but ignore errors as we fallback to other methods later
+        VERSIONS="$(get_package_versions || echo "")"
 
-    # Use user's version if set, otherwise get latest version from API (or website)
-    if [[ -z "${VERSION}" ]]; then
-        VERSION="$(get_latest_package_version "${VERSIONS}")"
-    fi
+        # Use user's version if set, otherwise get latest version from API (or website)
+        if [[ -z "${VERSION}" ]]; then
+            VERSION="$(get_latest_package_version "${VERSIONS}")"
+        fi
 
-    readonly VERSIONS VERSION
+        readonly VERSIONS VERSION
 
-    echo -e "Version to install:\t${VERSION}"
+        echo -e "Version to install:\t${VERSION}"
 
-    package_suffix="${package_arch}.pkg"
+        package_suffix="${package_arch}.pkg"
 
-    if [[ -n "${BINARY_BRANCH}" ]]; then
-        artifact_name="otelcol-sumo_.*-${package_suffix}"
-        get_package_from_branch "${BINARY_BRANCH}" "${artifact_name}"
+        if [[ -n "${BINARY_BRANCH}" ]]; then
+            artifact_name="otelcol-sumo_.*-${package_suffix}"
+            get_package_from_branch "${BINARY_BRANCH}" "${artifact_name}"
+        else
+            artifact_name="otelcol-sumo_${VERSION}-${package_suffix}"
+            readonly artifact_name
+
+            LINK="https://github.com/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases/download/v${VERSION}/${artifact_name}"
+            readonly LINK
+
+            get_package_from_url "${LINK}"
+        fi
     else
-        artifact_name="otelcol-sumo_${VERSION}-${package_suffix}"
-        readonly artifact_name
-
-        LINK="https://github.com/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases/download/v${VERSION}/${artifact_name}"
-        readonly LINK
-
-        get_package_from_url "${LINK}"
+        get_package_from_url "${DARWIN_PKG_URL}"
     fi
 
     pkg="${TMPDIR}/otelcol-sumo.pkg"
