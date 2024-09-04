@@ -17,9 +17,10 @@ const (
 	logDirPath            = "/var/log/otelcol-sumo"
 	sumoRemotePath        = "/etc/otelcol-sumo/sumologic-remote.yaml"
 
-	installToken    = "token"
-	installTokenEnv = "SUMOLOGIC_INSTALLATION_TOKEN"
-	apiBaseURL      = "https://open-collectors.sumologic.com"
+	installToken        = "token"
+	installTokenEnv     = "SUMOLOGIC_INSTALLATION_TOKEN"
+	apiBaseURL          = "https://open-collectors.sumologic.com"
+	ephemeralConfigPath = confDPath + "/ephemeral.yaml"
 
 	curlTimeoutErrorCode = 28
 )

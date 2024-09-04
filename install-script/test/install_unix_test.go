@@ -62,7 +62,7 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryCreated,
 				checkBinaryIsRunning,
 				checkConfigCreated,
-				checkEphemeralInConfig(userConfigPath),
+				checkEphemeralInConfig(ephemeralConfigPath),
 				checkHostmetricsConfigNotCreated,
 				checkTokenEnvFileNotCreated,
 			},
@@ -113,7 +113,7 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 				checkRemoteConfigDirectoryCreated,
 				checkTokenInSumoConfig,
-				checkEphemeralInConfig(configPath),
+				checkEphemeralInConfig(ephemeralConfigPath),
 			},
 		},
 		{
