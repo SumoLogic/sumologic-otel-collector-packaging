@@ -48,7 +48,7 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 				checkEphemeralNotInConfig(ephemeralConfigPath),
 				checkHostmetricsConfigNotCreated,
-				checkTokenEnvFileNotCreated,
+				checkTokenEnvFileCreated,
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 				checkEphemeralInConfig(ephemeralConfigPath),
 				checkHostmetricsConfigNotCreated,
-				checkTokenEnvFileNotCreated,
+				checkTokenEnvFileCreated,
 			},
 		},
 		{
