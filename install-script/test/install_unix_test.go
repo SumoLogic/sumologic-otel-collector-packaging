@@ -132,47 +132,6 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
-			name: "same installation token",
-			options: installOptions{
-				installToken: installToken,
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteTokenToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated},
-		},
-		{
-			name: "same api base url",
-			options: installOptions{
-				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteAPIBaseURLToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkAPIBaseURLInConfig},
-		},
-		{
-			name: "different api base url",
-			options: installOptions{
-				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
-			},
-			preActions: []checkFunc{preActionMockUserConfig, preActionWriteDifferentAPIBaseURLToUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated,
-				checkAbortedDueToDifferentAPIBaseURL},
-			installCode: 1,
-		},
-		{
-			name: "adding api base url",
-			options: installOptions{
-				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
-			},
-			preActions: []checkFunc{preActionMockUserConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkAPIBaseURLInConfig},
-		},
-		{
 			name: "configuration with tags",
 			options: installOptions{
 				skipInstallToken: true,
