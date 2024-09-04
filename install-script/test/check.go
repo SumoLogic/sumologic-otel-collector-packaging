@@ -59,7 +59,7 @@ func checkConfigNotCreated(c check) {
 }
 
 func checkConfigOverrided(c check) {
-	conf, err := getConfig(userConfigPath)
+	conf, err := getConfig(configPath)
 	if err != nil {
 		c.test.Fatal(err)
 	}
