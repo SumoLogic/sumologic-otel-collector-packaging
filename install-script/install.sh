@@ -646,10 +646,10 @@ function upgrade() {
 function upgrade_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum update --quiet
+            yum update --quiet --yes
             ;;
         apt-get)
-            apt-get update --quiet && apt-get upgrade --quiet
+            apt-get update --quiet && apt-get upgrade --quiet --yes
             ;;
     esac
 
@@ -675,13 +675,13 @@ function uninstall_darwin() {
 function uninstall_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum remove --quiet -y otelcol-sumo
+            yum remove --quiet -yes otelcol-sumo
             ;;
         apt-get)
             if [[ "${PURGE}" == "true" ]]; then
-                apt-get purge --quiet -y otelcol-sumo
+                apt-get purge --quiet --yes otelcol-sumo
             else
-                apt-get remove --quiet -y otelcol-sumo
+                apt-get remove --quiet --yes otelcol-sumo
             fi
             ;;
     esac
@@ -1006,13 +1006,13 @@ function install_linux_package() {
     case $(get_package_manager) in
         yum | dnf)
             curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.rpm.sh | bash
-            yum --quiet --disablerepo="*" --enablerepo="sumologic_stable" -y update
-            yum install --quiet "${package_with_version}"
+            yum --quiet --disablerepo="*" --enablerepo="sumologic_stable" --yes update
+            yum install --quiet --yes "${package_with_version}"
             ;;
         apt-get)
             curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.deb.sh | bash
-            apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
-            apt-get install --quiet "${package_with_version}"
+            apt-get update --quiet --yes -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
+            apt-get install --quiet --yes "${package_with_version}"
             ;;
     esac
 }
