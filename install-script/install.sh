@@ -716,11 +716,15 @@ function get_user_env_config() {
 }
 
 function get_user_api_url() {
-    otelcol-config --read-kv .extensions.sumologic.api_base_url
+    if command -v otelcol-config &> /dev/null; then
+        otelcol-config --read-kv .extensions.sumologic.api_base_url
+    fi
 }
 
 function get_user_opamp_endpoint() {
-    otelcol-config --read-kv .extensions.opamp.endpoint
+    if command -v otelcol-config &> /dev/null; then
+        otelcol-config --read-kv .extensions.opamp.endpoint
+    fi
 }
 
 # write installation token to user configuration file
