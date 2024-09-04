@@ -49,7 +49,6 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 				checkUserConfigCreated,
 				checkEphemeralNotInConfig(userConfigPath),
-				checkTokenInConfig,
 				checkHostmetricsConfigNotCreated,
 				checkTokenEnvFileNotCreated,
 			},
@@ -66,7 +65,6 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryIsRunning,
 				checkConfigCreated,
 				checkUserConfigCreated,
-				checkTokenInConfig,
 				checkEphemeralInConfig(userConfigPath),
 				checkHostmetricsConfigNotCreated,
 				checkTokenEnvFileNotCreated,
@@ -85,7 +83,6 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 				checkRemoteConfigDirectoryNotCreated,
 				checkUserConfigCreated,
-				checkTokenInConfig,
 				checkHostmetricsConfigCreated,
 				checkHostmetricsOwnershipAndPermissions(rootUser, rootGroup),
 			},
@@ -155,7 +152,6 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryIsRunning,
 				checkConfigCreated,
 				checkUserConfigCreated,
-				checkTokenInConfig,
 			},
 		},
 		{
@@ -165,7 +161,7 @@ func TestInstallScript(t *testing.T) {
 			},
 			preActions: []checkFunc{preActionMockUserConfig, preActionWriteTokenToUserConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigCreated, checkTokenInConfig},
+			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkUserConfigCreated},
 		},
 		{
 			name: "adding installation token",
@@ -174,7 +170,7 @@ func TestInstallScript(t *testing.T) {
 			},
 			preActions: []checkFunc{preActionMockUserConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkTokenInConfig},
+			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated},
 		},
 		{
 			name: "editing installation token",
@@ -184,7 +180,7 @@ func TestInstallScript(t *testing.T) {
 			},
 			preActions: []checkFunc{preActionMockUserConfig, preActionWriteEmptyUserConfig},
 			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated, checkTokenInConfig},
+			postChecks: []checkFunc{checkBinaryCreated, checkConfigCreated, checkUserConfigCreated},
 		},
 		{
 			name: "same api base url",

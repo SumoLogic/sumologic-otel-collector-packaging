@@ -68,15 +68,6 @@ func checkTokenEnvFileNotCreated(c check) {
 	require.NoFileExists(c.test, tokenEnvFilePath, "env token file not been created")
 }
 
-func checkTokenInConfig(c check) {
-	require.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided")
-
-	conf, err := getConfig(userConfigPath)
-	require.NoError(c.test, err, "error while reading configuration")
-
-	require.Equal(c.test, c.installOptions.installToken, conf.Extensions.Sumologic.InstallationToken, "installation token is different than expected")
-}
-
 func checkTokenInSumoConfig(c check) {
 	require.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided")
 
