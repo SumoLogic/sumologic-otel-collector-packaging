@@ -504,7 +504,7 @@ function ask_to_continue() {
     # Just fail if we're not running in uninteractive mode
     # TODO: Figure out a way to reliably ask for confirmation with stdin redirected
 
-    echo "Please use the --yes flag to continue"
+    echo "Please use the -y flag to continue"
     exit 1
 
     # local choice
@@ -646,10 +646,10 @@ function upgrade() {
 function upgrade_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum update --quiet --yes
+            yum update --quiet -y
             ;;
         apt-get)
-            apt-get update --quiet && apt-get upgrade --quiet --yes
+            apt-get update --quiet && apt-get upgrade --quiet -y
             ;;
     esac
 
@@ -679,9 +679,9 @@ function uninstall_linux() {
             ;;
         apt-get)
             if [[ "${PURGE}" == "true" ]]; then
-                apt-get purge --quiet --yes otelcol-sumo
+                apt-get purge --quiet -y otelcol-sumo
             else
-                apt-get remove --quiet --yes otelcol-sumo
+                apt-get remove --quiet -y otelcol-sumo
             fi
             ;;
     esac
@@ -1006,13 +1006,13 @@ function install_linux_package() {
     case $(get_package_manager) in
         yum | dnf)
             curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.rpm.sh | bash
-            yum --quiet --disablerepo="*" --enablerepo="sumologic_stable" --yes update
-            yum install --quiet --yes "${package_with_version}"
+            yum --quiet --disablerepo="*" --enablerepo="sumologic_stable" -y update
+            yum install --quiet -y "${package_with_version}"
             ;;
         apt-get)
             curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.deb.sh | bash
-            apt-get update --quiet --yes -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
-            apt-get install --quiet --yes "${package_with_version}"
+            apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
+            apt-get install --quiet -y "${package_with_version}"
             ;;
     esac
 }
