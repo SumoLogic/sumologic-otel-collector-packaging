@@ -1074,8 +1074,10 @@ fi
 if [[ -z "${USER_TOKEN}" ]]; then
     USER_TOKEN="$(get_user_env_config "${TOKEN_ENV_FILE}")"
 fi
-if [[ -z "${USER_TOKEN}" && $(command -v otelcol-config &> /dev/null) ]]; then
-    USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+if [[ -z "${USER_TOKEN}" ]]; then
+    if command -v otelcol-config &> /dev/null; then
+        USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+    fi
 fi
 readonly USER_TOKEN
 
