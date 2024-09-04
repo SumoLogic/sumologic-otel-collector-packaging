@@ -85,7 +85,7 @@ func checkEphemeralInConfig(p string) func(c check) {
 	return func(c check) {
 		assert.True(c.test, c.installOptions.ephemeral, "ephemeral was not specified")
 
-		conf, err := getConfig(p)
+		_, err := os.Stat(p)
 		require.NoError(c.test, err, "error while reading configuration")
 
 		assert.True(c.test, conf.Extensions.Sumologic.Ephemeral, "ephemeral is not true")
@@ -96,8 +96,10 @@ func checkEphemeralNotInConfig(p string) func(c check) {
 	return func(c check) {
 		assert.False(c.test, c.installOptions.ephemeral, "ephemeral was specified")
 
-		conf, err := getConfig(p)
-		require.NoError(c.test, err, "error while reading configuration")
+		_, err := os.Stat(p)
+		if err == nil {
+			c.test.Fatal("ephemeral in config")
+		}
 
 		assert.False(c.test, conf.Extensions.Sumologic.Ephemeral, "ephemeral is true")
 	}
