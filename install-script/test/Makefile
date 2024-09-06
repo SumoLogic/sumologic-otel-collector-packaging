@@ -3,7 +3,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 ifneq ($(OS),windows)
-	GOTESTPREFIX ?= sudo env PATH="${PATH}" GH_CI_TOKEN="${GITHUB_TOKEN}"
+	GOTESTPREFIX ?= sudo env PATH="${PATH}" GH_CI_TOKEN="${GITHUB_TOKEN}" DARWIN_PKG_URL="${DARWIN_PKG_URL}"
 endif
 
 LINT=golangci-lint
