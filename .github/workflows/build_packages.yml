@@ -368,14 +368,14 @@ jobs:
           go-version: stable
 
       - name: Download macOS package and use it for install.sh
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && matrix.os == 'macOS' }}
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build_package.outputs.package_path }}
+          name: ${{ needs.build_packages.outputs.package_path }}
           path: artifacts/
 
       - name: Set DARWIN_PKG_URL
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && matrix.os == 'macOS' }}
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: echo DARWIN_PKG_URL="file://${{ github.workspace }}/artifacts/${{ needs.build_package.outputs.package_path }}" >> $GITHUB_ENV
 
       - name: Run install script tests
