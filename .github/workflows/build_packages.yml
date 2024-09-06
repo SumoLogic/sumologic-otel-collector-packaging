@@ -336,7 +336,7 @@ jobs:
     name: Test Install Script
     runs-on: ${{ matrix.runs_on }}
     needs:
-      - build_package
+      - build_packages
     strategy:
       fail-fast: false
       matrix:
