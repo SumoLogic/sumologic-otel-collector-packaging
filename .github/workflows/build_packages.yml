@@ -371,12 +371,14 @@ jobs:
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build_packages.outputs.package_path }}
           path: artifacts/
+          pattern: otelcol-sumo_*-intel.pkg
 
       - name: Set DARWIN_PKG_URL
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
-        run: echo DARWIN_PKG_URL="file://${{ github.workspace }}/artifacts/${{ needs.build_package.outputs.package_path }}" >> $GITHUB_ENV
+        run: |
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg)"
+          echo DARWIN_PKG_URL="file://${fp}" >> $GITHUB_ENV
 
       - name: Run install script tests
         if: steps.changed-files.outputs.any_changed == 'true'
