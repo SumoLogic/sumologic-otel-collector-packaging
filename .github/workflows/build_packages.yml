@@ -374,16 +374,16 @@ jobs:
           path: artifacts/
           pattern: otelcol-sumo_*-intel.pkg
 
-      - name: Debug
+      - name: Show packages
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
           ls -l artifacts/
-          ls -l artifacts/otelcol-sumo*/*
+          ls -l artifacts/**/*
 
       - name: Set DARWIN_PKG_URL
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg)"
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> $GITHUB_ENV
 
       - name: Run install script tests
