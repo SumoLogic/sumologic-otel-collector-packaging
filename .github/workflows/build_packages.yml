@@ -374,6 +374,12 @@ jobs:
           path: artifacts/
           pattern: otelcol-sumo_*-intel.pkg
 
+      - name: Debug
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
+        run: |
+          ls -l artifacts/
+          ls -l artifacts/otelcol-sumo*/*
+
       - name: Set DARWIN_PKG_URL
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
