@@ -334,7 +334,7 @@ function check_dependencies() {
         error=1
     fi
 
-    REQUIRED_COMMANDS=(echo sed curl head grep sort mv chmod getopts hostname touch xargs)
+    REQUIRED_COMMANDS=(echo sed curl head grep sort mv getopts hostname touch xargs)
     if [[ -n "${BINARY_BRANCH}" ]]; then  # unzip is only necessary for downloading from GHA artifacts
         REQUIRED_COMMANDS+=(unzip)
     fi
@@ -610,12 +610,6 @@ function setup_config_darwin() {
         write_opamp_extension
 
         write_remote_config_launchd "${LAUNCHD_CONFIG}"
-
-        # Remote configuration directory must be writable
-        chmod 750 "${REMOTE_CONFIG_DIRECTORY}"
-
-        # Remote configuration directory must be owned by the mac pkg service user
-        chown _otelcol-sumo:_otelcol-sumo "${REMOTE_CONFIG_DIRECTORY}"
     fi
 
 }
