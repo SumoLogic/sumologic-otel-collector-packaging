@@ -1112,6 +1112,8 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     if [[ -z "${DOWNLOAD_ONLY}" ]]; then
         if [[ -n "${USER_TOKEN}" && -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${USER_TOKEN}" != "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
             echo "You are trying to install with different token than in your configuration file!"
+            echo "${USER_TOKEN}"
+            echo "${SUMOLOGIC_INSTALLATION_TOKEN}"
             exit 1
         fi
 
