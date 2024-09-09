@@ -1086,7 +1086,7 @@ fi
 readonly USER_TOKEN
 
 # Exit if installation token is not set and there is no user configuration
-if [[ -z "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SKIP_TOKEN}" != "true" && -z "${USER_TOKEN}" ]]; then
+if [[ -z "${SUMOLOGIC_INSTALLATION_TOKEN}" && "${SKIP_TOKEN}" != "true" && -z "${USER_TOKEN}" && -z "${DOWNLOAD_ONLY}" ]]; then
     echo "Installation token has not been provided. Please set the '${ENV_TOKEN}' environment variable."
     echo "You can ignore this requirement by adding '--${ARG_LONG_SKIP_TOKEN} argument."
     exit 1
