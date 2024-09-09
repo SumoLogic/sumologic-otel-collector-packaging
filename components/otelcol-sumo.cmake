@@ -1,5 +1,4 @@
 macro(default_otc_linux_install)
-  create_otc_components()
   install_otc_config_directory()
   install_otc_config_fragment_directory()
   install_otc_config_examples()
@@ -16,7 +15,6 @@ macro(default_otc_linux_install)
 endmacro()
 
 macro(default_otc_darwin_install)
-  create_otc_components()
   install_otc_config_directory()
   install_otc_config_fragment_directory()
   install_otc_config_examples()
