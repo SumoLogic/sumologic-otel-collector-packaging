@@ -1075,6 +1075,9 @@ fi
 if [[ -z "${USER_TOKEN}" ]]; then
     if command -v otelcol-config &> /dev/null; then
         USER_TOKEN=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+        if [[ "${USER_TOKEN}" == "null" ]]; then
+            USER_TOKEN=""
+        fi
     fi
 fi
 readonly USER_TOKEN
