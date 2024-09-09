@@ -48,6 +48,8 @@ expected_collector_files=(
   "etc/otelcol-sumo/conf.d"
   "etc/otelcol-sumo/conf.d/common.yaml"
   "etc/otelcol-sumo/conf.d-available"
+  "etc/otelcol-sumo/conf.d-available/ephemeral.yaml"
+  "etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
   "etc/otelcol-sumo/conf.d-available/examples"
   "etc/otelcol-sumo/sumologic.yaml"
   "Library/Application Support/otelcol-sumo"
@@ -58,11 +60,6 @@ expected_collector_files=(
   "var/lib/otelcol-sumo"
   "var/lib/otelcol-sumo/file_storage"
   "var/log/otelcol-sumo"
-)
-
-# a list of files that the hostmetrics package should install
-expected_hostmetrics_files=(
-  "etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
 )
 
 function install_package() {
@@ -184,12 +181,6 @@ while IFS=  read -r -d $'\0'; do
   collector_pkg+=("$REPLY")
 done < <(find . -name "*-otelcol-sumo.pkg" -type d -print0)
 
-# create an array of hostmetrics packages (only one is expected)
-hostmetrics_pkg=()
-while IFS=  read -r -d $'\0'; do
-  hostmetrics_pkg+=("$REPLY")
-done < <(find . -name "*-otelcol-sumo-hostmetrics.pkg" -type d -print0)
-
 # verify that the expected number of sub-packages were found
 pkg_count="${#all_pkgs[@]}"
 expected_pkg_count=2
@@ -202,12 +193,6 @@ fi
 # only one collector sub-package should exist
 if [ "${#collector_pkg[@]}" -gt 1 ]; then
   echo "error: more than one collector sub-package was found"
-  exit 1
-fi
-
-# only one hostmetrics sub-package should exist
-if [ "${#hostmetrics_pkg[@]}" -gt 1 ]; then
-  echo "error: more than one hostmetrics sub-package was found"
   exit 1
 fi
 
@@ -243,41 +228,6 @@ for f in "${all_collector_files[@]}"; do
   collector_files+=("$collector_file")
 done
 
-cd "$expanded_dir" || exit
-
-# get a list of files installed by the hostmetrics sub-package excluding both
-# system files and collector files
-hostmetrics_pkg_name="$(echo "${hostmetrics_pkg[0]}" | cut -d/ -f2-)"
-cd "${hostmetrics_pkg_name}/Payload" || exit
-all_hostmetrics_files=()
-while IFS=  read -r -d $'\0'; do
-  all_hostmetrics_files+=("$REPLY")
-done < <(find . ! -name '.' -print0)
-
-hostmetrics_files=()
-
-for f in "${all_hostmetrics_files[@]}"; do
-  hostmetrics_file="$(echo "$f" | cut -d/ -f2-)"
-
-  # shellcheck disable=SC2076
-  if [[ " ${system_files[*]} " =~ " ${hostmetrics_file} " ]]; then
-    continue
-  fi
-
-  # shellcheck disable=SC2076
-  if [[ " ${collector_files[*]} " =~ " ${hostmetrics_file} " ]]; then
-    continue
-  fi
-
-  # shellcheck disable=SC2076
-  if [[ ! " ${expected_collector_files[*]} " =~ " ${collector_file} " ]]; then
-    echo "error: unexpected file installed by hostmetrics sub-package: ${hostmetrics_file}"
-    exit 1
-  fi
-
-  hostmetrics_files+=("$hostmetrics_file")
-done
-
 cd "$exec_dir" || exit
 
 install_package "$mpkg" "$mpkg_basename"
@@ -287,7 +237,6 @@ echo "##########################################################################
 echo "Verifying installation: ${mpkg}"
 echo "################################################################################"
 verify_installation "com.sumologic.otelcol-sumo" "${expected_collector_files[@]}"
-verify_installation "com.sumologic.otelcol-sumo-hostmetrics" "${expected_hostmetrics_files[@]}"
 
 echo
 echo "################################################################################"
@@ -305,6 +254,5 @@ echo "##########################################################################
 echo "Verifying uninstallation: ${mpkg}"
 echo "################################################################################"
 verify_uninstallation "com.sumologic.otelcol-sumo" "${expected_collector_files[@]}"
-verify_uninstallation "com.sumologic.otelcol-sumo-hostmetrics" "${expected_hostmetrics_files[@]}"
 
 echo "Success!"

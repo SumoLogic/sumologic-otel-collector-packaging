@@ -43,17 +43,14 @@ collector_files=(
   "/etc/otelcol-sumo/sumologic.yaml"
   "/etc/otelcol-sumo/conf.d"
   "/etc/otelcol-sumo/conf.d-available"
+  "/etc/otelcol-sumo/conf.d-available/ephemeral.yaml"
+  "/etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
   "/etc/otelcol-sumo"
   "/usr/local/bin/otelcol-config"
   "/usr/local/bin/otelcol-sumo"
   "/var/lib/otelcol-sumo/file_storage"
   "/var/lib/otelcol-sumo"
   "/var/log/otelcol-sumo"
-)
-
-# A list of files & directories to remove for hostmetrics
-hostmetrics_files=(
-  "/etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
 )
 
 function package_is_registered() {
@@ -114,7 +111,6 @@ function uninstall_package() {
 
 stop_service "${service_plist_file}"
 uninstall_package "com.sumologic.otelcol-sumo" "${collector_files[@]}"
-uninstall_package "com.sumologic.otelcol-sumo-hostmetrics" "${hostmetrics_files[@]}"
 
 # remove the directory that this script belongs to
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"

@@ -8,6 +8,8 @@ macro(default_otc_linux_install)
   install_otc_filestorage_state_directory()
   install_otc_sumologic_yaml()
   install_otc_common_yaml()
+  install_otc_linux_hostmetrics_yaml()
+  install_otc_ephemeral_yaml()
   install_otc_token_env()
   install_otc_binary()
   install_otc_config_binary()
@@ -24,6 +26,7 @@ macro(default_otc_darwin_install)
   install_otc_sumologic_yaml()
   install_otc_common_yaml()
   install_otc_darwin_hostmetrics_yaml()
+  install_otc_ephemeral_yaml()
   install_otc_binary()
   install_otc_config_binary()
   install_otc_uninstall_script()
@@ -39,12 +42,6 @@ macro(create_otc_components)
     DISPLAY_NAME "Application Files"
     REQUIRED
     GROUP "otelcol-sumo-group"
-  )
-
-  cpack_add_component("otelcol-sumo-hostmetrics"
-    DISPLAY_NAME "Collect Host Metrics"
-    GROUP "otelcol-sumo-group"
-    DISABLED
   )
 endmacro()
 
@@ -293,7 +290,7 @@ macro(install_otc_common_yaml)
   )
 endmacro()
 
-# e.g. /etc/otelcol-sumo/conf.d/hostmetrics.yaml
+# e.g. /etc/otelcol-sumo/conf.d-available/hostmetrics.yaml
 macro(install_otc_darwin_hostmetrics_yaml)
   require_variables(
     "ASSETS_DIR"
@@ -307,11 +304,11 @@ macro(install_otc_darwin_hostmetrics_yaml)
       OWNER_READ OWNER_WRITE
       GROUP_READ
       WORLD_READ
-    COMPONENT otelcol-sumo-hostmetrics
+    COMPONENT otelcol-sumo
   )
 endmacro()
 
-# e.g. /etc/otelcol-sumo/conf.d/hostmetrics.yaml
+# e.g. /etc/otelcol-sumo/conf.d-available/hostmetrics.yaml
 macro(install_otc_linux_hostmetrics_yaml)
   require_variables(
     "ASSETS_DIR"
@@ -325,7 +322,24 @@ macro(install_otc_linux_hostmetrics_yaml)
       OWNER_READ OWNER_WRITE
       GROUP_READ
       WORLD_READ
-    COMPONENT otelcol-sumo-hostmetrics
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /etc/otelcol-sumo/conf.d-available/ephemeral.yaml
+macro(install_otc_ephemeral_yaml)
+  require_variables(
+    "ASSETS_DIR"
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
+  )
+  install(
+    FILES "${ASSETS_DIR}/conf.d/ephemeral.yaml"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE
+      GROUP_READ
+      WORLD_READ
+    COMPONENT otelcol-sumo
   )
 endmacro()
 
