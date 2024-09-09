@@ -183,7 +183,7 @@ done < <(find . -name "*-otelcol-sumo.pkg" -type d -print0)
 
 # verify that the expected number of sub-packages were found
 pkg_count="${#all_pkgs[@]}"
-expected_pkg_count=1
+expected_pkg_count=0
 
 if [ "$pkg_count" -ne $expected_pkg_count ]; then
   echo "error: ${expected_pkg_count} sub-packages were expected but found ${pkg_count}"

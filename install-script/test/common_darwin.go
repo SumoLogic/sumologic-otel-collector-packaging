@@ -115,7 +115,6 @@ func tearDown(t *testing.T) {
 	}
 
 	// Remove packages
-	forgetPackage(t, "com.sumologic.otelcol-sumo-hostmetrics")
 	forgetPackage(t, "com.sumologic.otelcol-sumo")
 }
 
