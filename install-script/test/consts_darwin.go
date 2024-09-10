@@ -9,11 +9,11 @@ const (
 
 	// TODO: fix mismatch between darwin permissions & linux binary install permissions
 	// 00-otelcol-config-settings.yaml must be writable as the install scripts mutate it
-	commonConfigPathFilePermissions uint32 = 0600
+	commonConfigPathFilePermissions uint32 = 0660
 	configPathDirPermissions        uint32 = 0770
-	configPathFilePermissions       uint32 = 0600
-	confDPathFilePermissions        uint32 = 0600
-	etcPathPermissions              uint32 = 0751
+	configPathFilePermissions       uint32 = 0660
+	confDPathFilePermissions        uint32 = 0660
+	etcPathPermissions              uint32 = 0771
 	opampDPermissions               uint32 = 0770
 
 	rootGroup   string = "wheel"

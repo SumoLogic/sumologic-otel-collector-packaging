@@ -55,7 +55,7 @@ macro(install_otc_config_directory)
     DESTINATION "${OTC_CONFIG_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
-      GROUP_READ GROUP_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
       WORLD_EXECUTE
     COMPONENT otelcol-sumo
   )
@@ -114,8 +114,8 @@ macro(install_otc_config_examples)
       FILES "${example}"
       DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}/examples"
       PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_WRITE GROUP_EXECUTE
+        OWNER_READ OWNER_WRITE
+        GROUP_READ GROUP_WRITE
       COMPONENT otelcol-sumo
     )
   endforeach(example)
@@ -146,7 +146,7 @@ macro(install_otc_state_directory)
     DESTINATION "${OTC_STATE_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
-      GROUP_READ GROUP_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -161,7 +161,7 @@ macro(install_otc_filestorage_state_directory)
     DESTINATION "${OTC_FILESTORAGE_STATE_DIR}"
     DIRECTORY_PERMISSIONS
       OWNER_READ OWNER_WRITE OWNER_EXECUTE
-      GROUP_READ GROUP_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -251,8 +251,8 @@ macro(install_otc_sumologic_yaml)
     FILES "${ASSETS_DIR}/sumologic.yaml"
     DESTINATION "${OTC_CONFIG_DIR}"
     PERMISSIONS
-      OWNER_READ
-      GROUP_READ
+      OWNER_READ OWNER_WRITE
+      GROUP_READ GROUP_WRITE
     RENAME "${OTC_SUMOLOGIC_CONFIG}"
     COMPONENT otelcol-sumo
   )
@@ -302,7 +302,7 @@ macro(install_otc_darwin_hostmetrics_yaml)
     RENAME "hostmetrics.yaml"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ
+      GROUP_READ GROUP_WRITE
       WORLD_READ
     COMPONENT otelcol-sumo
   )
@@ -320,7 +320,7 @@ macro(install_otc_linux_hostmetrics_yaml)
     RENAME "hostmetrics.yaml"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ
+      GROUP_READ GROUP_WRITE
       WORLD_READ
     COMPONENT otelcol-sumo
   )
@@ -337,7 +337,7 @@ macro(install_otc_ephemeral_yaml)
     DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ
+      GROUP_READ GROUP_WRITE
       WORLD_READ
     COMPONENT otelcol-sumo
   )
