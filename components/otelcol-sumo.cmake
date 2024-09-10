@@ -303,7 +303,6 @@ macro(install_otc_darwin_hostmetrics_yaml)
     PERMISSIONS
       OWNER_READ OWNER_WRITE
       GROUP_READ GROUP_WRITE
-      WORLD_READ
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -321,7 +320,6 @@ macro(install_otc_linux_hostmetrics_yaml)
     PERMISSIONS
       OWNER_READ OWNER_WRITE
       GROUP_READ GROUP_WRITE
-      WORLD_READ
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -338,7 +336,6 @@ macro(install_otc_ephemeral_yaml)
     PERMISSIONS
       OWNER_READ OWNER_WRITE
       GROUP_READ GROUP_WRITE
-      WORLD_READ
     COMPONENT otelcol-sumo
   )
 endmacro()
