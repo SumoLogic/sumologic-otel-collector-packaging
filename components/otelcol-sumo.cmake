@@ -136,6 +136,21 @@ macro(install_otc_user_env_directory)
   )
 endmacro()
 
+# e.g. /etc/otelcol-sumo/opamp.d
+macro(install_otc_opampd_directory)
+  require_variables(
+    "OTC_OPAMPD_DIR"
+  )
+  install(
+    DIRECTORY
+    DESTINATION "${OTC_OPAMPD_DIR}"
+    DIRECTORY_PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_WRITE GROUP_EXECUTE
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
 # e.g. /var/lib/otelcol-sumo
 macro(install_otc_state_directory)
   require_variables(
