@@ -46,6 +46,7 @@ collector_files=(
   "/etc/otelcol-sumo/conf.d-available/ephemeral.yaml"
   "/etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
   "/etc/otelcol-sumo"
+  "/etc/otelcol-sumo/opamp.d"
   "/usr/local/bin/otelcol-config"
   "/usr/local/bin/otelcol-sumo"
   "/var/lib/otelcol-sumo/file_storage"

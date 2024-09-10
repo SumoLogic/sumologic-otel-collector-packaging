@@ -51,6 +51,7 @@ expected_collector_files=(
   "etc/otelcol-sumo/conf.d-available/ephemeral.yaml"
   "etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
   "etc/otelcol-sumo/conf.d-available/examples"
+  "etc/otelcol-sumo/opamp.d"
   "etc/otelcol-sumo/sumologic.yaml"
   "Library/Application Support/otelcol-sumo"
   "Library/Application Support/otelcol-sumo/uninstall.sh"
