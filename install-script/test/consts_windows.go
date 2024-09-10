@@ -20,6 +20,7 @@ const (
 	opampDPath                   = etcPath + `\opamp.d`
 	userConfigPath               = confDPath + `\common.yaml`
 	hostmetricsConfigPath        = confDPath + `\hostmetrics.yaml`
+	sumoRemotePath               = etcPath + `\sumologic-remote.yaml`
 
 	installToken    string = "token"
 	installTokenEnv string = "SUMOLOGIC_INSTALLATION_TOKEN"
