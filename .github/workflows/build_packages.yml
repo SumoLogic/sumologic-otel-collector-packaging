@@ -350,6 +350,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PACKAGECLOUD_MASTER_TOKEN: ${{ secrets.PACKAGECLOUD_MASTER_TOKEN }}
+      PACKAGECLOUD_REPO: ci-builds
     steps:
       - uses: actions/checkout@v4
 
