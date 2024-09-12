@@ -1007,7 +1007,7 @@ function install_linux_package() {
     local package_with_version
     readonly package_with_version="${1}"
 
-    if [[ -n "${PACKAGECLOUD_MASTER_TOKEN}" ]]; then
+    if [[ "${PACKAGECLOUD_MASTER_TOKEN}" != "" ]]; then
       base_url="https://${PACKAGECLOUD_MASTER_TOKEN}:@packagecloud.io"
     else
       base_url="https://packagecloud.io"
