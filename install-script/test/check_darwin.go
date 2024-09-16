@@ -41,9 +41,6 @@ func checkConfigFilesOwnershipAndPermissions(ownerName string, ownerGroup string
 					case configPath:
 						// /etc/otelcol-sumo/sumologic.yaml
 						permissions = configPathFilePermissions
-					case userConfigPath:
-						// /etc/otelcol-sumo/conf.d/common.yaml
-						permissions = commonConfigPathFilePermissions
 					default:
 						// /etc/otelcol-sumo/conf.d/*
 						permissions = confDPathFilePermissions
