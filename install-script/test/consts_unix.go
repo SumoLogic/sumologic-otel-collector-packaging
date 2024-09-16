@@ -25,11 +25,9 @@ const (
 
 	curlTimeoutErrorCode = 28
 
-	// 00-otelcol-config-settings.yaml must be writable as the install scripts mutate it
-	commonConfigPathFilePermissions uint32 = 0770
-	configPathDirPermissions        uint32 = 0770
-	configPathFilePermissions       uint32 = 0660
-	confDPathFilePermissions        uint32 = 0660
-	etcPathPermissions              uint32 = 0771
-	opampDPermissions               uint32 = 0770
+	configPathDirPermissions  uint32 = 0770
+	configPathFilePermissions uint32 = 0660
+	confDPathFilePermissions  uint32 = 0660
+	etcPathPermissions        uint32 = 0771
+	opampDPermissions         uint32 = 0770
 )

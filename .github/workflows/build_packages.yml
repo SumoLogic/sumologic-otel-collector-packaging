@@ -350,8 +350,6 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PACKAGECLOUD_MASTER_TOKEN: ${{ secrets.PACKAGECLOUD_MASTER_TOKEN }}
-      PACKAGECLOUD_REPO: ci-builds
     steps:
       - uses: actions/checkout@v4
 
@@ -387,6 +385,14 @@ jobs:
         run: |
           fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> $GITHUB_ENV
+
+      - name: Set Packagecloud environment variables
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
+        run: |
+          token="${{ secrets.PACKAGECLOUD_MASTER_TOKEN }}"
+          repo="ci-builds"
+          echo PACKAGECLOUD_MASTER_TOKEN="${token}" >> $GITHUB_ENV
+          echo PACKAGECLOUD_REPO="${repo}" >> $GITHUB_ENV
 
       - name: Run install script tests
         if: steps.changed-files.outputs.any_changed == 'true'
