@@ -13,7 +13,7 @@ const (
 	confDAvailablePath    = etcPath + "/conf.d-available"
 	opampDPath            = etcPath + "/opamp.d"
 	userConfigPath        = confDPath + "/00-otelcol-config-settings.yaml"
-	hostmetricsConfigPath = confDAvailablePath + "/hostmetrics.yaml"
+	hostmetricsConfigPath = confDPath + "/hostmetrics.yaml"
 	cacheDirectory        = "/var/cache/otelcol-sumo/"
 	logDirPath            = "/var/log/otelcol-sumo"
 	sumoRemotePath        = "/etc/otelcol-sumo/sumologic-remote.yaml"
@@ -21,7 +21,7 @@ const (
 	installToken        = "token"
 	installTokenEnv     = "SUMOLOGIC_INSTALLATION_TOKEN"
 	apiBaseURL          = "https://open-collectors.sumologic.com"
-	ephemeralConfigPath = confDAvailablePath + "/ephemeral.yaml"
+	ephemeralConfigPath = confDPath + "/ephemeral.yaml"
 
 	curlTimeoutErrorCode = 28
 
