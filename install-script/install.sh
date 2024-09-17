@@ -533,9 +533,6 @@ function setup_config() {
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         echo "Warning: remote management is currently in beta."
 
-        echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
-        mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
-
         write_opamp_extension
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
@@ -543,7 +540,11 @@ function setup_config() {
         fi
 
         if [[ "${EPHEMERAL}" == "true" ]]; then
-            write_ephemeral_true
+          ls -l /etc/otelcol-sumo/conf.d
+          ls -l /etc/otelcol-sumo/conf.d-available
+          write_ephemeral_true
+          ls -l /etc/otelcol-sumo/conf.d
+          ls -l /etc/otelcol-sumo/conf.d-available
         fi
 
         if [[ -n "${API_BASE_URL}" ]]; then
@@ -562,7 +563,11 @@ function setup_config() {
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
         echo -e "Installing ${OS_TYPE} hostmetrics configuration"
+        ls -l /etc/otelcol-sumo/conf.d
+        ls -l /etc/otelcol-sumo/conf.d-available
         otelcol-config --enable-hostmetrics
+        ls -l /etc/otelcol-sumo/conf.d
+        ls -l /etc/otelcol-sumo/conf.d-available
     fi
 
     ## Check if there is anything to update in configuration
@@ -606,10 +611,6 @@ function setup_config_darwin() {
 
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         echo "Warning: remote management is currently in beta."
-
-        echo -e "Creating remote configurations directory (${REMOTE_CONFIG_DIRECTORY})"
-        # TODO(echlebek): remove this once packaging does it
-        mkdir -p "${REMOTE_CONFIG_DIRECTORY}"
 
         write_opamp_extension
 
@@ -1202,38 +1203,6 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     # Extract choices xml from meta package, override the choices to enable
     # optional choices, and then install using the new choice selections
     installer -showChoiceChangesXML -pkg "${pkg}" -target / > "${choices}"
-
-    # Determine how many installation choices exist
-    choices_count=$(plutil -convert raw -o - "${choices}")
-    readonly choices_count
-
-    # Loop through each installation choice
-    for (( i=0; i < "${choices_count}"; i++ )); do
-        choice_id_key="${i}.choiceIdentifier"
-        choice_attr_key="${i}.choiceAttribute"
-        attr_setting_key="${i}.attributeSetting"
-
-        # Skip if choiceAttribute does not equal selected
-        choice_attr="$(plutil_extract_key "${choices}" "${choice_attr_key}")"
-        if [ "$choice_attr" != "selected" ]; then
-            continue
-        fi
-
-        # Get the choice identifier
-        choice_id="$(plutil_extract_key "${choices}" "${choice_id_key}")"
-
-        # Mark the choice as selected if the feature flag is true
-        case "${choice_id}" in
-        "otelcol-sumo-hostmetricsChoice")
-          if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
-              echo -e "Enabling ${OS_TYPE} hostmetrics install option"
-              plutil_replace_key "${choices}" "${attr_setting_key}" "integer" 1
-          fi
-          ;;
-        esac
-    done
-
-    installer -applyChoiceChangesXML "$choices" -pkg "$pkg" -target /
 
     if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" && "${SKIP_TOKEN}" != "true" ]]; then
         echo "Writing installation token to launchd config"

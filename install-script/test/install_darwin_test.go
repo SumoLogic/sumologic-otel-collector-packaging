@@ -70,7 +70,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkLaunchdConfigCreated,
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
 		},
 		{
 			name: "installation token only",
@@ -92,7 +91,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkHostmetricsConfigNotCreated,
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
 		},
 		{
 			name: "installation token and ephemeral",
@@ -115,7 +113,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkHostmetricsConfigNotCreated,
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
 		},
 		{
 			name: "override default config",
@@ -138,7 +135,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkUserConfigCreated,
 				checkLaunchdConfigCreated,
 			},
-			installCode: 1, // because of invalid installation token
 		},
 		{
 			name: "installation token and hostmetrics",
