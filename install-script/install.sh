@@ -54,6 +54,10 @@ ARG_LONG_TIMEOUT='download-timeout'
 PACKAGE_GITHUB_ORG="SumoLogic"
 PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
 
+PACKAGECLOUD_ORG="${PACKAGECLOUD_ORG:-sumologic}"
+PACKAGECLOUD_REPO="${PACKAGECLOUD_REPO:-stable}"
+PACKAGECLOUD_MASTER_TOKEN="${PACKAGECLOUD_MASTER_TOKEN:-}"
+
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
 readonly ARG_SHORT_UNINSTALL ARG_LONG_UNINSTALL
@@ -1003,15 +1007,24 @@ function install_linux_package() {
     local package_with_version
     readonly package_with_version="${1}"
 
+    if [[ "${PACKAGECLOUD_MASTER_TOKEN}" != "" ]]; then
+      base_url="https://${PACKAGECLOUD_MASTER_TOKEN}:@packagecloud.io"
+    else
+      base_url="https://packagecloud.io"
+    fi
+    base_url+="/install/repositories/${PACKAGECLOUD_ORG}/${PACKAGECLOUD_REPO}"
+
+    repo_id="${PACKAGECLOUD_ORG}_${PACKAGECLOUD_REPO}"
+
     case $(get_package_manager) in
         yum | dnf)
-            curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.rpm.sh | bash
-            yum --quiet --disablerepo="*" --enablerepo="sumologic_stable" -y update
+            curl -s "${base_url}/script.rpm.sh" | bash
+            yum --quiet --disablerepo="*" --enablerepo="${repo_id}" -y update
             yum install --quiet -y "${package_with_version}"
             ;;
         apt-get)
-            curl -s https://packagecloud.io/install/repositories/sumologic/stable/script.deb.sh | bash
-            apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/sumologic_stable"
+            curl -s "${base_url}/script.deb.sh" | bash
+            apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
             apt-get install --quiet -y "${package_with_version}"
             ;;
     esac

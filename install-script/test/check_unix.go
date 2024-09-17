@@ -39,7 +39,7 @@ func preActionMockUserConfig(c check) {
 	f, err := os.Create(userConfigPath)
 	require.NoError(c.test, err)
 
-	err = f.Chmod(fs.FileMode(commonConfigPathFilePermissions))
+	err = f.Chmod(fs.FileMode(confDPathFilePermissions))
 	require.NoError(c.test, err)
 }
 

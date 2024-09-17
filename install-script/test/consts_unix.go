@@ -10,6 +10,7 @@ const (
 	scriptPath            = "../install.sh"
 	configPath            = etcPath + "/sumologic.yaml"
 	confDPath             = etcPath + "/conf.d"
+	confDAvailablePath    = etcPath + "/conf.d-available"
 	opampDPath            = etcPath + "/opamp.d"
 	userConfigPath        = confDPath + "/00-otelcol-config-settings.yaml"
 	hostmetricsConfigPath = confDPath + "/hostmetrics.yaml"
@@ -23,4 +24,10 @@ const (
 	ephemeralConfigPath = confDPath + "/ephemeral.yaml"
 
 	curlTimeoutErrorCode = 28
+
+	configPathDirPermissions  uint32 = 0770
+	configPathFilePermissions uint32 = 0660
+	confDPathFilePermissions  uint32 = 0660
+	etcPathPermissions        uint32 = 0771
+	opampDPermissions         uint32 = 0770
 )

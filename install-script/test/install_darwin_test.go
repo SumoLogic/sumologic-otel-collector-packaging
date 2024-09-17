@@ -107,7 +107,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
 				checkUserConfigCreated,
-				checkEphemeralInConfig(userConfigPath),
+				checkEphemeralInConfig(ephemeralConfigPath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
 				checkUserExists,
