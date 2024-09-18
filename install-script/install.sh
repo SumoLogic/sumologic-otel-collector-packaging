@@ -1217,6 +1217,7 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
 
     echo "Waiting for otelcol to start"
     while ! launchctl print system/otelcol-sumo | grep -q "state = running"; do
+        launchctl print system/otelcol-sumo | grep "state = "
         sleep 0.1
     done
     OTEL_EXITED_WITH_ERROR=false
