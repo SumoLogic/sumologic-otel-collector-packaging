@@ -343,13 +343,10 @@ jobs:
         include:
           - arch_os: linux_amd64
             runs_on: ubuntu-20.04
-            shell: bash
           - arch_os: darwin_amd64
             runs_on: macos-latest
-            shell: bash
           - arch_os: windows_amd64
             runs_on: windows-2022
-            shell: powershell
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -391,8 +388,13 @@ jobs:
           fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> $GITHUB_ENV
 
-      - name: Run install script tests
-        shell: ${{ matrix.shell }}
-        if: steps.changed-files.outputs.any_changed == 'true'
+      - name: Run install script tests (*nix)
+        if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows'
+        working-directory: install-script/test
+        run: make test
+
+      - name: Run install script tests (Windows)
+        shell: powershell
+        if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows'
         working-directory: install-script/test
         run: make test
