@@ -1214,11 +1214,12 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     # Run an unload/load launchd config to pull in new changes & restart the service
     launchctl unload "${LAUNCHD_CONFIG}"
     launchctl load -w "${LAUNCHD_CONFIG}"
+    launchctl kickstart -k "${LAUNCHD_CONFIG}"
 
     echo "Waiting for otelcol to start"
     while ! launchctl print system/otelcol-sumo | grep -q "state = running"; do
         launchctl print system/otelcol-sumo | grep "state = "
-        sleep 0.1
+        sleep 1
     done
     OTEL_EXITED_WITH_ERROR=false
     echo 'Checking otelcol status'
