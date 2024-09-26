@@ -1200,9 +1200,8 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
         exit 0
     fi
 
-    # Extract choices xml from meta package, override the choices to enable
-    # optional choices, and then install using the new choice selections
-    installer -showChoiceChangesXML -pkg "${pkg}" -target / > "${choices}"
+    echo "Installing otelcol-sumo package"
+    installer -pkg "${pkg}" -target /
 
     if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" && "${SKIP_TOKEN}" != "true" ]]; then
         echo "Writing installation token to launchd config"
@@ -1212,12 +1211,12 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     setup_config_darwin
 
     # Run an unload/load launchd config to pull in new changes & restart the service
-    launchctl unload -w "${LAUNCHD_CONFIG}"
+    launchctl unload "${LAUNCHD_CONFIG}"
     launchctl load -w "${LAUNCHD_CONFIG}"
-    launchctl start system/otelcol-sumo
 
     echo "Waiting for otelcol to start"
     while ! launchctl print system/otelcol-sumo | grep -q "state = running"; do
+        echo -n "  otelcol service "
         launchctl print system/otelcol-sumo | grep "state = "
         sleep 1
     done
