@@ -570,6 +570,8 @@ function setup_config() {
         ls -l /etc/otelcol-sumo/conf.d-available
     fi
 
+    ls -l /etc/otelcol-sumo
+
     ## Check if there is anything to update in configuration
     if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" ]]; then
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
