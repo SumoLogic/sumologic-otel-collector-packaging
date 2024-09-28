@@ -164,7 +164,6 @@ function set_defaults() {
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
     CONFIG_DIRECTORY="/etc/otelcol-sumo"
     SUMO_BINARY_PATH="/usr/local/bin/otelcol-sumo"
-    REMOTE_CONFIG_DIRECTORY="${CONFIG_DIRECTORY}/opamp.d"
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
     CONFIG_PATH="${CONFIG_DIRECTORY}/sumologic.yaml"
@@ -951,6 +950,7 @@ function plutil_delete_key() {
     fi
 }
 
+# shellcheck disable=SC2317
 function plutil_extract_key() {
     local file key output
     readonly file="${1}"
@@ -1194,8 +1194,6 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     fi
 
     pkg="${TMPDIR}/otelcol-sumo.pkg"
-    choices="${TMPDIR}/otelcol-sumo-choices.xml"
-    readonly pkg choices
 
     if [[ "${DOWNLOAD_ONLY}" == "true" ]]; then
         echo "Package downloaded to: ${pkg}"
@@ -1224,7 +1222,7 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     done
     OTEL_EXITED_WITH_ERROR=false
     echo 'Checking otelcol status'
-    for i in {1..15}; do
+    for _ in {1..15}; do
         if launchctl print system/otelcol-sumo | grep -q "last exit code = 1"; then
             OTEL_EXITED_WITH_ERROR=true
             break;
