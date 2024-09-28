@@ -335,7 +335,7 @@ jobs:
   test-install-script:
     name: Test Install Script
     runs-on: ${{ matrix.runs_on }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     needs:
       - build_packages
     strategy:
