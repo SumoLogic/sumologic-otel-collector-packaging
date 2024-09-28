@@ -66,7 +66,7 @@ func checkEphemeralNotInConfig(p string) func(c check) bool {
 		assert.False(c.test, c.installOptions.ephemeral, "ephemeral was specified")
 
 		conf, err := getConfig(p)
-		if !asssert.NoError(c.test, err, "error while reading configuration") {
+		if !assert.NoError(c.test, err, "error while reading configuration") {
 			return false
 		}
 

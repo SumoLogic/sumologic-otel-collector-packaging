@@ -5,7 +5,6 @@ package sumologic_scripts_tests
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os/exec"
@@ -15,7 +14,7 @@ import (
 // These checks always have to be true after a script execution
 var commonPostChecks = []checkFunc{checkNoBakFilesPresent}
 
-func runTest(t *testing.T, spec *testSpec) {
+func runTest(t *testing.T, spec *testSpec) (fErr error) {
 	ch := check{
 		test:                t,
 		installOptions:      spec.options,
@@ -77,6 +76,7 @@ func runTest(t *testing.T, spec *testSpec) {
 			return nil
 		}
 	}
+	return nil
 }
 
 func tearDown(t *testing.T) {
