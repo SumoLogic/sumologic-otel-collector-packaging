@@ -5,8 +5,6 @@ package sumologic_scripts_tests
 import (
 	"context"
 	"fmt"
-	"net"
-	"net/http"
 	"os/exec"
 	"testing"
 )
