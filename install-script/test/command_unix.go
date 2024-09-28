@@ -9,8 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/stretchr/testify/require"
 )
 
 type installOptions struct {
@@ -77,6 +75,8 @@ func (io *installOptions) string() []string {
 
 	if io.apiBaseURL != "" {
 		opts = append(opts, "--api", io.apiBaseURL)
+	} else {
+		opts = append(opts, "--api", mockAPIBaseURL)
 	}
 
 	if io.timeout != 0 {
@@ -125,20 +125,20 @@ func runScript(ch check) (int, []string, []string, error) {
 
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 
 	defer in.Close()
 
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 	defer out.Close()
 
 	errOut, err := cmd.StderrPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 	defer errOut.Close()
 
@@ -147,7 +147,7 @@ func runScript(ch check) (int, []string, []string, error) {
 
 	// Start the process
 	if err = cmd.Start(); err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 
 	// Read the results from the process
@@ -166,8 +166,9 @@ func runScript(ch check) (int, []string, []string, error) {
 		}
 
 		// otherwise ensure there is no error
-		require.NoError(ch.test, err)
-
+		if err != nil {
+			return 0, nil, nil, err
+		}
 	}
 
 	// Handle stderr separately

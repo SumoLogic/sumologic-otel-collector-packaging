@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"os/exec"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 // These checks always have to be true after a script execution
@@ -33,51 +31,51 @@ func runTest(t *testing.T, spec *testSpec) {
 
 	defer tearDown(t)
 
-	t.Log("Starting HTTP server")
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, "200 OK\n")
-		require.NoError(t, err)
-	})
-
-	listener, err := net.Listen("tcp", ":3333")
-	require.NoError(t, err)
-
-	httpServer := &http.Server{
-		Handler: mux,
+	mockAPI, err := startMockAPI(t)
+	if err != nil {
+		return fmt.Errorf("Failed to start mock API: %s", err)
 	}
-	go func() {
-		err := httpServer.Serve(listener)
-		if err != nil && err != http.ErrServerClosed {
-			require.NoError(t, err)
-		}
-	}()
+
 	defer func() {
-		require.NoError(t, httpServer.Shutdown(context.Background()))
+		if err := mockAPI.Shutdown(context.Background()); err != nil {
+			fErr = fmt.Errorf("Failed to shutdown API: %s", err)
+			return
+		}
 	}()
 
 	t.Log("Running pre actions")
 	for _, a := range spec.preActions {
-		a(ch)
+		if ok := a(ch); !ok {
+			return nil
+		}
 	}
 
 	t.Log("Running pre checks")
 	for _, c := range spec.preChecks {
-		c(ch)
+		if ok := c(ch); !ok {
+			return nil
+		}
 	}
 
 	ch.code, ch.output, ch.errorOutput, ch.err = runScript(ch)
+	if err != nil {
+		return err
+	}
 
 	checkRun(ch)
 
 	t.Log("Running common post checks")
 	for _, c := range commonPostChecks {
-		c(ch)
+		if ok := c(ch); !ok {
+			return nil
+		}
 	}
 
 	t.Log("Running post checks")
 	for _, c := range spec.postChecks {
-		c(ch)
+		if ok := c(ch); !ok {
+			return nil
+		}
 	}
 }
 

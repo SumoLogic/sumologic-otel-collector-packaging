@@ -26,6 +26,7 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryIsRunning,
 				checkConfigCreated,
 			},
+			installCode: 1,
 		},
 		{
 			name: "override default config",
@@ -153,7 +154,9 @@ func TestInstallScript(t *testing.T) {
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
-			runTest(t, &spec)
+			if err := runTest(t, &spec); err != nil {
+				t.Error(err)
+			}
 		})
 	}
 }

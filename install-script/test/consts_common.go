@@ -9,6 +9,8 @@ const (
 	GithubOrg           = "SumoLogic"
 	GithubAppRepository = "sumologic-otel-collector"
 	GithubApiBaseUrl    = "https://api.github.com"
+
+	mockAPIBaseURL = "http://127.0.0.1:3333"
 )
 
 func authenticateGithub() string {

@@ -10,42 +10,56 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
-func checkAbortedDueToNoToken(c check) {
-	require.Greater(c.test, len(c.output), 1)
-	require.Contains(c.test, c.output, "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable.")
+func checkAbortedDueToNoToken(c check) bool {
+	if !assert.Greater(c.test, len(c.output), 1) {
+		return false
+	}
+	return assert.Contains(c.test, c.output, "Installation token has not been provided. Please set the 'SUMOLOGIC_INSTALLATION_TOKEN' environment variable.")
 }
 
-func preActionMockConfig(c check) {
+func preActionMockConfig(c check) bool {
 	err := os.MkdirAll(etcPath, fs.FileMode(etcPathPermissions))
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	f, err := os.Create(configPath)
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	err = f.Chmod(fs.FileMode(configPathFilePermissions))
-	require.NoError(c.test, err)
+	return assert.NoError(c.test, err)
 }
 
-func preActionMockUserConfig(c check) {
+func preActionMockUserConfig(c check) bool {
 	err := os.MkdirAll(etcPath, fs.FileMode(etcPathPermissions))
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	err = os.MkdirAll(confDPath, fs.FileMode(configPathDirPermissions))
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	f, err := os.Create(userConfigPath)
-	require.NoError(c.test, err)
+	if !assert.NoError(c.test, err) {
+		return false
+	}
 
 	err = f.Chmod(fs.FileMode(confDPathFilePermissions))
-	require.NoError(c.test, err)
+	return assert.NoError(c.test, err)
 }
 
-func PathHasOwner(t *testing.T, path string, ownerName string, groupName string) {
+func PathHasOwner(t *testing.T, path string, ownerName string, groupName string) bool {
 	info, err := os.Stat(path)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
 	// get the owning user and group
 	stat := info.Sys().(*syscall.Stat_t)
@@ -53,11 +67,17 @@ func PathHasOwner(t *testing.T, path string, ownerName string, groupName string)
 	gid := strconv.FormatUint(uint64(stat.Gid), 10)
 
 	usr, err := user.LookupId(uid)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
 	group, err := user.LookupGroupId(gid)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
-	require.Equal(t, ownerName, usr.Username, "%s should be owned by user '%s'", path, ownerName)
-	require.Equal(t, groupName, group.Name, "%s should be owned by group '%s'", path, groupName)
+	if !assert.Equal(t, ownerName, usr.Username, "%s should be owned by user '%s'", path, ownerName) {
+		return false
+	}
+	return assert.Equal(t, groupName, group.Name, "%s should be owned by group '%s'", path, groupName)
 }

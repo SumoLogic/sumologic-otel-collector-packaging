@@ -70,6 +70,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkLaunchdConfigCreated,
 				checkHomeDirectoryCreated,
 			},
+			installCode: 1,
 		},
 		{
 			name: "installation token only",
@@ -461,7 +462,9 @@ func TestInstallScriptDarwin(t *testing.T) {
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
-			runTest(t, &spec)
+			if err := runTest(t, &spec); err != nil {
+				t.Error(err)
+			}
 		})
 	}
 }
