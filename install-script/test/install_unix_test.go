@@ -81,7 +81,7 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 				checkRemoteConfigDirectoryCreated,
 				checkHostmetricsConfigCreated,
-				checkHostmetricsOwnershipAndPermissions(rootUser, rootGroup),
+				checkHostmetricsOwnershipAndPermissions(systemUser, systemGroup),
 			},
 		},
 		{

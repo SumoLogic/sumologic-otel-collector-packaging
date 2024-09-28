@@ -48,6 +48,8 @@ func (io *installOptions) string() []string {
 
 	if io.apiBaseURL != "" {
 		opts = append(opts, "-Api", io.apiBaseURL)
+	} else {
+		opts = append(opts, "-Api", mockAPIBaseURL)
 	}
 
 	return opts
