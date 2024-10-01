@@ -151,6 +151,14 @@ macro(install_otc_opampd_directory)
       GROUP_READ GROUP_WRITE GROUP_EXECUTE
     COMPONENT otelcol-sumo
   )
+  install(
+    FILES "${SOURCE_DOT_KEEP_PATH}"
+    DESTINATION "${OTC_OPAMPD_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo
+  )
 endmacro()
 
 # e.g. /var/lib/otelcol-sumo

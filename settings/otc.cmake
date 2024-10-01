@@ -24,6 +24,7 @@ macro(set_otc_settings)
   set(OTC_CONFIG_BINARY "otelcol-config")
   set(OTC_SUMOLOGIC_CONFIG "sumologic.yaml")
   set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
+  set(DOT_KEEP_FILE ".keep")
 
   # Directories
   set(OTC_BIN_DIR "usr/local/bin")
@@ -75,6 +76,7 @@ macro(set_otc_settings)
   set(GH_ARTIFACT_OTC_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_BIN}")
   set(GH_ARTIFACT_OTC_CONFIG_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_CONFIG_BIN}")
   set(ACL_LOG_FILE_PATHS "/var/log")
+  set(DOT_KEEP_PATH "${ARTIFACTS_DIR}/${DOT_KEEP_FILE}")
 
   ##
   # Other
