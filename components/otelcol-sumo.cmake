@@ -141,6 +141,7 @@ endmacro()
 # e.g. /etc/otelcol-sumo/opamp.d
 macro(install_otc_opampd_directory)
   require_variables(
+    "DOT_KEEP_PATH"
     "OTC_OPAMPD_DIR"
   )
   install(
@@ -152,7 +153,7 @@ macro(install_otc_opampd_directory)
     COMPONENT otelcol-sumo
   )
   install(
-    FILES "${SOURCE_DOT_KEEP_PATH}"
+    FILES "${DOT_KEEP_PATH}"
     DESTINATION "${OTC_OPAMPD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
