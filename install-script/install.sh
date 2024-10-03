@@ -717,13 +717,19 @@ function get_user_env_config() {
 
 function get_user_api_url() {
     if command -v otelcol-config &> /dev/null; then
-        otelcol-config --read-kv .extensions.sumologic.api_base_url
+        KV=$(otelcol-config --read-kv .extensions.sumologic.api_base_url)
+        if [[ "${KV}" != "null" ]]; then
+            echo "${KV}"
+        fi
     fi
 }
 
 function get_user_opamp_endpoint() {
     if command -v otelcol-config &> /dev/null; then
-        otelcol-config --read-kv .extensions.opamp.endpoint
+        KV=$(otelcol-config --read-kv .extensions.opamp.endpoint)
+        if [[ "${KV}" != "null" ]]; then
+            echo "${KV}"
+        fi
     fi
 }
 
