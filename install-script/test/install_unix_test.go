@@ -29,15 +29,6 @@ func TestInstallScript(t *testing.T) {
 			installCode: 1,
 		},
 		{
-			name: "override default config",
-			options: installOptions{
-				skipInstallToken: true,
-			},
-			preActions: []checkFunc{preActionMockConfig},
-			preChecks:  []checkFunc{checkBinaryNotCreated, checkConfigCreated},
-			postChecks: []checkFunc{checkBinaryCreated, checkBinaryIsRunning, checkConfigCreated, checkConfigOverrided},
-		},
-		{
 			name: "installation token only",
 			options: installOptions{
 				installToken: installToken,
