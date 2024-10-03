@@ -3,6 +3,7 @@ package sumologic_scripts_tests
 import (
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -180,7 +181,7 @@ func preActionInstallPackage(c check) bool {
 }
 
 func preActionInstallPackageWithDifferentAPIBaseURL(c check) bool {
-	c.installOptions.apiBaseURL = "different" + c.installOptions.apiBaseURL
+	c.installOptions.apiBaseURL = path.Join(c.installOptions.apiBaseURL, "different")
 	c.code, c.output, c.errorOutput, c.err = runScript(c)
 	return assert.NoError(c.test, c.err)
 }
