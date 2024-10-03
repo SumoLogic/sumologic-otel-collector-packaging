@@ -773,8 +773,6 @@ function write_installation_token_launchd() {
     if ! plutil_key_is_type "${LAUNCHD_CONFIG}" "${LAUNCHD_TOKEN_KEY}" "string"; then
         plutil_replace_key "${LAUNCHD_CONFIG}" "${LAUNCHD_TOKEN_KEY}" "string" "${SUMOLOGIC_INSTALLATION_TOKEN}"
     fi
-
-    cat /Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist
 }
 
 function write_remote_config_launchd() {
