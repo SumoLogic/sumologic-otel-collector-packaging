@@ -12,7 +12,20 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
+
+type configRoot struct {
+	Extensions *configExtensions `yaml:"extensions,omitempty"`
+}
+
+type configExtensions struct {
+	sumologic *sumologicExtension `yaml:"sumologic,omitempty"`
+}
+
+type sumologicExtension struct {
+	ephemeral bool `yaml:"ephemeral,omitempty"`
+}
 
 func checkACLAvailability(c check) bool {
 	return assert.FileExists(&testing.T{}, "/usr/bin/getfacl", "File ACLS is not supported")
@@ -78,7 +91,7 @@ func checkTokenEnvFileCreated(c check) bool {
 }
 
 func checkTokenEnvFileNotCreated(c check) bool {
-	return assert.NoFileExists(c.test, tokenEnvFilePath, "env token file not been created")
+	return assert.NoFileExists(c.test, tokenEnvFilePath, "env token file has been created")
 }
 
 func checkTokenInEnvFile(c check) bool {
@@ -103,25 +116,49 @@ func checkTokenInEnvFile(c check) bool {
 	return true
 }
 
-func checkEphemeralInConfig(p string) func(c check) bool {
+func checkEphemeralConfigFileCreated(p string) func(c check) bool {
 	return func(c check) bool {
-		assert.True(c.test, c.installOptions.ephemeral, "ephemeral was not specified")
-
-		_, err := os.Stat(p)
-		return assert.NoError(c.test, err, "error while reading configuration")
+		return assert.FileExists(c.test, p, "ephemeral config file has not been created")
 	}
 }
 
-func checkEphemeralNotInConfig(p string) func(c check) bool {
+func checkEphemeralConfigFileNotCreated(p string) func(c check) bool {
 	return func(c check) bool {
-		assert.False(c.test, c.installOptions.ephemeral, "ephemeral was specified")
+		return assert.NoFileExists(c.test, p, "ephemeral config file has been created")
+	}
+}
 
-		_, err := os.Stat(p)
-		if err == nil {
-			c.test.Error("ephemeral in config")
+func checkEphemeralEnabledInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
 			return false
 		}
-		return true
+
+		var config configRoot
+
+		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+
+		return config.extensions.sumologic.ephemeral
+	}
+}
+
+func checkEphemeralNotEnabledInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
+			return false
+		}
+
+		var config configRoot
+
+		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+
+		return !config.extensions.sumologic.ephemeral
 	}
 }
 
