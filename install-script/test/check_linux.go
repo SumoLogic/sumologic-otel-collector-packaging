@@ -150,7 +150,7 @@ func checkEphemeralNotEnabledInRemote(p string) func(c check) bool {
 		yamlFile, err := os.ReadFile(p)
 		if err != nil {
 			// assume the error is due to the file not existing, which is valid
-			return false
+			return true
 		}
 
 		var config configRoot
