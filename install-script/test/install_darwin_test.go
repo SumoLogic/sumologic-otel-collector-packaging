@@ -136,6 +136,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkUserConfigCreated,
 				checkLaunchdConfigCreated,
 			},
+			installCode: 1, // because of invalid installation token
 		},
 		{
 			name: "installation token and hostmetrics",
@@ -198,7 +199,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkRemoteConfigDirectoryCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
 				checkUserConfigCreated,
-				checkEphemeralInConfig(configPath),
+				checkEphemeralInConfig(sumoRemotePath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
 				checkUserExists,
