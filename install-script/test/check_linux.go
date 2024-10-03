@@ -20,11 +20,11 @@ type configRoot struct {
 }
 
 type configExtensions struct {
-	sumologic *sumologicExtension `yaml:"sumologic,omitempty"`
+	Sumologic *sumologicExt `yaml:"sumologic,omitempty"`
 }
 
-type sumologicExtension struct {
-	ephemeral bool `yaml:"ephemeral,omitempty"`
+type sumologicExt struct {
+	Ephemeral bool `yaml:"ephemeral,omitempty"`
 }
 
 func checkACLAvailability(c check) bool {
@@ -141,7 +141,7 @@ func checkEphemeralEnabledInRemote(p string) func(c check) bool {
 			return false
 		}
 
-		return config.extensions.sumologic.ephemeral
+		return config.Extensions.Sumologic.Ephemeral
 	}
 }
 
@@ -158,7 +158,7 @@ func checkEphemeralNotEnabledInRemote(p string) func(c check) bool {
 			return false
 		}
 
-		return !config.extensions.sumologic.ephemeral
+		return !config.Extensions.Sumologic.Ephemeral
 	}
 }
 
