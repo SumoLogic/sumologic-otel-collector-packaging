@@ -197,19 +197,6 @@ jobs:
           path: ./build/gh-artifacts
           if_no_artifact_found: fail
 
-      - name: Download otelcol-config artifact from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v3.1.4
-        if: inputs.workflow_id != ''
-        with:
-          github_token: ${{ secrets.gh_artifacts_token }}
-          repo: SumoLogic/sumologic-otel-collector
-          run_id: ${{ inputs.workflow_id }}
-          workflow: dev_builds.yml
-          workflow_conclusion: success
-          name: ${{ steps.bin.outputs.otelcol_config_path }}
-          path: ./build/gh-artifacts
-          if_no_artifact_found: fail
-
       - name: Build package
         if: runner.os == 'Linux'
         uses: ./ci/github-actions/make
