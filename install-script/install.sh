@@ -1132,7 +1132,7 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
 
         USER_API_URL="$(get_user_api_url)"
         if [[ -n "${USER_API_URL}" && -n "${API_BASE_URL}" && "${USER_API_URL}" != "${API_BASE_URL}" ]]; then
-            echo "You are trying to install with different api base url than in your configuration file!"
+            echo "You are trying to install with different api base url than in your configuration file! (${USER_API_URL} != ${API_BASE_URL})"
             exit 1
         fi
 
