@@ -987,12 +987,15 @@ function install_linux_package() {
             yum install --quiet -y "${package_name}-${VERSION}"
             ;;
         apt-get)
-            local package_with_version
-            readonly package_with_version="${package_name}=${VERSION}"
-            echo "Installing ${package_with_version}"
+            local package_str
+            package_str="${package_name}"
+            if [[ -n "${VERSION}" ]]; then
+                package_str="${package_str}=${VERSION}"
+            fi
+            echo "Installing ${package_str}"
             curl -s "${base_url}/script.deb.sh" | bash
             apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
-            apt-get install --quiet -y "${package_with_version}"
+            apt-get install --quiet -y "${package_str}"
             ;;
     esac
 }
