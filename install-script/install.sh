@@ -354,7 +354,7 @@ function check_dependencies() {
     fi
 }
 
-function get_latest_package_version() {
+function get_latest_github_package_version() {
     local versions
     readonly versions="${1}"
 
@@ -372,47 +372,11 @@ function get_latest_package_version() {
     fi
 }
 
-function get_latest_version() {
-    local versions
-    readonly versions="${1}"
-
-    # get latest version directly from website if there is no versions from api
-    if [[ -z "${versions}" ]]; then
-        curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 5 --retry-max-time 150 -s https://github.com/SumoLogic/sumologic-otel-collector/releases \
-        | grep -Eo '/SumoLogic/sumologic-otel-collector/releases/tag/v[0-9]+\.[0-9]+\.[0-9]+-sumo-[0-9]+[^-]' \
-        | head -n 1 | sed 's%/SumoLogic/sumologic-otel-collector/releases/tag/v\([^"]*\)".*%\1%g'
-    else
-        # sed 's/ /\n/g' converts spaces to new lines
-        echo "${versions}" | sed 's/ /\n/g' | head -n 1
-    fi
-}
-
 # Get available versions of otelcol-sumo
 # skip prerelease and draft releases
 # sort it from last to first
 # remove v from beginning of version
-function get_versions() {
-    # returns empty in case we exceeded github rate limit
-    if [[ "$(github_rate_limit)" == "0" ]]; then
-        return
-    fi
-
-    curl \
-    --connect-timeout 5 \
-    --max-time 30 \
-    --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 150 \
-    -sH "Accept: application/vnd.github.v3+json" \
-    https://api.github.com/repos/SumoLogic/sumologic-otel-collector/releases \
-    | grep -E '(tag_name|"(draft|prerelease)")' \
-    | sed 'N;N;s/.*true.*//' \
-    | grep -o 'v.*"' \
-    | sort -rV \
-    | sed 's/^v//;s/"$//'
-}
-
-function get_package_versions() {
+function get_github_package_versions() {
     # returns empty in case we exceeded github rate limit. This can happen if we are running this script too many times in a short period.
     if [[ "$(github_rate_limit)" == "0" ]]; then
         return
@@ -489,15 +453,6 @@ function verify_installation() {
     fi
 
     echo -e "Installation succeded:\t$(${otel_command} --version)"
-}
-
-# Get installed version of otelcol-sumo
-function get_installed_version() {
-    if [[ -f "${SUMO_BINARY_PATH}" ]]; then
-        set +o pipefail
-        "${SUMO_BINARY_PATH}" --version | grep -o 'v[0-9].*$' | sed 's/v//'
-        set -o pipefail
-    fi
 }
 
 # Ask to continue and abort if not
@@ -1013,8 +968,8 @@ function get_package_manager() {
 }
 
 function install_linux_package() {
-    local package_with_version
-    readonly package_with_version="${1}"
+    local package_name
+    readonly package_name="${1}"
 
     if [[ "${PACKAGECLOUD_MASTER_TOKEN}" != "" ]]; then
       base_url="https://${PACKAGECLOUD_MASTER_TOKEN}:@packagecloud.io"
@@ -1029,12 +984,12 @@ function install_linux_package() {
         yum | dnf)
             curl -s "${base_url}/script.rpm.sh" | bash
             yum --quiet --disablerepo="*" --enablerepo="${repo_id}" -y update
-            yum install --quiet -y "${package_with_version}-${VERSION}"
+            yum install --quiet -y "${package_name}-${VERSION}"
             ;;
         apt-get)
             curl -s "${base_url}/script.deb.sh" | bash
             apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
-            apt-get install --quiet -y "${package_with_version}=${VERSION}"
+            apt-get install --quiet -y "${package_name}=${VERSION}"
             ;;
     esac
 }
@@ -1170,11 +1125,11 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     if [[ -z "${DARWIN_PKG_URL}" ]]; then
         echo -e "Getting versions..."
         # Get versions, but ignore errors as we fallback to other methods later
-        VERSIONS="$(get_package_versions || echo "")"
+        VERSIONS="$(get_github_package_versions || echo "")"
 
         # Use user's version if set, otherwise get latest version from API (or website)
         if [[ -z "${VERSION}" ]]; then
-            VERSION="$(get_latest_package_version "${VERSIONS}")"
+            VERSION="$(get_latest_github_package_version "${VERSIONS}")"
         fi
 
         readonly VERSIONS VERSION
@@ -1243,39 +1198,17 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     exit 0
 fi
 
-echo -e "Getting installed version..."
-INSTALLED_VERSION="$(get_installed_version)"
-if [[ -n "${INSTALLED_VERSION}" ]]; then
-    echo "otelcol-sumo is already installed! to upgrade, use the --upgrade flag."
-    exit 1
-fi
-
-echo -e "Getting versions..."
-# Get versions, but ignore errors as we fallback to other methods later
-VERSIONS="$(get_versions || echo "")"
-
-# Use user's version if set, otherwise get latest version from API (or website)
-if [[ -z "${VERSION}" ]]; then
-    VERSION="$(get_latest_version "${VERSIONS}")"
-fi
-
-echo -e "Version to install:\t${VERSION}"
-
-echo -e "Changelog:\t\thttps://github.com/SumoLogic/sumologic-otel-collector/blob/main/CHANGELOG.md"
-# add newline after breaking changes and changelog
-echo ""
-
-package_with_version="${VERSION}"
-if [[ -n "${package_with_version}" ]]; then
+package_name=""
+if [[ -n "${package_name}" ]]; then
     if [[ "${FIPS}" == "true" ]]; then
     echo "Getting FIPS-compliant binary"
-        package_with_version=otelcol-sumo-fips
+        package_name=otelcol-sumo-fips
     else
-        package_with_version=otelcol-sumo
+        package_name=otelcol-sumo
     fi
 fi
 
-install_linux_package "${package_with_version}"
+install_linux_package "${package_name}"
 verify_installation
 setup_config
 
