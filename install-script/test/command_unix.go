@@ -27,6 +27,7 @@ type installOptions struct {
 	opampEndpoint      string
 	downloadOnly       bool
 	dontKeepDownloads  bool
+	version            string
 }
 
 func (io *installOptions) string() []string {
@@ -85,6 +86,15 @@ func (io *installOptions) string() []string {
 
 	if io.opampEndpoint != "" {
 		opts = append(opts, "--opamp-api", io.opampEndpoint)
+	}
+
+	otc_version := os.Getenv("OTC_VERSION")
+	otc_build_number := os.Getenv("OTC_BUILD_NUMBER")
+
+	if io.version != "" {
+		opts = append(opts, "--version", io.version)
+	} else if otc_version != "" && otc_build_number != "" {
+		opts = append(opts, "--version", fmt.Sprintf("%s-%s", otc_version, otc_build_number))
 	}
 
 	return opts

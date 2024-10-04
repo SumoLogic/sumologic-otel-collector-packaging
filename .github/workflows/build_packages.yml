@@ -337,6 +337,7 @@ jobs:
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 60
     needs:
+      - determine_version
       - build_packages
     strategy:
       fail-fast: false
@@ -351,6 +352,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OTC_VERSION: ${{ needs.determine_version.outputs.otc_version }}
+      OTC_BUILD_NUMBER: ${{ github.run_number }}
       PACKAGECLOUD_MASTER_TOKEN: ${{ secrets.PACKAGECLOUD_MASTER_TOKEN }}
       PACKAGECLOUD_REPO: ci-builds
     steps:

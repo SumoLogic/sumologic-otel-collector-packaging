@@ -1029,12 +1029,12 @@ function install_linux_package() {
         yum | dnf)
             curl -s "${base_url}/script.rpm.sh" | bash
             yum --quiet --disablerepo="*" --enablerepo="${repo_id}" -y update
-            yum install --quiet -y "${package_with_version}"
+            yum install --quiet -y "${package_with_version}-${VERSION}"
             ;;
         apt-get)
             curl -s "${base_url}/script.deb.sh" | bash
             apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
-            apt-get install --quiet -y "${package_with_version}"
+            apt-get install --quiet -y "${package_with_version}" -v "${VERSION}"
             ;;
     esac
 }
