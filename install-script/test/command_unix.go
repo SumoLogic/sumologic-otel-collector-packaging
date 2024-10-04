@@ -93,7 +93,8 @@ func (io *installOptions) string() []string {
 
 	if io.version != "" {
 		opts = append(opts, "--version", io.version)
-	} else if otc_build_number != "" {
+		//} else if otc_version != "" && otc_build_number != "" {
+	} else {
 		opts = append(opts, "--version", fmt.Sprintf("%s-%s", otc_version, otc_build_number))
 	}
 
