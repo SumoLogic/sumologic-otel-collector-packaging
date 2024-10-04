@@ -988,7 +988,7 @@ function install_linux_package() {
             ;;
         apt-get)
             package_with_version="${package_name}=${VERSION}"
-            echo "Installing "
+            echo "Installing ${package_with_version}"
             curl -s "${base_url}/script.deb.sh" | bash
             apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
             apt-get install --quiet -y "${package_with_version}"
