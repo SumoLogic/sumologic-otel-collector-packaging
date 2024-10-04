@@ -987,7 +987,8 @@ function install_linux_package() {
             yum install --quiet -y "${package_name}-${VERSION}"
             ;;
         apt-get)
-            package_with_version="${package_name}=${VERSION}"
+            local package_with_version
+            readonly package_with_version="${package_name}=${VERSION}"
             echo "Installing ${package_with_version}"
             curl -s "${base_url}/script.deb.sh" | bash
             apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
@@ -1201,13 +1202,11 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
 fi
 
 package_name=""
-if [[ -n "${package_name}" ]]; then
-    if [[ "${FIPS}" == "true" ]]; then
-    echo "Getting FIPS-compliant binary"
-        package_name=otelcol-sumo-fips
-    else
-        package_name=otelcol-sumo
-    fi
+if [[ "${FIPS}" == "true" ]]; then
+  echo "Getting FIPS-compliant binary"
+  package_name=otelcol-sumo-fips
+else
+  package_name=otelcol-sumo
 fi
 
 install_linux_package "${package_name}"

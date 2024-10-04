@@ -133,6 +133,8 @@ func runScript(ch check) (int, []string, []string, error) {
 	cmd.Env = ch.installOptions.buildEnvs()
 	output := []string{}
 
+	fmt.Printf("DEBUG: runScript cmd: %s\n", ch.installOptions.string())
+
 	in, err := cmd.StdinPipe()
 	if err != nil {
 		return 0, nil, nil, err
