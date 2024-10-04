@@ -1034,7 +1034,7 @@ function install_linux_package() {
         apt-get)
             curl -s "${base_url}/script.deb.sh" | bash
             apt-get update --quiet -y -o Dir::Etc::sourcelist="sources.list.d/${repo_id}"
-            apt-get install --quiet -y "${package_with_version}" -v "${VERSION}"
+            apt-get install --quiet -y "${package_with_version}=${VERSION}"
             ;;
     esac
 }
