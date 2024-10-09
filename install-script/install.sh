@@ -1020,6 +1020,59 @@ function check_deprecated_linux_flags() {
     fi
 }
 
+function is_package_installed() {
+    case $(get_package_manager) in
+        yum | dnf)
+            # TODO: refine exact command
+            yum --cacheonly list --installed otelcol-sumo > /dev/null 2>&1
+            ;;
+        apt-get)
+            dpkg --status otelcol-sumo > /dev/null 2>&1
+            ;;
+    esac
+}
+
+# Try to infer if there is a binary, pre-packaging rework installation, the
+# kind of installation that was performed by downloading artifacts from Github,
+# before we moved to using distribution packages.
+function has_prepackaging_installation() {
+    if command -v otelcol-sumo 2>&1 > /dev/null && ! is_package_installed; then
+        true
+    else
+        false
+    fi
+}
+
+function backup_prepackaging_configuration() {
+    cp -r "${CONFIG_DIRECTORY}" "${TMPDIR}/otelcol-sumo-configuration-backup"
+}
+
+function restore_prepackaging_configuration() {
+    echo "restore_prepackaging_configuration(): not implemented yet"
+}
+
+function uninstall_prepackaging_installation() {
+    # Stop the service and remove its unit file
+    SYSTEMD_SERVICE_PATH="/etc/systemd/system/otelcol-sumo.service"
+    if [[ -f "${SYSTEMD_SERVICE_PATH}" ]]; then
+        systemctl --quiet stop otelcol-sumo || true
+        systemctl --quiet disable otelcol-sumo || true
+        rm -f "${SYSTEMD_SERVICE_PATH}"
+    fi
+
+    # Remove the old binary
+    rm -f "${SUMO_BINARY_PATH}"
+
+    # Remove old configuration and data
+    FILE_STORAGE="/var/lib/otelcol-sumo/file_storage"
+    rm -rf "${CONFIG_DIRECTORY}" "${FILE_STORAGE}"
+
+    # Remove the otelcol-sumo user and group
+    SYSTEM_USER="otelcol-sumo"
+    userdel --remove --force "${SYSTEM_USER}" 2>/dev/null || true
+    groupdel "${SYSTEM_USER}" 2>/dev/null || true
+}
+
 ############################ Main code
 
 OS_TYPE="$(get_os_type)"
@@ -1212,9 +1265,30 @@ else
   package_name=otelcol-sumo
 fi
 
+if has_prepackaging_installation; then
+   # Display a warning and information message here?
+   echo 'Pre-packaging installation detected'
+
+   # Backup current configuration
+   backup_prepackaging_configuration
+
+   # Remove current installation
+   uninstall_prepackaging_installation
+
+   # We can now proceed and install using the packages and attempt to restore
+   # the configuration later.
+   HAD_PREPACKAGING_INSTALLATION="true"
+fi
+
 install_linux_package "${package_name}"
 verify_installation
 setup_config
+
+# If an old, pre-packaging rework installation was removed during this run,
+# attempt the restore the configuration that was backed up during that removal.
+if [[ -n "${HAD_PREPACKAGING_INSTALLATION}" ]]; then
+    restore_prepackaging_configuration
+fi
 
 echo 'Reloading systemd'
 systemctl daemon-reload
