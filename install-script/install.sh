@@ -64,7 +64,7 @@ readonly ARG_SHORT_UNINSTALL ARG_LONG_UNINSTALL
 readonly ARG_SHORT_UPGRADE ARG_LONG_UPGRADE
 readonly ARG_SHORT_PURGE ARG_LONG_PURGE ARG_SHORT_DOWNLOAD ARG_LONG_DOWNLOAD
 readonly ARG_SHORT_CONFIG_BRANCH ARG_LONG_CONFIG_BRANCH ARG_SHORT_BINARY_BRANCH ARG_LONG_CONFIG_BRANCH
-readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH 
+readonly ARG_SHORT_BRANCH ARG_LONG_BRANCH
 readonly ARG_SHORT_SKIP_TOKEN ARG_LONG_SKIP_TOKEN ARG_SHORT_FIPS ARG_LONG_FIPS ENV_TOKEN
 readonly ARG_SHORT_INSTALL_HOSTMETRICS ARG_LONG_INSTALL_HOSTMETRICS
 readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
@@ -1286,9 +1286,11 @@ setup_config
 
 # If an old, pre-packaging rework installation was removed during this run,
 # attempt the restore the configuration that was backed up during that removal.
+set +u
 if [[ -n "${HAD_PREPACKAGING_INSTALLATION}" ]]; then
     restore_prepackaging_configuration
 fi
+set -u
 
 echo 'Reloading systemd'
 systemctl daemon-reload
