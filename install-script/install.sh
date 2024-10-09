@@ -1036,7 +1036,7 @@ function is_package_installed() {
 # kind of installation that was performed by downloading artifacts from Github,
 # before we moved to using distribution packages.
 function has_prepackaging_installation() {
-    if command -v otelcol-sumo 2>&1 > /dev/null && ! is_package_installed; then
+    if command -v otelcol-sumo > /dev/null 2>&1 && ! is_package_installed; then
         true
     else
         false
