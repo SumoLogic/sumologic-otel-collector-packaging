@@ -12,7 +12,6 @@ import (
 	"unsafe"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 )
 
@@ -29,79 +28,109 @@ type ACLRecord struct {
 	AccessMode        windows.ACCESS_MODE
 }
 
-func checkAbortedDueToNoToken(c check) {
-	require.Greater(c.test, len(c.output), 1)
-	require.Greater(c.test, len(c.errorOutput), 1)
+func checkAbortedDueToNoToken(c check) bool {
+	if !assert.Greater(c.test, len(c.output), 1) {
+		return false
+	}
+	if !assert.Greater(c.test, len(c.errorOutput), 1) {
+		return false
+	}
 	// The exact formatting of the error message can be different depending on Powershell version
 	errorOutput := strings.Join(c.errorOutput, " ")
-	require.Contains(c.test, errorOutput, "Installation token has not been provided.")
-	require.Contains(c.test, errorOutput, "Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable.")
+	if !assert.Contains(c.test, errorOutput, "Installation token has not been provided.") {
+		return false
+	}
+	return assert.Contains(c.test, errorOutput, "Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable.")
 }
 
-func checkBinaryFipsError(c check) {
+func checkBinaryFipsError(c check) bool {
 	cmd := exec.Command(binaryPath, "--version")
 	_, err := cmd.Output()
-	require.Error(c.test, err, "running on a non-FIPS system must error")
+	if !assert.Error(c.test, err, "running on a non-FIPS system must error") {
+		return false
+	}
 
 	exitErr, ok := err.(*exec.ExitError)
-	require.True(c.test, ok, "returned error must be of type ExitError")
+	if !assert.True(c.test, ok, "returned error must be of type ExitError") {
+		return false
+	}
 
-	require.Equal(c.test, 2, exitErr.ExitCode(), "got error code while checking version")
-	require.Contains(c.test, string(exitErr.Stderr), "not in FIPS mode")
+	if !assert.Equal(c.test, 2, exitErr.ExitCode(), "got error code while checking version") {
+		return false
+	}
+	return assert.Contains(c.test, string(exitErr.Stderr), "not in FIPS mode")
 }
 
-func checkEphemeralNotInConfig(p string) func(c check) {
-	return func(c check) {
+func checkEphemeralNotInConfig(p string) func(c check) bool {
+	return func(c check) bool {
 		assert.False(c.test, c.installOptions.ephemeral, "ephemeral was specified")
 
 		conf, err := getConfig(p)
-		require.NoError(c.test, err, "error while reading configuration")
+		if !assert.NoError(c.test, err, "error while reading configuration") {
+			return false
+		}
 
 		assert.False(c.test, conf.Extensions.Sumologic.Ephemeral, "ephemeral is true")
+		return true
 	}
 }
 
-func checkEphemeralInConfig(p string) func(c check) {
-	return func(c check) {
+func checkEphemeralInConfig(p string) func(c check) bool {
+	return func(c check) bool {
 		assert.True(c.test, c.installOptions.ephemeral, "ephemeral was not specified")
 
 		conf, err := getConfig(p)
-		require.NoError(c.test, err, "error while reading configuration")
+		if !assert.NoError(c.test, err, "error while reading configuration") {
+			return false
+		}
 
 		assert.True(c.test, conf.Extensions.Sumologic.Ephemeral, "ephemeral is not true")
+		return true
 	}
 }
 
-func checkTokenInConfig(c check) {
-	require.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided")
+func checkTokenInConfig(c check) bool {
+	if !assert.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided") {
+		return false
+	}
 
 	conf, err := getConfig(userConfigPath)
-	require.NoError(c.test, err, "error while reading configuration")
+	if !assert.NoError(c.test, err, "error while reading configuration") {
+		return false
+	}
 
-	require.Equal(c.test, c.installOptions.installToken, conf.Extensions.Sumologic.InstallationToken, "installation token is different than expected")
+	return assert.Equal(c.test, c.installOptions.installToken, conf.Extensions.Sumologic.InstallationToken, "installation token is different than expected")
 }
 
-func checkTokenInSumoConfig(c check) {
-	require.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided")
+func checkTokenInSumoConfig(c check) bool {
+	if !assert.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided") {
+		return false
+	}
 
 	conf, err := getConfig(configPath)
-	require.NoError(c.test, err, "error while reading configuration")
+	if !assert.NoError(c.test, err, "error while reading configuration") {
+		return false
+	}
 
-	require.Equal(c.test, c.installOptions.installToken, conf.Extensions.Sumologic.InstallationToken, "installation token is different than expected")
+	return assert.Equal(c.test, c.installOptions.installToken, conf.Extensions.Sumologic.InstallationToken, "installation token is different than expected")
 }
 
-func checkConfigFilesOwnershipAndPermissions(ownerSid string) func(c check) {
-	return func(c check) {
+func checkConfigFilesOwnershipAndPermissions(ownerSid string) func(c check) bool {
+	return func(c check) bool {
 		etcPathGlob := filepath.Join(etcPath, "*")
 		etcPathNestedGlob := filepath.Join(etcPath, "*", "*")
 
 		for _, glob := range []string{etcPathGlob, etcPathNestedGlob} {
 			paths, err := filepath.Glob(glob)
-			require.NoError(c.test, err)
+			if !assert.NoError(c.test, err) {
+				return false
+			}
 			for _, path := range paths {
 				var aclRecords []ACLRecord
 				info, err := os.Stat(path)
-				require.NoError(c.test, err)
+				if !assert.NoError(c.test, err) {
+					return false
+				}
 				if info.IsDir() {
 					if path == opampDPath {
 						aclRecords = opampDPermissions
@@ -115,38 +144,48 @@ func checkConfigFilesOwnershipAndPermissions(ownerSid string) func(c check) {
 				PathHasOwner(c.test, path, ownerSid)
 			}
 		}
+		return true
 	}
 }
 
-func PathHasOwner(t *testing.T, path string, ownerSID string) {
+func PathHasOwner(t *testing.T, path string, ownerSID string) bool {
 	securityDescriptor, err := windows.GetNamedSecurityInfo(
 		path,
 		windows.SE_FILE_OBJECT,
 		windows.OWNER_SECURITY_INFORMATION,
 	)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
 	// get the owning user
 	owner, _, err := securityDescriptor.Owner()
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
-	require.Equal(t, ownerSID, owner.String(), "%s should be owned by user '%s'", path, ownerSID)
+	return assert.Equal(t, ownerSID, owner.String(), "%s should be owned by user '%s'", path, ownerSID)
 }
 
-func PathHasWindowsACLs(t *testing.T, path string, expectedACLs []ACLRecord) {
+func PathHasWindowsACLs(t *testing.T, path string, expectedACLs []ACLRecord) bool {
 	securityDescriptor, err := windows.GetNamedSecurityInfo(
 		path,
 		windows.SE_FILE_OBJECT,
 		windows.DACL_SECURITY_INFORMATION,
 	)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 
 	// get the ACL entries
 	acl, _, err := securityDescriptor.DACL()
-	require.NoError(t, err)
-	require.NotNil(t, acl)
+	if !assert.NoError(t, err) || !assert.NotNil(t, acl) {
+		return false
+	}
 	entries, err := GetExplicitEntriesFromACL(acl)
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return false
+	}
 	aclRecords := []ACLRecord{}
 	for _, entry := range entries {
 		aclRecord := ExplicitEntryToACLRecord(entry)
@@ -155,6 +194,7 @@ func PathHasWindowsACLs(t *testing.T, path string, expectedACLs []ACLRecord) {
 		}
 	}
 	assert.Equal(t, expectedACLs, aclRecords, "invalid ACLs for %s", path)
+	return true
 }
 
 // GetExplicitEntriesFromACL gets a list of explicit entries from an ACL

@@ -9,30 +9,25 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/stretchr/testify/require"
 )
 
 type installOptions struct {
 	installToken       string
 	autoconfirm        bool
-	skipSystemd        bool
 	tags               map[string]string
-	skipConfig         bool
 	skipInstallToken   bool
 	fips               bool
 	envs               map[string]string
 	uninstall          bool
-	purge              bool
 	apiBaseURL         string
-	configBranch       string
-	downloadOnly       bool
-	dontKeepDownloads  bool
 	installHostmetrics bool
 	remotelyManaged    bool
 	ephemeral          bool
 	timeout            float64
 	opampEndpoint      string
+	downloadOnly       bool
+	dontKeepDownloads  bool
+	version            string
 }
 
 func (io *installOptions) string() []string {
@@ -48,12 +43,8 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "--fips")
 	}
 
-	if io.skipSystemd {
-		opts = append(opts, "--skip-systemd")
-	}
-
-	if io.skipConfig {
-		opts = append(opts, "--skip-config")
+	if io.downloadOnly {
+		opts = append(opts, "--download-only")
 	}
 
 	if io.skipInstallToken {
@@ -62,18 +53,7 @@ func (io *installOptions) string() []string {
 
 	if io.uninstall {
 		opts = append(opts, "--uninstall")
-	}
-
-	if io.purge {
 		opts = append(opts, "--purge")
-	}
-
-	if io.downloadOnly {
-		opts = append(opts, "--download-only")
-	}
-
-	if !io.dontKeepDownloads {
-		opts = append(opts, "--keep-downloads")
 	}
 
 	if io.installHostmetrics {
@@ -96,10 +76,8 @@ func (io *installOptions) string() []string {
 
 	if io.apiBaseURL != "" {
 		opts = append(opts, "--api", io.apiBaseURL)
-	}
-
-	if io.configBranch != "" {
-		opts = append(opts, "--config-branch", io.configBranch)
+	} else {
+		opts = append(opts, "--api", mockAPIBaseURL)
 	}
 
 	if io.timeout != 0 {
@@ -108,6 +86,15 @@ func (io *installOptions) string() []string {
 
 	if io.opampEndpoint != "" {
 		opts = append(opts, "--opamp-api", io.opampEndpoint)
+	}
+
+	otc_version := os.Getenv("OTC_VERSION")
+	otc_build_number := os.Getenv("OTC_BUILD_NUMBER")
+
+	if io.version != "" {
+		opts = append(opts, "--version", io.version)
+	} else if otc_version != "" && otc_build_number != "" {
+		opts = append(opts, "--version", fmt.Sprintf("%s-%s", otc_version, otc_build_number))
 	}
 
 	return opts
@@ -146,22 +133,24 @@ func runScript(ch check) (int, []string, []string, error) {
 	cmd.Env = ch.installOptions.buildEnvs()
 	output := []string{}
 
+	fmt.Printf("DEBUG: runScript cmd: %s\n", ch.installOptions.string())
+
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 
 	defer in.Close()
 
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 	defer out.Close()
 
 	errOut, err := cmd.StderrPipe()
 	if err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 	defer errOut.Close()
 
@@ -170,7 +159,7 @@ func runScript(ch check) (int, []string, []string, error) {
 
 	// Start the process
 	if err = cmd.Start(); err != nil {
-		require.NoError(ch.test, err)
+		return 0, nil, nil, err
 	}
 
 	// Read the results from the process
@@ -189,12 +178,9 @@ func runScript(ch check) (int, []string, []string, error) {
 		}
 
 		// otherwise ensure there is no error
-		require.NoError(ch.test, err)
-
-		if ch.installOptions.autoconfirm {
-			continue
+		if err != nil {
+			return 0, nil, nil, err
 		}
-
 	}
 
 	// Handle stderr separately
