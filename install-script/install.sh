@@ -1048,7 +1048,8 @@ function backup_prepackaging_configuration() {
 }
 
 function restore_prepackaging_configuration() {
-    echo "restore_prepackaging_configuration(): not implemented yet"
+    echo "The existing collector configuration has been saved to ${TMPDIR}/otelcol-sumo-configuration-backup"
+    echo "If you had specific configuration you want to keep, you will need to merge it into ${CONFIG_DIRECTORY}"
 }
 
 function uninstall_prepackaging_installation() {
