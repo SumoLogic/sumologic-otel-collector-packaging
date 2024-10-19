@@ -74,10 +74,19 @@ func (io *installOptions) string() []string {
 		}
 	}
 
-	if io.apiBaseURL != "" {
-		opts = append(opts, "--api", io.apiBaseURL)
-	} else {
-		opts = append(opts, "--api", mockAPIBaseURL)
+	// 1. If the apiBaseURL is empty, replace it with the mock API's URL.
+	// 2. If the apiBaseURL is equal to the emptyAPIBaseURL constant, don't set
+	//    the --api flag.
+	// 3. If none of the above are true, set the --api flag to the value of
+	//    apiBaseURL.
+	apiBaseURL := ""
+	if io.apiBaseURL == "" {
+		apiBaseURL = mockAPIBaseURL
+	} else if io.apiBaseURL != emptyAPIBaseURL {
+		apiBaseURL = io.apiBaseURL
+	}
+	if apiBaseURL != "" {
+		opts = append(opts, "--api", apiBaseURL)
 	}
 
 	if io.timeout != 0 {
@@ -133,7 +142,7 @@ func runScript(ch check) (int, []string, []string, error) {
 	cmd.Env = ch.installOptions.buildEnvs()
 	output := []string{}
 
-	fmt.Printf("DEBUG: runScript cmd: %s\n", ch.installOptions.string())
+	ch.test.Logf("Running command: %s", strings.Join(ch.installOptions.string(), " "))
 
 	in, err := cmd.StdinPipe()
 	if err != nil {

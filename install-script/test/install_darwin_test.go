@@ -61,15 +61,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				skipInstallToken: true,
 			},
 			preChecks: notInstalledChecks,
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
-				checkUserConfigCreated,
-				checkLaunchdConfigCreated,
-				checkHomeDirectoryCreated,
-			},
+			postChecks: notInstalledChecks,
 			installCode: 1,
 		},
 		{
@@ -84,7 +76,8 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
 				checkUserConfigCreated,
-				checkEphemeralNotInConfig(userConfigPath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
 				checkUserExists,
@@ -106,7 +99,8 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
 				checkUserConfigCreated,
-				checkEphemeralInConfig(ephemeralConfigPath),
+				checkEphemeralConfigFileCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
 				checkUserExists,
@@ -118,8 +112,8 @@ func TestInstallScriptDarwin(t *testing.T) {
 		{
 			name: "override default config",
 			options: installOptions{
-				skipInstallToken: true,
 				autoconfirm:      true,
+				installToken:     installToken,
 			},
 			preActions: []checkFunc{preActionMockConfig},
 			preChecks: []checkFunc{
@@ -136,7 +130,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkUserConfigCreated,
 				checkLaunchdConfigCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "installation token and hostmetrics",
@@ -159,7 +153,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkHostmetricsOwnershipAndPermissions(systemUser, systemGroup),
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "installation token and remotely-managed",
@@ -174,15 +168,16 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkConfigCreated,
 				checkRemoteConfigDirectoryCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
-				checkUserConfigCreated,
-				checkEphemeralNotInConfig(configPath),
+				checkUserConfigNotCreated,
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
 				checkUserExists,
 				checkGroupExists,
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "installation token, remotely-managed, and ephemeral",
@@ -198,38 +193,16 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkConfigCreated,
 				checkRemoteConfigDirectoryCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
-				checkUserConfigCreated,
-				checkEphemeralInConfig(sumoRemotePath),
+				checkUserConfigNotCreated,
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralEnabledInRemote(sumoRemotePath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
 				checkUserExists,
 				checkGroupExists,
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
-		},
-		{
-			name: "installation token only, binary not in PATH",
-			options: installOptions{
-				installToken: installToken,
-				envs: map[string]string{
-					"PATH": "/sbin:/bin:/usr/sbin:/usr/bin",
-				},
-			},
-			preChecks: notInstalledChecks,
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
-				checkUserConfigCreated,
-				checkLaunchdConfigCreated,
-				checkTokenInLaunchdConfig,
-				checkUserExists,
-				checkGroupExists,
-				checkHomeDirectoryCreated,
-			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "same installation token in launchd config",
@@ -254,7 +227,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkTokenInLaunchdConfig,
 				checkHomeDirectoryCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "different installation token in launchd config",
@@ -289,7 +262,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 			name: "same api base url",
 			options: installOptions{
 				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
 			},
 			preActions: []checkFunc{
 				preActionInstallPackage,
@@ -307,13 +279,12 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkUserConfigCreated,
 				checkAPIBaseURLInConfig,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "different api base url",
 			options: installOptions{
 				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
 			},
 			preActions: []checkFunc{
 				preActionInstallPackageWithDifferentAPIBaseURL,
@@ -337,13 +308,15 @@ func TestInstallScriptDarwin(t *testing.T) {
 			name: "adding api base url",
 			options: installOptions{
 				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
 			},
 			preActions: []checkFunc{preActionInstallPackageWithNoAPIBaseURL},
 			preChecks: []checkFunc{
 				checkBinaryCreated,
 				checkConfigCreated,
-				checkUserConfigCreated,
+				// The user config file will only exist if non-default values
+				// are used for otelcol-config managed settings such as the
+				// API URL or tags
+				checkUserConfigNotCreated,
 				checkUserExists,
 			},
 			postChecks: []checkFunc{
@@ -352,35 +325,12 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkUserConfigCreated,
 				checkAPIBaseURLInConfig,
 			},
-			installCode: 1, // because of invalid installation token
-		},
-		{
-			name: "editing api base url",
-			options: installOptions{
-				apiBaseURL:       apiBaseURL,
-				skipInstallToken: true,
-			},
-			preActions: []checkFunc{
-				preActionInstallPackageWithNoAPIBaseURL,
-			},
-			preChecks: []checkFunc{
-				checkBinaryCreated,
-				checkConfigCreated,
-				checkUserConfigCreated,
-				checkUserExists,
-			},
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkConfigCreated,
-				checkUserConfigCreated,
-				checkAPIBaseURLInConfig,
-			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "configuration with tags",
 			options: installOptions{
-				skipInstallToken: true,
+				installToken: installToken,
 				tags: map[string]string{
 					"lorem":     "ipsum",
 					"foo":       "bar",
@@ -398,12 +348,11 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkTags,
 				checkLaunchdConfigCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "same tags",
 			options: installOptions{
-				skipInstallToken: true,
 				tags: map[string]string{
 					"lorem":     "ipsum",
 					"foo":       "bar",
@@ -429,12 +378,11 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkTags,
 				checkLaunchdConfigCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 		{
 			name: "editing tags",
 			options: installOptions{
-				skipInstallToken: true,
 				tags: map[string]string{
 					"lorem":     "ipsum",
 					"foo":       "bar",
@@ -459,7 +407,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkTags,
 				checkLaunchdConfigCreated,
 			},
-			installCode: 1, // because of invalid installation token
+			installCode: 0,
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {

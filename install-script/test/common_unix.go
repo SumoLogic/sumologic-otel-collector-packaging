@@ -58,9 +58,10 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 		}
 	}
 
+	t.Log("Running script")
 	ch.code, ch.output, ch.errorOutput, ch.err = runScript(ch)
-	if err != nil {
-		return err
+	if ch.err != nil {
+		return ch.err
 	}
 
 	// Remove cache in case of curl issue

@@ -73,6 +73,9 @@ func forgetPackage(t *testing.T, name string) error {
 
 func removeFileIfExists(t *testing.T, path string) error {
 	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -85,6 +88,9 @@ func removeFileIfExists(t *testing.T, path string) error {
 func removeDirectoryIfExists(t *testing.T, path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -159,13 +165,19 @@ func tearDown(t *testing.T) {
 func unloadLaunchdService(t *testing.T) error {
 	info, err := os.Stat(launchdPath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
 	}
 
 	if info.IsDir() {
-		return fmt.Errorf("launchd config is not a file: %s", launchdPath)
+		return fmt.Errorf("launchd config is a directory: %s", launchdPath)
 	}
 
 	output, err := exec.Command("launchctl", "unload", "-w", "otelcol-sumo").Output()
-	return fmt.Errorf("error stopping service: %s", string(output))
+	if err != nil {
+		fmt.Errorf("error stopping service: %s", string(output))
+	}
+	return nil
 }

@@ -134,35 +134,6 @@ func checkTokenInLaunchdConfig(c check) bool {
 	return assert.Equal(c.test, c.installOptions.installToken, conf.EnvironmentVariables.InstallationToken, "installation token is different than expected")
 }
 
-func checkEphemeralInConfig(p string) func(c check) bool {
-	return func(c check) bool {
-		assert.True(c.test, c.installOptions.ephemeral, "ephemeral was not specified")
-
-		conf, err := getConfig(p)
-		if !assert.NoError(c.test, err, "error while reading configuration") {
-			return false
-		}
-
-		assert.True(c.test, conf.Extensions.Sumologic.Ephemeral, "ephemeral is not true")
-		return true
-	}
-}
-
-func checkEphemeralNotInConfig(p string) func(c check) bool {
-	return func(c check) bool {
-		assert.False(c.test, c.installOptions.ephemeral, "ephemeral was specified")
-
-		conf, err := getConfig(p)
-		if !assert.NoError(c.test, err, "error while reading configuration") {
-			return false
-		}
-
-		assert.False(c.test, conf.Extensions.Sumologic.Ephemeral, "ephemeral is true")
-
-		return true
-	}
-}
-
 func checkUserExists(c check) bool {
 	exists, err := dsclKeyExistsForPath(c.test, "/Users", systemUser)
 	assert.NoError(c.test, err)
@@ -176,17 +147,20 @@ func checkUserNotExists(c check) bool {
 }
 
 func preActionInstallPackage(c check) bool {
+	c.installOptions.installToken = installToken
 	c.code, c.output, c.errorOutput, c.err = runScript(c)
 	return assert.NoError(c.test, c.err)
 }
 
 func preActionInstallPackageWithDifferentAPIBaseURL(c check) bool {
+	c.installOptions.installToken = installToken
 	c.installOptions.apiBaseURL = path.Join(c.installOptions.apiBaseURL, "different")
 	c.code, c.output, c.errorOutput, c.err = runScript(c)
 	return assert.NoError(c.test, c.err)
 }
 
 func preActionInstallPackageWithDifferentTags(c check) bool {
+	c.installOptions.installToken = installToken
 	c.installOptions.tags = map[string]string{
 		"some": "tag",
 	}
@@ -195,12 +169,14 @@ func preActionInstallPackageWithDifferentTags(c check) bool {
 }
 
 func preActionInstallPackageWithNoAPIBaseURL(c check) bool {
-	c.installOptions.apiBaseURL = ""
+	c.installOptions.installToken = installToken
+	c.installOptions.apiBaseURL = emptyAPIBaseURL
 	c.code, c.output, c.errorOutput, c.err = runScript(c)
 	return assert.NoError(c.test, c.err)
 }
 
 func preActionInstallPackageWithNoTags(c check) bool {
+	c.installOptions.installToken = installToken
 	c.installOptions.tags = nil
 	c.code, c.output, c.errorOutput, c.err = runScript(c)
 	return assert.NoError(c.test, c.err)
@@ -218,6 +194,7 @@ func preActionMockLaunchdConfig(c check) bool {
 	}
 
 	conf := NewLaunchdConfig()
+	conf.EnvironmentVariables.InstallationToken = installToken
 	err = saveLaunchdConfig(launchdPath, conf)
 	return assert.NoError(c.test, err)
 }

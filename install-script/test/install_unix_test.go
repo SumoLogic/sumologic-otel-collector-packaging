@@ -7,12 +7,20 @@ import (
 )
 
 func TestInstallScript(t *testing.T) {
+	notInstalledChecks := []checkFunc{
+		checkBinaryNotCreated,
+		checkConfigNotCreated,
+		checkUserConfigNotCreated,
+		checkUserNotExists,
+		checkGroupNotExists,
+	}
+
 	for _, spec := range []testSpec{
 		{
 			name:        "no arguments",
 			options:     installOptions{},
-			preChecks:   []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks:   notInstalledChecks,
+			postChecks:  notInstalledChecks,
 			installCode: 1,
 		},
 		{
@@ -20,20 +28,16 @@ func TestInstallScript(t *testing.T) {
 			options: installOptions{
 				skipInstallToken: true,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-			},
-			installCode: 0,
+			preChecks: notInstalledChecks,
+			postChecks: notInstalledChecks,
+			installCode: 1,
 		},
 		{
 			name: "installation token only",
 			options: installOptions{
 				installToken: installToken,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
@@ -49,7 +53,7 @@ func TestInstallScript(t *testing.T) {
 				installToken: installToken,
 				ephemeral:    true,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
@@ -66,7 +70,7 @@ func TestInstallScript(t *testing.T) {
 				installToken:       installToken,
 				installHostmetrics: true,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
@@ -82,7 +86,7 @@ func TestInstallScript(t *testing.T) {
 				installToken:    installToken,
 				remotelyManaged: true,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
@@ -99,7 +103,7 @@ func TestInstallScript(t *testing.T) {
 				remotelyManaged: true,
 				ephemeral:       true,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
@@ -116,7 +120,7 @@ func TestInstallScript(t *testing.T) {
 				remotelyManaged: true,
 				opampEndpoint:   "wss://example.com",
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
@@ -139,7 +143,7 @@ func TestInstallScript(t *testing.T) {
 					"numeric":   "1_024",
 				},
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,

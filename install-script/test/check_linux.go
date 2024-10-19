@@ -15,18 +15,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type configRoot struct {
-	Extensions *configExtensions `yaml:"extensions,omitempty"`
-}
-
-type configExtensions struct {
-	Sumologic *sumologicExt `yaml:"sumologic,omitempty"`
-}
-
-type sumologicExt struct {
-	Ephemeral bool `yaml:"ephemeral,omitempty"`
-}
-
 func checkACLAvailability(c check) bool {
 	return assert.FileExists(&testing.T{}, "/usr/bin/getfacl", "File ACLS is not supported")
 }
@@ -114,53 +102,6 @@ func checkTokenInEnvFile(c check) bool {
 		}
 	}
 	return true
-}
-
-func checkEphemeralConfigFileCreated(p string) func(c check) bool {
-	return func(c check) bool {
-		return assert.FileExists(c.test, p, "ephemeral config file has not been created")
-	}
-}
-
-func checkEphemeralConfigFileNotCreated(p string) func(c check) bool {
-	return func(c check) bool {
-		return assert.NoFileExists(c.test, p, "ephemeral config file has been created")
-	}
-}
-
-func checkEphemeralEnabledInRemote(p string) func(c check) bool {
-	return func(c check) bool {
-		yamlFile, err := os.ReadFile(p)
-		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
-			return false
-		}
-
-		var config configRoot
-
-		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
-			return false
-		}
-
-		return config.Extensions.Sumologic.Ephemeral
-	}
-}
-
-func checkEphemeralNotEnabledInRemote(p string) func(c check) bool {
-	return func(c check) bool {
-		yamlFile, err := os.ReadFile(p)
-		if err != nil {
-			// assume the error is due to the file not existing, which is valid
-			return true
-		}
-
-		var config configRoot
-
-		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
-			return false
-		}
-
-		return !config.Extensions.Sumologic.Ephemeral
-	}
 }
 
 func checkUninstallationOutput(c check) bool {
