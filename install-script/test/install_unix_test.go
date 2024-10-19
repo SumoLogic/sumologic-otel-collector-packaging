@@ -132,7 +132,7 @@ func TestInstallScript(t *testing.T) {
 		{
 			name: "configuration with tags",
 			options: installOptions{
-				skipInstallToken: true,
+				installToken: installToken,
 				tags: map[string]string{
 					"lorem":     "ipsum",
 					"foo":       "bar",

@@ -148,6 +148,7 @@ func checkUserNotExists(c check) bool {
 
 func preActionInstallPackage(c check) bool {
 	c.installOptions.installToken = installToken
+	c.installOptions.apiBaseURL = mockAPIBaseURL
 	c.code, c.output, c.errorOutput, c.err = runScript(c)
 	return assert.NoError(c.test, c.err)
 }
