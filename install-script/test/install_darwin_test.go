@@ -268,7 +268,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				apiBaseURL: mockAPIBaseURL,
 			},
 			preActions: []checkFunc{
-				preActionInstallPackageWithMockAPI,
+				preActionInstallPackage,
 			},
 			preChecks: []checkFunc{
 				checkBinaryCreated,
