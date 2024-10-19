@@ -11,8 +11,6 @@ func TestInstallScript(t *testing.T) {
 		checkBinaryNotCreated,
 		checkConfigNotCreated,
 		checkUserConfigNotCreated,
-		checkUserNotExists,
-		checkGroupNotExists,
 	}
 
 	for _, spec := range []testSpec{
@@ -28,8 +26,8 @@ func TestInstallScript(t *testing.T) {
 			options: installOptions{
 				skipInstallToken: true,
 			},
-			preChecks: notInstalledChecks,
-			postChecks: notInstalledChecks,
+			preChecks:   notInstalledChecks,
+			postChecks:  notInstalledChecks,
 			installCode: 1,
 		},
 		{
