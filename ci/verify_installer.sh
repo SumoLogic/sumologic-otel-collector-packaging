@@ -60,6 +60,7 @@ expected_collector_files=(
   "Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
   "usr/local/bin/otelcol-config"
   "usr/local/bin/otelcol-sumo"
+  "usr/share/otelcol-sumo"
   "usr/share/otelcol-sumo/otelcol-sumo.sh"
   "var/lib/otelcol-sumo"
   "var/lib/otelcol-sumo/file_storage"
