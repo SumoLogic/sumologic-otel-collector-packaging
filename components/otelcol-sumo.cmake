@@ -370,10 +370,12 @@ endmacro()
 macro(install_otc_service_systemd)
   require_variables(
     "ASSETS_DIR"
+    "OTC_SYSTEMD_CONFIG"
     "OTC_SYSTEMD_DIR"
   )
+  install_otc_service_script()
   install(
-    FILES "${ASSETS_DIR}/services/systemd/otelcol-sumo.service"
+    FILES "${ASSETS_DIR}/services/systemd/${OTC_SYSTEMD_CONFIG}"
     DESTINATION "${OTC_SYSTEMD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
@@ -387,14 +389,34 @@ endmacro()
 macro(install_otc_service_launchd)
   require_variables(
     "ASSETS_DIR"
+    "OTC_LAUNCHD_CONFIG"
     "OTC_LAUNCHD_DIR"
   )
+  install_otc_service_script()
   install(
-    FILES "${ASSETS_DIR}/services/launchd/com.sumologic.otelcol-sumo.plist"
+    FILES "${ASSETS_DIR}/services/launchd/${OTC_LAUNCHD_CONFIG}"
     DESTINATION "${OTC_LAUNCHD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /usr/share/otelcol-sumo/otelcol-sumo.sh
+macro(install_otc_service_script)
+  require_variables(
+    "ASSETS_DIR"
+    "OTC_SERVICE_SCRIPT"
+    "OTC_SHARE_DIR"
+  )
+  install(
+    FILES "${ASSETS_DIR}/${OTC_SERVICE_SCRIPT}"
+    DESTINATION "${OTC_SHARE_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
     COMPONENT otelcol-sumo
   )
 endmacro()

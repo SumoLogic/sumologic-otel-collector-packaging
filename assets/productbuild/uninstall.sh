@@ -49,6 +49,8 @@ collector_files=(
   "/etc/otelcol-sumo/opamp.d"
   "/usr/local/bin/otelcol-config"
   "/usr/local/bin/otelcol-sumo"
+  "/usr/share/otelcol-sumo/otelcol-sumo.sh"
+  "/usr/share/otelcol-sumo"
   "/var/lib/otelcol-sumo/file_storage"
   "/var/lib/otelcol-sumo"
   "/var/log/otelcol-sumo"

@@ -22,6 +22,8 @@ macro(set_otc_settings)
   # File names
   set(OTC_BINARY "otelcol-sumo")
   set(OTC_CONFIG_BINARY "otelcol-config")
+  set(OTC_LAUNCHD_CONFIG "com.sumologic.otelcol-sumo.plist")
+  set(OTC_SERVICE_SCRIPT "otelcol-sumo.sh")
   set(OTC_SUMOLOGIC_CONFIG "sumologic.yaml")
   set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
   set(DOT_KEEP_FILE ".keep")
@@ -38,6 +40,7 @@ macro(set_otc_settings)
   set(OTC_LAUNCHD_DIR "Library/LaunchDaemons")
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
   set(OTC_LOG_DIR "var/log/otelcol-sumo")
+  set(OTC_SHARE_DIR "usr/share/otelcol-sumo")
 
   # File paths
   set(OTC_BIN_PATH "${OTC_BIN_DIR}/${OTC_BINARY}")

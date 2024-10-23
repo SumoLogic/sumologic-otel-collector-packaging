@@ -551,8 +551,6 @@ function setup_config_darwin() {
         if [[ -n "${OPAMP_API_URL}" ]]; then
             write_opamp_endpoint "${OPAMP_API_URL}"
         fi
-
-        write_remote_config_launchd "${LAUNCHD_CONFIG}"
     fi
 
     if [[ "${EPHEMERAL}" == "true" ]]; then
@@ -747,22 +745,6 @@ function write_installation_token_launchd() {
     else
         plutil_replace_key "${file}" "${LAUNCHD_TOKEN_KEY}" "string" "${token}"
     fi
-}
-
-function write_remote_config_launchd() {
-    local file
-    readonly file="${1}"
-
-    if [[ ! -f "${file}" ]]; then
-        echo "The LaunchDaemon configuration file is missing: ${file}"
-        exit 1
-    fi
-
-    # Delete existing ProgramArguments
-    plutil_delete_key "${file}" "ProgramArguments"
-
-    # Create new ProgramArguments with --remote-config
-    plutil_create_key "${file}" "ProgramArguments" "json" "[ \"/usr/local/bin/otelcol-sumo\", \"--remote-config\", \"opamp:${CONFIG_PATH}\" ]"
 }
 
 # write sumologic ephemeral: true to user configuration file
