@@ -6,7 +6,7 @@
     <string>otelcol-sumo</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/usr/share/otelcol-sumo.sh</string>
+      <string>/usr/local/share/otelcol-sumo.sh</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>

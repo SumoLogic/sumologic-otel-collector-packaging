@@ -41,6 +41,9 @@ macro(set_otc_settings)
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
   set(OTC_LOG_DIR "var/log/otelcol-sumo")
   set(OTC_SHARE_DIR "usr/share/otelcol-sumo")
+  if("${goos}" STREQUAL "darwin")
+    set(OTC_SHARE_DIR "usr/local/share/otelcol-sumo")
+  endif()
 
   # File paths
   set(OTC_BIN_PATH "${OTC_BIN_DIR}/${OTC_BINARY}")
