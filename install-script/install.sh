@@ -901,17 +901,6 @@ function plutil_create_key() {
     fi
 }
 
-function plutil_delete_key() {
-    local file key
-    readonly file="${1}"
-    readonly key="${2}"
-
-    if ! plutil -remove "${key}" "${file}"; then
-        echo "plutil_delete_key error: key=${key}, file=${file}"
-        exit 1
-    fi
-}
-
 function plutil_extract_key() {
     local file key output
     readonly file="${1}"
