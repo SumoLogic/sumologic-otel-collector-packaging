@@ -125,6 +125,9 @@ macro(build_cpack_config)
   # Build CPackConfig
   include(CPack)
 
+  # Create components
+  create_otc_components()
+
   # Add a target for each packagecloud distro the package should be published to
   set(_pc_user "sumologic")
   set(_pc_repo "ci-builds")

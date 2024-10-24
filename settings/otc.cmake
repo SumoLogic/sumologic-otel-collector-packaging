@@ -22,8 +22,11 @@ macro(set_otc_settings)
   # File names
   set(OTC_BINARY "otelcol-sumo")
   set(OTC_CONFIG_BINARY "otelcol-config")
+  set(OTC_LAUNCHD_CONFIG "com.sumologic.otelcol-sumo.plist")
+  set(OTC_SERVICE_SCRIPT "otelcol-sumo.sh")
   set(OTC_SUMOLOGIC_CONFIG "sumologic.yaml")
   set(OTC_SYSTEMD_CONFIG "otelcol-sumo.service")
+  set(DOT_KEEP_FILE ".keep")
 
   # Directories
   set(OTC_BIN_DIR "usr/local/bin")
@@ -31,11 +34,16 @@ macro(set_otc_settings)
   set(OTC_CONFIG_FRAGMENTS_DIR "${OTC_CONFIG_DIR}/conf.d")
   set(OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR "${OTC_CONFIG_DIR}/conf.d-available")
   set(OTC_USER_ENV_DIR "${OTC_CONFIG_DIR}/env")
+  set(OTC_OPAMPD_DIR "${OTC_CONFIG_DIR}/opamp.d")
   set(OTC_STATE_DIR "var/lib/otelcol-sumo")
   set(OTC_FILESTORAGE_STATE_DIR "${OTC_STATE_DIR}/file_storage")
   set(OTC_LAUNCHD_DIR "Library/LaunchDaemons")
   set(OTC_SYSTEMD_DIR "lib/systemd/system")
   set(OTC_LOG_DIR "var/log/otelcol-sumo")
+  set(OTC_SHARE_DIR "usr/share/otelcol-sumo")
+  if("${goos}" STREQUAL "darwin")
+    set(OTC_SHARE_DIR "usr/local/share/otelcol-sumo")
+  endif()
 
   # File paths
   set(OTC_BIN_PATH "${OTC_BIN_DIR}/${OTC_BINARY}")
@@ -74,6 +82,7 @@ macro(set_otc_settings)
   set(GH_ARTIFACT_OTC_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_BIN}")
   set(GH_ARTIFACT_OTC_CONFIG_BINARY_PATH "${GH_ARTIFACTS_DIR}/${GH_OUTPUT_OTC_CONFIG_BIN}")
   set(ACL_LOG_FILE_PATHS "/var/log")
+  set(DOT_KEEP_PATH "${ASSETS_DIR}/${DOT_KEEP_FILE}")
 
   ##
   # Other
