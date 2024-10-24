@@ -398,7 +398,7 @@ macro(install_otc_service_launchd)
     DESTINATION "${OTC_LAUNCHD_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE
-      GROUP_READ GROUP_WRITE
+      GROUP_READ
     COMPONENT otelcol-sumo
   )
 endmacro()
