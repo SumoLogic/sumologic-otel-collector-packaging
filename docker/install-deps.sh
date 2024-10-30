@@ -4,6 +4,7 @@ set -euxo pipefail
 
 targetarch="$1"
 
+GITHUB_CLI_VERSION="2.60.1"
 PACKAGECLOUD_GO_VERSION="0.1.5"
 
 # Convert between Docker CPU architecture names and other names such as Go's
@@ -15,6 +16,25 @@ elif [ "$targetarch" = "arm64" ]; then
 else
     GOARCH="amd64"
 fi
+
+function install_github_cli() {
+    base_url="https://github.com/cli/cli/releases/download"
+    version="${GITHUB_CLI_VERSION}"
+    file="gh_${version}_linux_${GOARCH}.tar.gz"
+    url="${base_url}/v${version}/${file}"
+
+    # Download GitHub CLI
+    curl -Lo /tmp/github-cli.tar.gz "${url}"
+
+    # Verify that the file is gzip compressed data to prevent cases where
+    # outages, site changes, etc. result in the downloaded file being HTML text.
+    file /tmp/github-cli.tar.gz | grep "gzip compressed data"
+
+    # Install GitHub CLI
+    mkdir /tmp/github-cli
+    tar -C /tmp/github-cli -zxf /tmp/github-cli.tar.gz --strip-components=1
+    mv /tmp/github-cli/bin/gh /usr/local/bin/gh
+}
 
 function install_packagecloud_go() {
     base_url="https://github.com/amdprophet/packagecloud-go/releases/download"
@@ -34,4 +54,5 @@ function install_packagecloud_go() {
     mv /tmp/packagecloud /usr/local/bin/packagecloud
 }
 
+install_github_cli
 install_packagecloud_go

@@ -189,18 +189,18 @@ endmacro()
 macro(install_otc_binary)
   require_variables(
     "OTC_BIN_DIR"
-    "OTC_BINARY"
-    "SOURCE_OTC_BINARY_PATH"
+    "OTC_BIN"
+    "REMOTE_OTC_BIN_PATH"
   )
 
   install(
-    FILES "${SOURCE_OTC_BINARY_PATH}"
+    FILES "${REMOTE_OTC_BIN_PATH}"
     DESTINATION "${OTC_BIN_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_EXECUTE
       GROUP_READ GROUP_EXECUTE
       WORLD_READ WORLD_EXECUTE
-    RENAME "${OTC_BINARY}"
+    RENAME "${OTC_BIN}"
     COMPONENT otelcol-sumo
   )
 endmacro()
@@ -209,18 +209,18 @@ endmacro()
 macro(install_otc_config_binary)
   require_variables(
     "OTC_BIN_DIR"
-    "OTC_CONFIG_BINARY"
-    "SOURCE_OTC_CONFIG_BINARY_PATH"
+    "OTC_CONFIG_BIN"
+    "REMOTE_OTC_CONFIG_BIN_PATH"
   )
 
   install(
-    FILES "${SOURCE_OTC_CONFIG_BINARY_PATH}"
+    FILES "${REMOTE_OTC_CONFIG_BIN_PATH}"
     DESTINATION "${OTC_BIN_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_EXECUTE
       GROUP_READ GROUP_EXECUTE
       WORLD_READ WORLD_EXECUTE
-    RENAME "${OTC_CONFIG_BINARY}"
+    RENAME "${OTC_CONFIG_BIN}"
     COMPONENT otelcol-sumo
   )
 endmacro()

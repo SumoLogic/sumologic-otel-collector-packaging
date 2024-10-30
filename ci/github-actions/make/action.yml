@@ -4,7 +4,10 @@ inputs:
   target:
     required: true
     type: string
-  packagecloud-token:
+  gh_token:
+    required: false
+    type: string
+  packagecloud_token:
     required: false
     type: string
 
@@ -12,7 +15,8 @@ runs:
   using: 'docker'
   image: '../../../Dockerfile'
   env:
-    PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud-token }}
+    GH_TOKEN: ${{ inputs.gh_token }}
+    PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud_token }}
   args:
     - make
     - ${{ inputs.target }}

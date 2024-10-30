@@ -1,0 +1,75 @@
+name: 'Publish release'
+
+run-name: >
+  ${{ format('Publish Release for Workflow: {0}', inputs.workflow_id) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_id:
+        description: |
+          Workflow Run ID from this repository to use as a release.
+
+jobs:
+  publish_release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Not implemented
+        run: >
+          echo "This job is not functional yet" && exit 1
+
+      - name: Download all packages stored as artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      # Create the release tag separately to add a message to it
+      # NOTE: As per the github API, we need to create the tag object first, and then the git reference
+      - name: Create release tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tagRequest = await github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: '${{ env.RELEASE_TAG_NAME }}',
+              message: `App Version: ${{ env.OTC_APP_VERSION }}`,
+              object: context.sha,
+              type: 'commit',
+              tagger: {
+                name: "${{ github.actor }}",
+                email: "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com",
+              },
+            })
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ env.RELEASE_TAG_NAME }}',
+              sha: tagRequest.data.sha
+            })
+
+      - uses: ncipollo/release-action@v1
+        with:
+          name: v${{ needs.build_packages.outputs.otc_version }}-${{ github.run_number }}
+          commit: ${{ github.sha }}
+          tag: ${{ env.RELEASE_TAG_NAME }}
+
+          draft: true
+          generateReleaseNotes: true
+          prerelease: false
+
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+
+          artifacts: "artifacts/*/*"
+          artifactErrorsFailBuild: true
+          replacesArtifacts: true
+
+          body: |
+            This release packages [${{ env.OTC_APP_VERSION }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/${{ env.OTC_APP_VERSION }}).
+
+            The changelog below is for the package itself, rather than the Sumo Logic Distribution for OpenTelemetry Collector.
