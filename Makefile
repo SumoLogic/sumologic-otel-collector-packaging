@@ -42,6 +42,8 @@ publish-package:
 		-v "$(mkfile_dir):/src" \
 		-v "$(build_dir):/build" \
 		-e PACKAGECLOUD_TOKEN="$(PACKAGECLOUD_TOKEN)" \
+		-e AWS_ACCESS_KEY_ID="$(AWS_ACCESS_KEY_ID)" \
+		-e AWS_SECRET_ACCESS_KEY="$(AWS_SECRET_ACCESS_KEY)"
 		otelcol-sumo/cmake \
 		make publish-package
 

@@ -1,3 +1,6 @@
+# Checks if the Packagecloud distro supports the package architecture and if it
+# does it will be added to the list of Packagecloud distributions to upload the
+# package to.
 macro(check_architecture_support)
   if(NOT ${package_arch} IN_LIST _supported_architectures)
     message(FATAL_ERROR "${_distro_name} does not support architecture: ${package_arch}")

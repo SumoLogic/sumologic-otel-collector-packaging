@@ -7,12 +7,20 @@ inputs:
   packagecloud-token:
     required: false
     type: string
+  aws-access-key-id:
+    required: false
+    type: string
+  aws-secret-access-key:
+    required: false
+    type: string
 
 runs:
   using: 'docker'
   image: '../../../Dockerfile'
   env:
     PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud-token }}
+    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
   args:
     - make
     - ${{ inputs.target }}

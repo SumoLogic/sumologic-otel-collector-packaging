@@ -16,7 +16,8 @@ RUN apk add --no-cache \
     curl \
     bash \
     tar \
-    gzip
+    gzip \
+    aws-cli
 
 COPY docker/install-deps.sh /install-deps.sh
 

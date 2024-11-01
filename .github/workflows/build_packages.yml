@@ -75,6 +75,10 @@ on:
         type: boolean
         required: false
         default: false
+      is_latest:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   determine_workflow:
@@ -199,6 +203,8 @@ jobs:
       microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
       gh_ci_token: ${{ secrets.GH_CI_TOKEN }}
       packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     strategy:
       matrix:
@@ -249,6 +255,16 @@ jobs:
   install-script:
     name: Store install script
     runs-on: ubuntu-latest
+    needs:
+      - determine_version
+      - build_packages
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_S3_BUCKET: sumologic-osc-ci-builds
+      OTC_VERSION: ${{ needs.determine_version.outputs.otc_version }}
+      BUILD_NUMBER: ${{ needs.build_packages.outputs.otc_build_number }}
     steps:
       - uses: actions/checkout@v4
 
@@ -265,6 +281,23 @@ jobs:
           name: install.ps1
           path: ./install-script/install.ps1
           if-no-files-found: error
+
+      - name: Store install scripts on S3
+        run: |
+          version="${OTC_VERSION}-${BUILD_NUMBER}"
+          s3_path="${version}/"
+          aws s3 cp install-script/install.ps1 s3://${AWS_S3_BUCKET}/${s3_path}
+          aws s3 cp install-script/install.sh s3://${AWS_S3_BUCKET}/${s3_path}
+
+      - name: Create latest_version file
+        if: inputs.is_latest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          version="${OTC_VERSION}-${BUILD_NUMBER}"
+          echo "${version}" >> latest_version
+          aws s3 cp --content-type "text/plain" latest_version s3://${AWS_S3_BUCKET}/
 
   publish_release:
     name: Publish Release

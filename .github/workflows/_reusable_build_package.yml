@@ -38,6 +38,10 @@ on:
         required: false
         type: boolean
         default: false
+      packagecloud_go_version:
+        required: false
+        type: string
+        default: "0.2.2"
     secrets:
       gh_artifacts_token:
         required: true
@@ -61,6 +65,14 @@ on:
         required: true
       packagecloud_token:
         required: true
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+    outputs:
+      otc_build_number:
+        description: "The build number of the package"
+        value: ${{ jobs.build_package.outputs.otc_build_number }}
 
 defaults:
   run:
@@ -72,6 +84,7 @@ jobs:
     name: Build (CMake)
     if: inputs.build_tool == 'cmake'
     outputs:
+      otc_build_number: ${{ steps.get-build-number.outputs.otc_build_number }}
       package_path: ${{ steps.package.outputs.path }}
     steps:
       - name: Checkout
@@ -84,6 +97,15 @@ jobs:
           repo="sumologic-otel-collector"
           workflow_id="${{ inputs.workflow_id }}"
           echo "https://github.com/${org}/${repo}/actions/runs/${workflow_id}"
+
+      # Only output build number on one target so that it can be read by other
+      # jobs
+      - name: Output Build Number
+        if: inputs.cmake_target == 'otc_linux_amd64_deb'
+        id: get-build-number
+        run: |
+          build_number="${{ inputs.otc_build_number }}"
+          echo "otc_build_number=${build_number}" >> $GITHUB_OUTPUT
 
       - name: Determine if MacOS package should be signed
         if: runner.os == 'macOS'
@@ -216,12 +238,23 @@ jobs:
           path: ./build/${{ steps.package.outputs.path }}
           if-no-files-found: error
 
-      - name: Publish package to Packagecloud
+      - name: Publish packages
         if: runner.os == 'Linux'
         uses: ./ci/github-actions/make
         with:
           target: publish-package
           packagecloud-token: ${{ secrets.PACKAGECLOUD_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Publish packages
+        if: runner.os != 'Linux'
+        working-directory: build
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+        run: make publish-package
 
       - name: Wait for Packagecloud packages to be indexed
         if: runner.os == 'Linux'
