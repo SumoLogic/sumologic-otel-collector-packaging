@@ -1,0 +1,168 @@
+name: 'Publish release'
+
+run-name: >
+  ${{ format('Publish Release for Workflow: {0}', inputs.workflow_id) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_id:
+        description: |
+          Workflow Run ID from this repository to fetch artifacts from for this
+          release.
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  get-version:
+    name: Get application version for this revision
+    runs-on: ubuntu-latest
+    outputs:
+      git-sha: ${{ steps.get-version.outputs.git-sha }}
+      otc-version: ${{ steps.get-version.outputs.otc-version }}
+      sumo-version: ${{ steps.get-version.outputs.sumo-version }}
+      binary-version: ${{ steps.get-version.outputs.binary-version }}
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Outuput Workflow ID
+        run: echo ::notice title=Workflow ID::${{ inputs.workflow_id }}
+
+      - name: Output Workflow URL
+        run: |
+          repo_url="https://github.com/SumoLogic/sumologic-otel-collector-packaging"
+          url="${repo_url}/actions/runs/${{ inputs.workflow_id }}"
+          echo ::notice title=Workflow URL::${url}
+
+      - name: Determine Workflow Run ID from workflow
+        id: get-run-number
+        run: |
+          workflow="11673248730"
+          run_number=$(gh run view "${workflow}" --json number -t '{{.number}}')
+          echo "run-number=$run_number" >> $GITHUB_OUTPUT
+
+      - name: Output Workflow Run Number
+        run: |
+          run_number=${{ steps.get-run-number.outputs.run-number }}
+          echo ::notice title=Workflow Run Number::${run_number}
+
+      - name: Download otelcol-sumo artifact from workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: otelcol-sumo-linux_amd64
+          path: artifacts/
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.workflow_id }}
+
+      - name: Determine version from artifact
+        id: get-version
+        run: |
+          artifact="artifacts/otelcol-sumo-linux_amd64"
+          chmod +x "${artifact}"
+          script="ci/get_version_from_binary.sh"
+          core="$("$script" core "${artifact}")"
+          sumo="$("$script" sumo "${artifact}")"
+          run_number=${{ steps.get-run-number.outputs.run-number }}
+          echo "otc-version=$core" >> $GITHUB_OUTPUT
+          echo "sumo-version=$sumo" >> $GITHUB_OUTPUT
+          echo "binary-version=${core}-sumo-${sumo}" >> $GITHUB_OUTPUT
+          echo "version=${core}-${run_number}" >> $GITHUB_OUTPUT
+
+      - name: Output Binary Version
+        run: |
+          binary_version=${{ steps.get-version.outputs.binary-version }}
+          echo ::notice title=Binary Version::${binary_version}
+
+      - name: Output Package Version
+        run: |
+          package_version=${{ steps.get-version.outputs.version }}
+          echo ::notice title=Package Version::${package_version}
+
+      - name: Determine Git SHA of workflow
+        id: get-sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          workflow=${{ inputs.workflow_id }}
+          sha="$(gh run view ${workflow} --json headSha -t '{{.headSha}}')"
+          echo "git-sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Output Git SHA
+        run: |
+          echo ::notice title=Git SHA::${{ steps.get-sha.outputs.git-sha }}
+
+  # Store the install script from the packaging repository as a release
+  # artifact.
+  install-script:
+    name: Store install script
+    runs-on: ubuntu-latest
+    needs:
+      - get-version
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.get-version.outputs.git-sha }}
+
+      - name: Store Linux install script as action artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: install.sh
+          path: ./install-script/install.sh
+          if-no-files-found: error
+
+      - name: Store Windows install script as action artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: install.ps1
+          path: ./install-script/install.ps1
+          if-no-files-found: error
+
+  create-release:
+    name: Create Github release
+    runs-on: ubuntu-20.04
+    needs:
+      - get-version
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts from workflow
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.workflow_id }}
+
+      - uses: ncipollo/release-action@v1
+        with:
+          name: v${{ needs.get-version.outputs.version }}
+          commit: ${{ needs.get-version.outputs.git-sha }}
+          tag: v${{ needs.get-version.outputs.version }}
+
+          draft: true
+          generateReleaseNotes: true
+          prerelease: false
+
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+
+          artifacts: "artifacts/*/*"
+          artifactErrorsFailBuild: true
+          replacesArtifacts: true
+
+          body: |
+            This release packages
+            [${{ needs.get-version.outputs.version }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/v${{ needs.get-version.outputs.binary-version }}).
+
+            The changelog below is for the package itself, rather than the Sumo
+            Logic Distribution for OpenTelemetry Collector. The changelog for
+            the Sumo Logic Distribution for OpenTelemetry Collector can be found
+            on the collector's
+            [release page](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/v${{ needs.get-version.outputs.binary-version }}).
