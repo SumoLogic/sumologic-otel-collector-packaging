@@ -110,8 +110,10 @@ KEEP_DOWNLOADS=false
 
 CURL_MAX_TIME=1800
 
-PACKAGE_GITHUB_ORG="SumoLogic"
-PACKAGE_GITHUB_REPO="sumologic-otel-collector-packaging"
+# NB: the S3 variables are only used on Darwin
+S3_BUCKET="${S3_BUCKET:-sumologic-osc-stable}"
+S3_REGION="${S3_REGION:-us-west-2}"
+S3_URI="https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com"
 
 PACKAGECLOUD_ORG="${PACKAGECLOUD_ORG:-sumologic}"
 PACKAGECLOUD_REPO="${PACKAGECLOUD_REPO:-stable}"
@@ -312,11 +314,6 @@ function parse_options() {
   done
 }
 
-# Get github rate limit
-function github_rate_limit() {
-    curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 --retry-max-time 150 -X GET https://api.github.com/rate_limit -v 2>&1 | grep x-ratelimit-remaining | grep -oE "[0-9]+"
-}
-
 # Ensure TMPDIR is set to a directory where we can safely store temporary files
 function set_tmpdir() {
     # generate a new tmpdir using mktemp
@@ -350,47 +347,11 @@ function check_dependencies() {
     fi
 }
 
-function get_latest_github_package_version() {
-    local versions
-    readonly versions="${1}"
-
-    # get latest version directly from website if there is no versions from api
-    if [[ -z "${versions}" ]]; then
-        curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 \
-            --retry-max-time 150 -s \
-            "https://github.com/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases" \
-            | grep -oE '/'${PACKAGE_GITHUB_ORG}'/'${PACKAGE_GITHUB_REPO}'/releases/tag/(.*)"' \
-            | head -n 1 \
-            | sed 's%/'${PACKAGE_GITHUB_ORG}'/'${PACKAGE_GITHUB_REPO}'/releases/tag/v\([^"]*\)".*%\1%g'
-    else
-        # sed 's/ /\n/g' converts spaces to new lines
-        echo "${versions}" | sed 's/ /\n/g' | head -n 1
-    fi
-}
-
-# Get available versions of otelcol-sumo
-# skip prerelease and draft releases
-# sort it from last to first
-# remove v from beginning of version
-function get_github_package_versions() {
-    # returns empty in case we exceeded github rate limit. This can happen if we are running this script too many times in a short period.
-    if [[ "$(github_rate_limit)" == "0" ]]; then
-        return
-    fi
-
-    curl \
-    --connect-timeout 5 \
-    --max-time 30 \
-    --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 150 \
-    -sH "Accept: application/vnd.github.v3+json" \
-    https://api.github.com/repos/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases \
-    | grep -E '(tag_name|"(draft|prerelease)")' \
-    | sed 'N;N;s/.*true.*//' \
-    | grep -o 'v.*"' \
-    | sort -rV \
-    | sed 's/^v//;s/"$//'
+# NB: this function is only for Darwin
+function get_latest_s3_package_version() {
+    curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 \
+        --retry-max-time 150 -s \
+        "${S3_URI}/latest_version" | tr -d '\n'
 }
 
 # Get OS type (linux or darwin)
@@ -781,81 +742,6 @@ function write_opamp_extension() {
 }
 
 # NB: this function is only for Darwin
-function get_package_from_branch() {
-    local branch
-    readonly branch="${1}"
-
-    local name
-    readonly name="${2}"
-
-    local actions_url actions_output artifacts_link artifact_id
-    readonly actions_url="https://api.github.com/repos/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/actions/runs?status=success&branch=${branch}&event=push&per_page=1"
-    echo -e "Getting artifacts from latest CI run for branch \"${branch}\":\t\t${actions_url}"
-    actions_output="$(curl -f -sS \
-      --connect-timeout 5 \
-      --max-time 30 \
-      --retry 5 \
-      --retry-delay 0 \
-      --retry-max-time 150 \
-      -H "Accept: application/vnd.github+json" \
-      -H "Authorization: token ${GITHUB_TOKEN}" \
-      "${actions_url}")"
-    readonly actions_output
-
-    # get latest action run
-    artifacts_link="$(echo "${actions_output}" | grep '"url"' | grep -oE '"https.*packaging/actions.*"' -m 1)"
-
-    # strip first and last double-quote from $artifacts_link
-    artifacts_link=${artifacts_link%\"}
-    artifacts_link="${artifacts_link#\"}"
-    artifacts_link="${artifacts_link}/artifacts"
-    readonly artifacts_link
-
-    echo -e "Getting artifact id for CI run:\t\t${artifacts_link}"
-    artifact_id="$(curl -f -sS \
-    --connect-timeout 5 \
-    --max-time 30 \
-    --retry 5 \
-    --retry-delay 0 \
-    --retry-max-time 150 \
-    -H "Accept: application/vnd.github+json" \
-    -H "Authorization: token ${GITHUB_TOKEN}" \
-    "${artifacts_link}" \
-        | grep -E '"(id|name)"' \
-        | grep -B 1 "\"${name}\"" -m 1 \
-        | grep -oE "[0-9]+" -m 1)"
-    readonly artifact_id
-
-    echo "Artifact ID: ${artifact_id}"
-
-    local artifact_url download_path curl_args
-    readonly artifact_url="https://api.github.com/repos/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/actions/artifacts/${artifact_id}/zip"
-    readonly download_path="${DOWNLOAD_CACHE_DIR}/${artifact_id}.zip"
-    echo -e "Downloading package from: ${artifact_url}"
-    curl_args=(
-        "-fL"
-        "--connect-timeout" "5"
-        "--max-time" "${CURL_MAX_TIME}"
-        "--retry" "5"
-        "--retry-delay" "0"
-        "--retry-max-time" "150"
-        "--output" "${download_path}"
-        "--progress-bar"
-    )
-    if [ "${KEEP_DOWNLOADS}" == "true" ]; then
-        curl_args+=("-z" "${download_path}")
-    fi
-    curl "${curl_args[@]}" \
-        -H "Accept: application/vnd.github+json" \
-        -H "Authorization: token ${GITHUB_TOKEN}" \
-        "${artifact_url}"
-
-    unzip -p "$download_path" > "${TMPDIR}/otelcol-sumo.pkg"
-    if [ "${KEEP_DOWNLOADS}" == "false" ]; then
-        rm -f "${download_path}"
-    fi
-}
-
 function get_package_from_url() {
     local url download_filename download_path curl_args
     readonly url="${1}"
@@ -995,6 +881,15 @@ function install_linux_package() {
 }
 
 function check_deprecated_linux_flags() {
+    if [[ -n "${BINARY_BRANCH}" ]]; then
+        echo "warning: --binary-branch is deprecated"
+        exit 1
+    fi
+
+    if [[ -n "${CONFIG_BRANCH}" ]]; then
+        echo "warning: --config-branch is deprecated"
+    fi
+
     if [[ "${OS_TYPE}" == "darwin" ]]; then
         return
     fi
@@ -1002,15 +897,6 @@ function check_deprecated_linux_flags() {
     if [[ -n "${DOWNLOAD_ONLY}" ]]; then
         echo "--download-only is only supported on darwin, use 'install.sh --upgrade' to upgrade otelcol-sumo"
         exit 1
-    fi
-
-    if [[ -n "${BINARY_BRANCH}" ]]; then
-        echo "--binary-branch is only supported on darwin, use --version, --channel, and --channel-token on linux"
-        exit 1
-    fi
-
-    if [[ -n "${CONFIG_BRANCH}" ]]; then
-        echo "warning: --config-branch is deprecated"
     fi
 }
 
@@ -1192,13 +1078,6 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
         fi
     fi
 
-    set +u
-    if [[ -n "${BINARY_BRANCH}" && -z "${GITHUB_TOKEN}" ]]; then
-        echo "GITHUB_TOKEN env is required for '${ARG_LONG_BINARY_BRANCH}' option"
-        exit 1
-    fi
-    set -u
-
     package_arch=""
     case "${ARCH_TYPE}" in
       "amd64") package_arch="intel" ;;
@@ -1210,37 +1089,28 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     esac
     readonly package_arch
 
-    if [[ -z "${DARWIN_PKG_URL}" ]]; then
-        echo -e "Getting versions..."
-        # Get versions, but ignore errors as we fallback to other methods later
-        VERSIONS="$(get_github_package_versions || echo "")"
+    pkg_url=""
 
+    if [[ -z "${DARWIN_PKG_URL}" ]]; then
         # Use user's version if set, otherwise get latest version from API (or website)
         if [[ -z "${VERSION}" ]]; then
-            VERSION="$(get_latest_github_package_version "${VERSIONS}")"
+            echo -e "Getting latest version..."
+            VERSION="$(get_latest_s3_package_version)"
         fi
 
-        readonly VERSIONS VERSION
+        readonly VERSION
 
         echo -e "Version to install:\t${VERSION}"
 
-        package_suffix="${package_arch}.pkg"
+        artifact_name="otelcol-sumo_${VERSION}-${package_arch}.pkg"
+        readonly artifact_name
 
-        if [[ -n "${BINARY_BRANCH}" ]]; then
-            artifact_name="otelcol-sumo_.*-${package_suffix}"
-            get_package_from_branch "${BINARY_BRANCH}" "${artifact_name}"
-        else
-            artifact_name="otelcol-sumo_${VERSION}-${package_suffix}"
-            readonly artifact_name
-
-            LINK="https://github.com/${PACKAGE_GITHUB_ORG}/${PACKAGE_GITHUB_REPO}/releases/download/v${VERSION}/${artifact_name}"
-            readonly LINK
-
-            get_package_from_url "${LINK}"
-        fi
+        pkg_url="${S3_URI}/${VERSION}/${artifact_name}"
     else
-        get_package_from_url "${DARWIN_PKG_URL}"
+        pkg_url="${DARWIN_PKG_URL}"
     fi
+
+    get_package_from_url "${pkg_url}"
 
     pkg="${TMPDIR}/otelcol-sumo.pkg"
 

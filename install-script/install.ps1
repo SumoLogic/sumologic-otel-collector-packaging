@@ -31,11 +31,44 @@ param (
     [string] $Api,
 
     # The OpAmp Endpoint used to communicate with the OpAmp backend
-    [string] $OpAmpApi
+    [string] $OpAmpApi,
+
+    # OverrideArch overrides the architecture detected by this script. This can
+    # enable installation of x64 packages on an ARM64 system. The default value
+    # is set to the value of the OVERRIDE_ARCH environment variable.
+    [string] $OverrideArch = $env:OVERRIDE_ARCH,
+
+    # SkipArchDetection will disable the detection of the CPU architecture.
+    # CPU architecture detection is slow. Using OverrideArch with this flag
+    # improves the overall time it takes to execute this script.
+    [bool] $SkipArchDetection,
+
+    # S3Bucket is used to specify which S3 bucket to download the MSI package
+    # from. The default value is set to the value of the S3_BUCKET environment
+    # variable.
+    [string] $S3Bucket = $env:S3_BUCKET,
+
+    # S3Region is used to specify which S3 region to download the MSI package
+    # from. The default value is set to the value of the S3_REGION environment
+    # variable.
+    [string] $S3Region = $env:S3_REGION
 )
 
-$PackageGithubOrg = "SumoLogic"
-$PackageGithubRepo = "sumologic-otel-collector-packaging"
+# If the environment variable SKIP_ARCH_DETECTION is set and is not
+# equal to "0" then set $SkipArchDetection to $True.
+if ($env:SKIP_ARCH_DETECTION -ne "" -and $env:SKIP_ARCH_DETECTION -ne "0") {
+    $SkipArchDetection = $True
+}
+
+if ($S3Bucket -eq "") {
+    $S3Bucket = "sumologic-osc-stable"
+}
+
+if ($S3Region -eq "") {
+    $S3Region = "us-west-2"
+}
+
+$S3URI = "https://" + $S3Bucket + ".s3." + $S3Region + ".amazonaws.com"
 
 ##
 # Security tweaks
@@ -146,6 +179,11 @@ function Get-OSName
 }
 
 function Get-ArchName {
+    param (
+        [Parameter(Mandatory, Position=0)]
+        [bool] $AllowUnsupported
+    )
+
     Write-Host "Detecting architecture..."
 
     [int] $archId = (Get-CimInstance Win32_Processor)[0].Architecture
@@ -160,10 +198,23 @@ function Get-ArchName {
 
     switch ($arch)
     {
+        x86     { $archName = "x86" }
         x64     { $archName = "x64" }
+        MIPS    { $archName = "MIPS" }
+        Alpha   { $archName = "Alpha" }
+        PowerPC { $archName = "PowerPC" }
+        ia64    { $archName = "ia64" }
+        ARM64   { $archName = "ARM64" }
 
         default {
             Write-Error "Unsupported architecture:`t${arch}" -ErrorAction Stop
+        }
+    }
+
+    # Only x64 is supported at the moment
+    if (!($AllowUnsupported)) {
+        if ($archName -ne "x64") {
+            Write-Error "Unsupported architecture:`t${archName}" -ErrorAction Stop
         }
     }
 
@@ -210,98 +261,18 @@ function Get-InstalledPackageVersion {
     return $package.Version.Replace("-", ".")
 }
 
-function Get-Version {
+function Get-LatestVersion {
     param (
-        [Parameter(Mandatory, Position=0)]
-        [ValidateSet("All", "Latest")]
-        [string] $Command,
-
         [Parameter(Mandatory, Position=1)]
         [HttpClient] $HttpClient
     )
 
-    switch ($Command) {
-        All {
-            $request = [HttpRequestMessage]::new()
-            $request.Method = "GET"
-            $request.RequestURI = "https://api.github.com/repos/" + $PackageGithubOrg + "/" + $PackageGithubRepo + "/releases"
-            $request.Headers.Add("Accept", "application/vnd.github+json")
-            $request.Headers.Add("X-GitHub-Api-Version", "2022-11-28")
-
-            $response = $HttpClient.SendAsync($request).GetAwaiter().GetResult()
-            if (!($response.IsSuccessStatusCode)) {
-                $statusCode = [int]$response.StatusCode
-                $reasonPhrase = $response.StatusCode.ToString()
-                $errMsg = "${statusCode} ${reasonPhrase}"
-
-                if ($response.Content -ne $null) {
-                    $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-                    $errMsg += ": ${content}"
-                }
-
-                Write-Error $errMsg -ErrorAction Stop
-            }
-
-            $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-            $releases = $content | ConvertFrom-Json
-            $filtered = @()
-
-            foreach ($release in $releases) {
-                # Skip draft releases
-                if ($release.Draft -eq $true) {
-                    Write-Debug "Skipping draft release: ${release.Name}"
-                    continue
-                }
-
-                # Skip prereleases
-                if ($release.Prerelease -eq $true) {
-                    Write-Debug "Skipping prerelease: ${release.Name}"
-                    continue
-                }
-
-                $filtered += $release.Tag_name.TrimStart("v")
-            }
-
-            return $filtered
-        }
-
-        Latest {
-            $request = [HttpRequestMessage]::new()
-            $request.Method = "GET"
-            $request.RequestURI = "https://github.com/" + $PackageGithubOrg + "/" + $PackageGithubRepo + "/releases/latest"
-            $request.Headers.Add("Accept", "application/json")
-
-            $response = $HttpClient.SendAsync($request).GetAwaiter().GetResult()
-            if (!($response.IsSuccessStatusCode)) {
-                $statusCode = [int]$response.StatusCode
-                $reasonPhrase = $response.StatusCode.ToString()
-                $errMsg = "${statusCode} ${reasonPhrase}"
-
-                if ($response.Content -ne $null) {
-                    $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-                    $errMsg += ": ${content}"
-                }
-
-                Write-Error $errMsg -ErrorAction Stop
-            }
-
-            $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-            $release = $content | ConvertFrom-Json
-
-            return $release.Tag_name.TrimStart("v")
-        }
-    }
-}
-
-function Get-Changelog {
-    param (
-        [Parameter(Mandatory, Position=0)]
-        [HttpClient] $HttpClient
-    )
-
+    $URI = $S3URI + "/latest_version"
     $request = [HttpRequestMessage]::new()
     $request.Method = "GET"
-    $request.RequestURI = "https://raw.githubusercontent.com/SumoLogic/sumologic-otel-collector/main/CHANGELOG.md"
+    $request.RequestURI = $URI
+
+    Write-Host "Fetching latest version from: ${URI}"
 
     $response = $HttpClient.SendAsync($request).GetAwaiter().GetResult()
     if (!($response.IsSuccessStatusCode)) {
@@ -317,53 +288,14 @@ function Get-Changelog {
         Write-Error $errMsg -ErrorAction Stop
     }
 
-    return $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+    $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+    return $content -replace "`n","" -replace "`r",""
 }
 
-function Show-BreakingChanges {
+function Get-BinaryFromURI {
     param (
         [Parameter(Mandatory, Position=0)]
-        [string[]] $Versions,
-
-        [Parameter(Mandatory, Position=1)]
-        [string] $Changelog
-    )
-
-    $splitChangelog = $Changelog -Split "\n"
-    $breakingVersions = @()
-
-    foreach ($version in $Versions) {
-        # Get lines matching the following and join them into a string:
-        # * ##
-        # * ## Breaking
-        # * breaking changes
-        $matchingRegex = "^## |^### Breaking|breaking changes"
-        $matchingLines = (
-            $splitChangelog | Select-String -Pattern $matchingRegex
-        ) -Join "`r`n"
-
-        # Find the section for $version and get the content between it and the
-        # next version section.
-        $isBreakingRegex = "(?s)(?<=## \[v${version}\]).*?(?=\r\n## )"
-        $isBreakingChange = (
-            $matchingLines | Select-String -Pattern $isBreakingRegex
-        ).Matches.Value -ne ""
-
-        if ($isBreakingChange) {
-            $breakingVersions += $version
-        }
-    }
-
-    if ($breakingVersions.Count -gt 0) {
-        $versionsStr = $breakingVersions -Join ", v"
-        Write-Host "The following versions contain breaking changes: v${versionsStr}! Please make sure to read the linked Changelog file."
-    }
-}
-
-function Get-BinaryFromUri {
-    param (
-        [Parameter(Mandatory, Position=0)]
-        [string] $Uri,
+        [string] $URI,
 
         [Parameter(Mandatory, Position=1)]
         [string] $Path,
@@ -377,10 +309,10 @@ function Get-BinaryFromUri {
         Remove-Item $Path
     }
 
-    Write-Host "Preparing to download ${Uri}"
-    $requestUri = [System.Uri]$Uri
+    Write-Host "Preparing to download ${URI}"
+    $requestURI = [System.Uri]$URI
     $optReadHeaders = [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
-    $response = $HttpClient.GetAsync($requestUri, $optReadHeaders).GetAwaiter().GetResult()
+    $response = $HttpClient.GetAsync($requestURI, $optReadHeaders).GetAwaiter().GetResult()
     $responseMsg = $response.EnsureSuccessStatusCode()
 
     $httpStream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
@@ -391,7 +323,7 @@ function Get-BinaryFromUri {
     )
 
     $copier = $httpStream.CopyToAsync($fileStream)
-    Write-Host "Downloading ${requestUri}"
+    Write-Host "Downloading ${requestURI}"
     $copier.Wait()
     $fileStream.Close()
     $httpStream.Close()
@@ -409,9 +341,22 @@ try {
     }
 
     $osName = Get-OSName
-    $archName = Get-ArchName
     Write-Host "Detected OS type:`t${osName}"
-    Write-Host "Detected architecture:`t${archName}"
+
+    if ($SkipArchDetection -eq $False) {
+        $archName = Get-ArchName -AllowUnsupported ($OverrideArch -ne "")
+        Write-Host "Detected architecture:`t${archName}"
+    } else {
+        if ($OverrideArch -eq "") {
+            Write-Error "OverrideArch flag must be set when using SkipArchDetection"
+        }
+        Write-Host "Skipping architecture detection"
+    }
+
+    if ($OverrideArch -ne "") {
+        $archName = $OverrideArch
+        Write-Host "Architecture overridden: `t${archName}"
+    }
 
     $handler = New-Object HttpClientHandler
     $handler.AllowAutoRedirect = $true
@@ -443,46 +388,21 @@ try {
     Write-Host "Installed app version:`t${installedAppVersionStr}"
     Write-Host "Installed package version:`t${installedPackageVersionStr}"
 
-    # Get versions, but ignore errors as we fallback to other methods later
-    Write-Host "Getting versions..."
-    $versions = Get-Version -Command All -HttpClient $httpClient
-
     # Use user's version if set, otherwise get latest version from API (or website)
     if ($Version -eq "") {
-        if ($versions.Count -eq 1) {
-            $Version = $versions
-        } elseif ($versions.Count -gt 1) {
-            $Version = $versions[0]
-        } else {
-            $Version = Get-Version -Command Latest -HttpClient $httpClient
-        }
+        Write-Host "Getting latest version..."
+        $Version = Get-LatestVersion -HttpClient $httpClient
     }
 
-    # tags in the packaging repository have a dash before the build number, the Windows convention is a stop
-    $Tag = $Version
-    $Version = $Version.Replace("-", ".")
+    # versions have a dash before the build number, the Windows convention is a dot
+    $msiVersion = $Version.Replace("-", ".")
 
     Write-Host "Package version to install:`t${Version}"
 
     # Check if otelcol is already in newest version
-    if ($installedPackageVersion -eq $Version) {
-        Write-Host "OpenTelemetry collector is already in newest (${Version}) version"
-    } else {
-        # add newline before breaking changes and changelog
-        Write-Host ""
-        if (($installedVersion -ne "") -And ($versions -ne $null)) {
-            # Take versions from installed up to the newest
-            $index = $versions.IndexOf($installedVersion)
-            if ($index -gt 0) {
-                $changelog = Get-Changelog $httpClient
-                Show-BreakingChanges $versions[0..($index-1)] $changelog
-            }
-        }
+    if ($installedPackageVersion -eq $msiVersion) {
+        Write-Host "OpenTelemetry collector is already in newest (${msiVersion}) version"
     }
-
-    Write-Host "Changelog:`t`thttps://github.com/SumoLogic/sumologic-otel-collector/blob/main/CHANGELOG.md"
-    # add newline after breaking changes and changelog
-    Write-Host ""
 
     # Add -fips to the msi filename if necessary
     $fipsSuffix = ""
@@ -493,11 +413,10 @@ try {
 
     # Download MSI
     $msiLanguage = "en-US"
-    $msiFileName = "otelcol-sumo_${Version}_${msiLanguage}.${archName}${fipsSuffix}.msi"
-    $msiUri = "https://github.com/" + $PackageGithubOrg + "/" + $PackageGithubRepo + "/releases/download/"
-    $msiUri += "v${Tag}/${msiFileName}"
+    $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${archName}${fipsSuffix}.msi"
+    $msiURI = $S3URI + "/" + $Version + "/" + $msiFileName
     $msiPath = "${env:TEMP}\${msiFileName}"
-    Get-BinaryFromUri $msiUri -Path $msiPath -HttpClient $httpClient
+    Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
 
     # Install MSI
     [string[]] $msiProperties = @()
@@ -534,3 +453,5 @@ try {
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message
 }
+
+Write-Host "Installation successful"

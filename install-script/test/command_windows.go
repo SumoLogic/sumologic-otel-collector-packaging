@@ -18,6 +18,7 @@ type installOptions struct {
 	installHostmetrics bool
 	remotelyManaged    bool
 	ephemeral          bool
+	version            string
 }
 
 func (io *installOptions) string() []string {
@@ -50,6 +51,15 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "-Api", io.apiBaseURL)
 	} else {
 		opts = append(opts, "-Api", mockAPIBaseURL)
+	}
+
+	otc_version := os.Getenv("OTC_VERSION")
+	otc_build_number := os.Getenv("OTC_BUILD_NUMBER")
+
+	if io.version != "" {
+		opts = append(opts, "-Version", io.version)
+	} else if otc_version != "" && otc_build_number != "" {
+		opts = append(opts, "-Version", fmt.Sprintf("%s-%s", otc_version, otc_build_number))
 	}
 
 	return opts

@@ -3,25 +3,15 @@ name: '_reusable_build_package'
 on:
   workflow_call:
     inputs:
-      otc_version:
-        required: true
-        type: string
-      otc_sumo_version:
-        required: true
-        type: string
       otc_build_number:
-        required: false
+        required: true
         type: string
       cmake_target:
         required: true
         type: string
       workflow_id:
-        required: false
+        required: true
         type: string
-      use_release_artifacts:
-        required: false
-        type: boolean
-        default: false
       runs_on:
         required: true
         type: string
@@ -61,6 +51,17 @@ on:
         required: true
       packagecloud_token:
         required: true
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+    outputs:
+      otc_version:
+        description: "The version of the package"
+        value: ${{ jobs.build_package.outputs.otc_version }}
+      otc_build_number:
+        description: "The build number of the package"
+        value: ${{ jobs.build_package.outputs.otc_build_number }}
 
 defaults:
   run:
@@ -72,18 +73,28 @@ jobs:
     name: Build (CMake)
     if: inputs.build_tool == 'cmake'
     outputs:
+      otc_version: ${{ steps.get-otc-version.outputs.otc_version }}
+      otc_build_number: ${{ steps.get-build-number.outputs.otc_build_number }}
       package_path: ${{ steps.package.outputs.path }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Workflow URL for sumologic-otel-collector
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         run: |
           org="SumoLogic"
           repo="sumologic-otel-collector"
           workflow_id="${{ inputs.workflow_id }}"
           echo "https://github.com/${org}/${repo}/actions/runs/${workflow_id}"
+
+      # Only output build number on one target so that it can be read by other
+      # jobs
+      - name: Output Build Number
+        if: inputs.cmake_target == 'otc_linux_amd64_deb'
+        id: get-build-number
+        run: |
+          build_number=${{ inputs.otc_build_number }}
+          echo "otc_build_number=${build_number}" >> $GITHUB_OUTPUT
 
       - name: Determine if MacOS package should be signed
         if: runner.os == 'macOS'
@@ -99,10 +110,6 @@ jobs:
         if: runner.os != 'Linux'
         run: mkdir build
 
-      - name: Use GitHub Artifacts for binaries
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
-        run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
-
       # TODO: Go back to using Apple-Actions/import-codesign-certs once https://github.com/Apple-Actions/import-codesign-certs/pull/58 is merged
       - name: Import macOS Code-Signing Certificates
         if: ${{ runner.os == 'macOS' && env.MACOS_SIGNING_ENABLED == 'true' }}
@@ -116,13 +123,37 @@ jobs:
           /usr/bin/security set-key-partition-list -S apple-tool:,apple: -k ${{ secrets.apple_developer_certificate_password }} signing_temp.keychain
           /usr/bin/security list-keychains -d user -s signing_temp.keychain login.keychain
 
+      - name: Fetch version artifact
+        if: runner.os == 'Linux'
+        uses: ./ci/github-actions/cmake
+        with:
+          args: -P version_artifact.cmake
+          gh_token: ${{ secrets.gh_artifacts_token }}
+          workflow_id: ${{ inputs.workflow_id }}
+          work_dir: .
+
+      - name: Fetch version artifact
+        if: runner.os != 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.gh_artifacts_token }}
+          GH_WORKFLOW_ID: ${{ inputs.workflow_id }}
+        run: cmake -P version_artifact.cmake
+
+      - name: Output OTC Version
+        id: get-otc-version
+        if: inputs.cmake_target == 'otc_linux_amd64_deb'
+        working-directory: build/version_detection
+        run: |
+          version=$(./otelcol-sumo --version |
+          sed -E -n 's/.* v([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
+          echo otc_version="${version}" >> $GITHUB_OUTPUT
+
       - name: Build Makefile
         id: cmake-linux
         if: runner.os == 'Linux'
         uses: ./ci/github-actions/cmake
         with:
-          otc_version: ${{ inputs.otc_version }}
-          otc_sumo_version: ${{ inputs.otc_sumo_version }}
+          gh_token: ${{ secrets.gh_artifacts_token }}
           otc_build_number: ${{ inputs.otc_build_number }}
           target: ${{ inputs.cmake_target }}
           workflow_id: ${{ inputs.workflow_id }}
@@ -131,11 +162,11 @@ jobs:
         id: cmake-other
         if: runner.os != 'Linux'
         env:
-          OTC_VERSION: ${{ inputs.otc_version }}
-          OTC_SUMO_VERSION: ${{ inputs.otc_sumo_version }}
+          GH_TOKEN: ${{ secrets.gh_artifacts_token }}
+          GH_WORKFLOW_ID: ${{ inputs.workflow_id }}
           OTC_BUILD_NUMBER: ${{ inputs.otc_build_number }}
-          TARGET: ${{ inputs.cmake_target }}
           PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
+          TARGET: ${{ inputs.cmake_target }}
         working-directory: build
         run: cmake ../
 
@@ -150,62 +181,17 @@ jobs:
         run: >
           echo path="$PACKAGE_NAME" >> $GITHUB_OUTPUT
 
-      - name: Set simple otc-bin outputs
-        id: bin
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
-        env:
-          OTC_BIN: >-
-            ${{
-            steps.cmake-linux.outputs.otc-bin ||
-            steps.cmake-other.outputs.otc-bin
-            }}
-          OTC_CONFIG_BIN: >-
-            ${{
-            steps.cmake-linux.outputs.otc-config-bin ||
-            steps.cmake-other.outputs.otc-config-bin
-            }}
-        run: >
-          echo otelcol_sumo_path="$OTC_BIN" >> $GITHUB_OUTPUT &&
-          echo otelcol_config_path="$OTC_CONFIG_BIN" >> $GITHUB_OUTPUT
-
-      # Download the artifacts required to build the package target. If
-      # inputs.workflow_id is empty then this will be skipped and CMake will
-      # attempt to fetch the artifacts from a GitHub Release matching
-      # otc_version and otc_sumo_version.
-      - name: Download otelcol-sumo artifact from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v3.1.4
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
-        with:
-          github_token: ${{ secrets.gh_artifacts_token }}
-          repo: SumoLogic/sumologic-otel-collector
-          run_id: ${{ inputs.workflow_id }}
-          workflow: dev_builds.yml
-          workflow_conclusion: success
-          name: ${{ steps.bin.outputs.otelcol_sumo_path }}
-          path: ./build/gh-artifacts
-          if_no_artifact_found: fail
-
-      - name: Download otelcol-config artifact from sumologic-otel-collector
-        uses: dawidd6/action-download-artifact@v3.1.4
-        if: inputs.workflow_id != ''
-        with:
-          github_token: ${{ secrets.gh_artifacts_token }}
-          repo: SumoLogic/sumologic-otel-collector
-          run_id: ${{ inputs.workflow_id }}
-          workflow: dev_builds.yml
-          workflow_conclusion: success
-          name: ${{ steps.bin.outputs.otelcol_config_path }}
-          path: ./build/gh-artifacts
-          if_no_artifact_found: fail
-
       - name: Build package
         if: runner.os == 'Linux'
         uses: ./ci/github-actions/make
         with:
+          gh_token: ${{ secrets.gh_artifacts_token }}
           target: package
 
       - name: Build package
         if: runner.os != 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.gh_artifacts_token }}
         working-directory: build
         run: make package
 
@@ -216,19 +202,30 @@ jobs:
           path: ./build/${{ steps.package.outputs.path }}
           if-no-files-found: error
 
-      - name: Publish package to Packagecloud
+      - name: Publish packages
         if: runner.os == 'Linux'
         uses: ./ci/github-actions/make
         with:
           target: publish-package
-          packagecloud-token: ${{ secrets.PACKAGECLOUD_TOKEN }}
+          packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Publish packages
+        if: runner.os != 'Linux'
+        working-directory: build
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+        run: make publish-package
 
       - name: Wait for Packagecloud packages to be indexed
         if: runner.os == 'Linux'
         uses: ./ci/github-actions/make
         with:
           target: wait-for-packagecloud-indexing
-          packagecloud-token: ${{ secrets.PACKAGECLOUD_TOKEN }}
+          packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
 
   test_package:
     runs-on: ${{ inputs.runs_on }}
@@ -253,14 +250,11 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     name: Build (WiX) ${{ inputs.fips && 'FIPS' || '' }}
     if: inputs.build_tool == 'wix'
-    env:
-      PRODUCT_VERSION: ${{ inputs.otc_version }}.${{ inputs.otc_build_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Workflow URL for sumologic-otel-collector
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         run: |
           org="SumoLogic"
           repo="sumologic-otel-collector"
@@ -273,54 +267,40 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Use GitHub Artifacts for binaries
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
-        run: echo "OTC_ARTIFACTS_SOURCE=github-artifacts" >> $GITHUB_ENV
+      - name: Fetch version artifact
+        env:
+          GH_TOKEN: ${{ secrets.gh_artifacts_token }}
+          GH_WORKFLOW_ID: ${{ inputs.workflow_id }}
+        shell: cmd
+        run: cmake -P version_artifact.cmake
+
+      - name: Determine version from binary
+        id: get-version
+        working-directory: ./build/version_detection
+        run: >
+          version=$(./otelcol-sumo.exe --version |
+          sed -E -n 's/.* v([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
+          echo product_version="${version}.${{ inputs.otc_build_number }}" >> $GITHUB_OUTPUT &&
+          echo version="${version}-${{ inputs.otc_build_number }}" >> $GITHUB_OUTPUT
 
       - name: Determine artifact names
         run: |
           echo "OTC_WORKFLOW_ARTIFACT_NAME=otelcol-sumo-${{ inputs.fips && 'fips-' || '' }}windows_${{ inputs.goarch }}.exe" >> $GITHUB_ENV
-          echo "OTC_RELEASE_ARTIFACT_NAME=otelcol-sumo-${{ inputs.otc_version }}-sumo-${{inputs.otc_sumo_version }}-${{ inputs.fips && 'fips-' || '' }}windows_${{ inputs.goarch }}.exe" >> $GITHUB_ENV
           echo "OTC_BUILD_INPUT_NAME=otelcol-sumo-windows_${{ inputs.goarch }}.exe" >> $GITHUB_ENV
 
-      # Download the artifacts required to build the package target. If
-      # inputs.workflow_id is empty then this will be skipped and an attempt
-      # will be made to fetch the artifacts from a GitHub Release matching
-      # otc_version and otc_sumo_version.
-      - name: Download artifact from workflow
+      # Download the artifacts required to build the package target.
+      - name: Download otelcol-sumo artifact from workflow
         uses: dawidd6/action-download-artifact@v3.1.4
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
           run_id: ${{ inputs.workflow_id }}
-          workflow: dev_builds.yml
           workflow_conclusion: success
           name: ${{ env.OTC_WORKFLOW_ARTIFACT_NAME }}
           path: ./build/artifacts
           if_no_artifact_found: fail
 
-      # Download the artifacts, required to build the package target, from a
-      # GitHub Release.
-      - name: Download artifact from GitHub Release
-        uses: robinraju/release-downloader@v1.10
-        if: ${{ inputs.use_release_artifacts && inputs.workflow_id == '' }}
-        with:
-          repository: SumoLogic/sumologic-otel-collector
-          tag: v${{ inputs.otc_version }}-sumo-${{ inputs.otc_sumo_version }}
-          fileName: ${{ env.OTC_RELEASE_ARTIFACT_NAME }}
-          out-file-path: build/artifacts
-
-      - name: Rename GitHub Release artifact
-        if: ${{ inputs.use_release_artifacts && inputs.workflow_id == '' }}
-        working-directory: ./build/artifacts
-        env:
-          MV_FROM: ${{ env.OTC_RELEASE_ARTIFACT_NAME }}
-          MV_TO: ${{ env.OTC_BUILD_INPUT_NAME }}
-        run: mv -n "$MV_FROM" "$MV_TO"
-
       - name: Rename GitHub Workflow artifact
-        if: ${{ !inputs.use_release_artifacts && inputs.workflow_id != '' }}
         working-directory: ./build/artifacts
         env:
           MV_FROM: ${{ env.OTC_WORKFLOW_ARTIFACT_NAME }}
@@ -332,6 +312,7 @@ jobs:
         working-directory: ./msi/wix
         env:
           PLATFORM: ${{ inputs.package_arch }}
+          PRODUCT_VERSION: ${{ steps.get-version.outputs.product_version }}
         run: |
           msbuild.exe -p:Configuration=Release \
             -p:Platform=$PLATFORM \
@@ -357,6 +338,19 @@ jobs:
           name: ${{ steps.build.outputs.package_filename }}
           path: ${{ steps.build.outputs.package_path }}
           if-no-files-found: error
+
+      - name: Publish packages
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-west-2
+          VERSION: ${{ steps.get-version.outputs.version }}
+          PKG_PATH: ${{ steps.build.outputs.package_path }}
+          PKG_NAME: ${{ steps.build.outputs.package_filename }}
+          S3_BUCKET: sumologic-osc-ci-builds
+        run: |
+          aws.exe s3 cp $PKG_PATH \
+          s3://${S3_BUCKET}/${VERSION}/${PKG_NAME}
 
   test_wixext:
     name: Test (SumoLogic.wixext)
