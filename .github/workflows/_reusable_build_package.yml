@@ -4,13 +4,13 @@ on:
   workflow_call:
     inputs:
       otc_build_number:
-        required: false
+        required: true
         type: string
       cmake_target:
         required: true
         type: string
       workflow_id:
-        required: false
+        required: true
         type: string
       runs_on:
         required: true
