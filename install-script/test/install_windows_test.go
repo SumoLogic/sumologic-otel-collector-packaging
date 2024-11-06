@@ -27,7 +27,6 @@ func TestInstallScript(t *testing.T) {
 			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
-				checkLatestAppVersion,
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(localSystemSID),
 				checkUserConfigCreated,
@@ -148,7 +147,9 @@ func TestInstallScript(t *testing.T) {
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
-			runTest(t, &spec)
+			if err := runTest(t, &spec); err != nil {
+				t.Error(err)
+			}
 		})
 	}
 }

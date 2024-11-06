@@ -125,6 +125,9 @@ macro(build_cpack_config)
   # Build CPackConfig
   include(CPack)
 
+  # Create components
+  create_otc_components()
+
   # Add a target for each packagecloud distro the package should be published to
   set(_pc_user "sumologic")
   set(_pc_repo "ci-builds")
@@ -136,19 +139,47 @@ macro(build_cpack_config)
   get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
   add_custom_target(publish-package
     DEPENDS ${_all_publish_targets})
+
+  # Add a wait-for-packagecloud-indexing target to wait for Packagecloud to finish indexing
+  create_wait_for_packagecloud_indexing_target(${_pc_user} ${_pc_repo} ${_package_output})
 endmacro()
 
 # Create a Packagecloud publish target for uploading a package to a specific
 # repository for a specific distribution.
-function(create_packagecloud_publish_target _pc_user _pc_repo _pc_distro _pkg_name)
-    set(_pc_output "${_pkg_name}-${_pc_repo}/${_pc_distro}")
-    separate_arguments(_packagecloud_push_cmd UNIX_COMMAND "packagecloud push --skip-exists ${_pc_user}/${_pc_repo}/${_pc_distro} ${_pkg_name}")
+function(create_packagecloud_publish_target _pc_user _pc_repo _pc_distro _pkg_path)
+    set(_pc_output "${_pkg_path}-${_pc_repo}/${_pc_distro}")
+    separate_arguments(_packagecloud_push_cmd
+      UNIX_COMMAND "packagecloud push --skip-exists ${_pc_user}/${_pc_repo}/${_pc_distro} ${_pkg_path}")
     add_custom_command(OUTPUT ${_pc_output}
         COMMAND ${_packagecloud_push_cmd}
-        DEPENDS ${_pkg_name}
+        DEPENDS ${_pkg_path}
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         VERBATIM)
     append_to_publish_targets(${_pc_output})
+endfunction()
+
+# Create a Packagecloud wait for indexing target that will block until
+# Packagecloud has finished indexing packages with the given package name.
+function(create_wait_for_packagecloud_indexing_target _pc_user _pc_repo _pkg_path)
+  set(_pc_output "${_pkg_path}-${_pc_repo}-wait-for-indexing")
+  cmake_path(GET _pkg_path FILENAME _pkg_name)
+  set(_repo_id "${_pc_user}/${_pc_repo}")
+  set(_base_cmd "packagecloud search")
+  set(_query_arg "--query ${_pkg_name}")
+  set(_wait_args "--wait-for-indexing --wait-seconds 30 --wait-max-retries 12")
+  set(_cmd "${_base_cmd} ${_repo_id} ${_query_arg} ${_wait_args}")
+  separate_arguments(_packagecloud_search_cmd UNIX_COMMAND "${_cmd}")
+
+  message(STATUS "wait for indexing command: ${_cmd}")
+
+  add_custom_command(OUTPUT ${_pc_output}
+    COMMAND ${_packagecloud_search_cmd}
+    DEPENDS ${_pkg_name}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM)
+
+  add_custom_target(wait-for-packagecloud-indexing
+    DEPENDS ${_pc_output})
 endfunction()
 
 # Sets a GitHub output parameter by appending a statement to the file defined by

@@ -4,24 +4,19 @@ package sumologic_scripts_tests
 
 import (
 	"context"
-	"io"
-	"net"
-	"net/http"
+	"fmt"
 	"os"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 // These checks always have to be true after a script execution
 var commonPostChecks = []checkFunc{checkNoBakFilesPresent}
 
-func cleanCache(t *testing.T) {
-	err := os.RemoveAll(cacheDirectory)
-	require.NoError(t, err)
+func cleanCache(t *testing.T) error {
+	return os.RemoveAll(cacheDirectory)
 }
 
-func runTest(t *testing.T, spec *testSpec) {
+func runTest(t *testing.T, spec *testSpec) (fErr error) {
 	ch := check{
 		test:                t,
 		installOptions:      spec.options,
@@ -37,55 +32,59 @@ func runTest(t *testing.T, spec *testSpec) {
 
 	defer tearDown(t)
 
-	t.Log("Starting HTTP server")
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := io.WriteString(w, "200 OK\n")
-		require.NoError(t, err)
-	})
-
-	listener, err := net.Listen("tcp", ":3333")
-	require.NoError(t, err)
-
-	httpServer := &http.Server{
-		Handler: mux,
+	mockAPI, err := startMockAPI(t)
+	if err != nil {
+		return fmt.Errorf("Failed to start mock API: %s", err)
 	}
-	go func() {
-		err := httpServer.Serve(listener)
-		if err != nil && err != http.ErrServerClosed {
-			require.NoError(t, err)
-		}
-	}()
+
 	defer func() {
-		require.NoError(t, httpServer.Shutdown(context.Background()))
+		if err := mockAPI.Shutdown(context.Background()); err != nil {
+			fErr = fmt.Errorf("Failed to shutdown API: %s", err)
+			return
+		}
 	}()
 
 	t.Log("Running pre actions")
 	for _, a := range spec.preActions {
-		a(ch)
+		if ok := a(ch); !ok {
+			return nil
+		}
 	}
 
 	t.Log("Running pre checks")
 	for _, c := range spec.preChecks {
-		c(ch)
+		if ok := c(ch); !ok {
+			return nil
+		}
 	}
 
+	t.Log("Running script")
 	ch.code, ch.output, ch.errorOutput, ch.err = runScript(ch)
+	if ch.err != nil {
+		return ch.err
+	}
 
 	// Remove cache in case of curl issue
 	if ch.code == curlTimeoutErrorCode {
-		cleanCache(t)
+		if err := cleanCache(t); err != nil {
+			return err
+		}
 	}
 
 	checkRun(ch)
 
 	t.Log("Running common post checks")
 	for _, c := range commonPostChecks {
-		c(ch)
+		if ok := c(ch); !ok {
+			return nil
+		}
 	}
 
 	t.Log("Running post checks")
 	for _, c := range spec.postChecks {
-		c(ch)
+		if ok := c(ch); !ok {
+			return nil
+		}
 	}
+	return nil
 }
