@@ -1,9 +1,26 @@
 # Require CMake >= 3.24.1
 cmake_minimum_required(VERSION 3.24.1 FATAL_ERROR)
 
+# Required environment variables
+if(NOT DEFINED ENV{GH_TOKEN})
+  message(FATAL_ERROR "GH_TOKEN environment variable must be set")
+endif()
+
+if(NOT DEFINED ENV{GH_WORKFLOW_ID})
+  message(FATAL_ERROR "GH_WORKFLOW_ID environment variable must be set")
+endif()
+
+set(GH_TOKEN "$ENV{GH_TOKEN}")
+set(GH_WORKFLOW_ID "$ENV{GH_WORKFLOW_ID}")
+
 # Required and optional programs. Attempts to find required and optional
 # programs used to build the packages.
 find_program(PACKAGECLOUD_PROGRAM packagecloud)
+find_program(GH_PROGRAM gh REQUIRED)
+
+# Include utils
+set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
+include("${CMAKE_SOURCE_DIR}/utils.cmake")
 
 # Set version information
 include("${CMAKE_SOURCE_DIR}/version.cmake")
@@ -16,17 +33,13 @@ include(CPackComponent)
 set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/assets")
 set(COMPONENTS_DIR "${CMAKE_SOURCE_DIR}/components")
 set(DISTRIBUTIONS_DIR "${CMAKE_SOURCE_DIR}/distributions")
-set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/external_projects")
 set(SETTINGS_DIR "${CMAKE_SOURCE_DIR}/settings")
 set(TARGETS_DIR "${CMAKE_SOURCE_DIR}/targets")
 set(TEMPLATES_DIR "${CMAKE_SOURCE_DIR}/templates")
 set(TEMPLATES_OUTPUT_DIR "${CMAKE_BINARY_DIR}/templates_output")
-set(UTILS_DIR "${CMAKE_SOURCE_DIR}/utils")
 
 # Include CMake files
-include("${CMAKE_SOURCE_DIR}/utils.cmake")
 include("${CMAKE_SOURCE_DIR}/components.cmake")
-include("${CMAKE_SOURCE_DIR}/external_projects.cmake")
 include("${CMAKE_SOURCE_DIR}/templates.cmake")
 include("${CMAKE_SOURCE_DIR}/packages.cmake")
 include("${CMAKE_SOURCE_DIR}/distributions.cmake")

@@ -9,5 +9,5 @@ macro(set_common_settings)
   #set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 
   set(ARTIFACTS_DIR "${CMAKE_BINARY_DIR}/artifacts")
-  set(GH_ARTIFACTS_DIR "${CMAKE_BINARY_DIR}/gh-artifacts")
+  set(ACL_LOG_FILE_PATHS "/var/log")
 endmacro()

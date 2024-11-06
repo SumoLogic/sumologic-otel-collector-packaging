@@ -4,37 +4,13 @@
 # upgrades from one build to the next.
 name: 'Build packages'
 
-# Sets the name of the CI run based on whether the run was triggered by a push
-# or remotely with or without workflow_run_id or use_release_artifacts  set. The
-# name used for push events is the full commit message as I have not been able
-# to find a way to only show the commit title (first 72 characters of commit
-# message) - Justin K.
+# Sets the name of the CI run based on whether the run was triggered with or
+# without a workflow_id set.
 run-name: >
   ${{
-  (inputs.use_release_artifacts &&
-  inputs.otc_version != '' &&
-  inputs.otc_sumo_version != '') &&
-  format('Build for GitHub Release: {0}-sumo-{1}, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
+  inputs.workflow_id == '' && format('Build for Remote Workflow: latest-main')
   ||
-  (inputs.use_release_artifacts &&
-  (inputs.otc_version == '' ||
-  inputs.otc_sumo_version == '')) &&
-  'Build for GitHub Release: latest'
-  ||
-  (inputs.workflow_id != '' &&
-  inputs.otc_version != '' &&
-  inputs.otc_sumo_version != '') &&
-  format('Build for Remote Workflow: {0}, Version: {1}-sumo-{2}', inputs.workflow_id, inputs.otc_version, inputs.otc_sumo_version)
-  ||
-  (inputs.workflow_id == '' &&
-  inputs.otc_version != '' &&
-  inputs.otc_sumo_version != '') &&
-  format('Build for Remote Workflow: latest-main, Version: {0}-sumo-{1}', inputs.otc_version, inputs.otc_sumo_version)
-  ||
-  inputs.workflow_id != '' &&
-  format('Build for Remote Workflow: {0}, Version: unknown', inputs.workflow_id)
-  ||
-  github.event.head_commit.message
+  inputs.workflow_id != '' && format('Build for Remote Workflow: {0}', inputs.workflow_id)
   }}
 
 on:
@@ -52,29 +28,6 @@ on:
           are being built for.
         required: false
         type: string
-      otc_version:
-        description: |
-          Version of otelcol-sumo to package in A.B.C format.
-        required: false
-        type: string
-      otc_sumo_version:
-        description: |
-          Sumo version of otelcol-sumo to package. E.g. the X in A.B.C-sumo-X.
-        required: false
-        type: string
-      release:
-        description: Publish draft release
-        type: boolean
-        required: false
-        default: false
-      use_release_artifacts:
-        description: |
-          Fetch artifacts from a GitHub Release instead of the artifacts from a
-          GitHub CI run. Both otc_version and otc_sumo_version are required if
-          this is set to true.
-        type: boolean
-        required: false
-        default: false
 
 jobs:
   determine_workflow:
@@ -107,65 +60,6 @@ jobs:
       - name: Output Remote Workflow URL
         run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ steps.workflow.outputs.id }}
 
-  # Determines the latest version which will be used to fetch artifacts from a
-  # GitHub Release and as the version of the packages being built. This is
-  # skipped if the otc_version and otc_sumo_version inputs have been set.
-  determine_version:
-    runs-on: ubuntu-latest
-    name: Determine version
-    outputs:
-      otc_version: ${{ steps.versions.outputs.otc_version }}
-      otc_sumo_version: ${{ steps.versions.outputs.otc_sumo_version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Determine the latest release version if either otc_version or
-      # otc_sumo_version are empty.
-      - name: Determine latest release version
-        id: release
-        if: >
-          inputs.otc_version == '' &&
-          inputs.otc_sumo_version == ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG_NAME=$(gh release view -R SumoLogic/sumologic-otel-collector --jq ".tagName" --json "tagName")
-          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
-
-      - name: Determine version core from release
-        id: version-core
-        if: >
-          inputs.otc_version == '' &&
-          inputs.otc_sumo_version == ''
-        env:
-          VERSION_TAG: ${{ steps.release.outputs.tag_name }}
-        run: >
-          ./ci/get_version.sh otc_version > /tmp/otc_version &&
-          cat /tmp/otc_version &&
-          echo "version=$(cat /tmp/otc_version)" >> $GITHUB_OUTPUT
-
-      - name: Determine sumo version from release
-        id: sumo-version
-        if: >
-          inputs.otc_version == '' &&
-          inputs.otc_sumo_version == ''
-        env:
-          VERSION_TAG: ${{ steps.release.outputs.tag_name }}
-        run: >
-          ./ci/get_version.sh otc_sumo_version > /tmp/otc_sumo_version &&
-          cat /tmp/otc_sumo_version &&
-          echo "version=$(cat /tmp/otc_sumo_version)" >> $GITHUB_OUTPUT
-
-      - name: Set output versions
-        id: versions
-        run: |
-            echo "otc_version=${{ inputs.otc_version || steps.version-core.outputs.version }}" >> $GITHUB_OUTPUT
-            echo "otc_sumo_version=${{ inputs.otc_sumo_version || steps.sumo-version.outputs.version }}" >> $GITHUB_OUTPUT
-
-      - name: Output App Version
-        run: echo ::notice title=App Version::${{ steps.versions.outputs.otc_version }}-sumo-${{ steps.versions.outputs.otc_sumo_version }}
-
   # Builds a package for each target in the matrix. The target must be an
   # existing file name (without extension) in the targets directory when
   # build_tool is cmake.
@@ -174,14 +68,10 @@ jobs:
     uses: ./.github/workflows/_reusable_build_package.yml
     needs:
       - determine_workflow
-      - determine_version
     with:
-      otc_version: ${{ needs.determine_version.outputs.otc_version }}
-      otc_sumo_version: ${{ needs.determine_version.outputs.otc_sumo_version }}
       otc_build_number: ${{ github.run_number }}
       cmake_target: ${{ matrix.target }}
       workflow_id: ${{ needs.determine_workflow.outputs.workflow_id }}
-      use_release_artifacts: ${{ inputs.use_release_artifacts || false }}
       runs_on: ${{ matrix.runs_on }}
       goarch: ${{ matrix.goarch }}
       package_arch: ${{ matrix.package_arch }}
@@ -199,7 +89,8 @@ jobs:
       microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
       gh_ci_token: ${{ secrets.GH_CI_TOKEN }}
       packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
-
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     strategy:
       matrix:
         include:
@@ -249,6 +140,15 @@ jobs:
   install-script:
     name: Store install script
     runs-on: ubuntu-latest
+    needs:
+      - build_packages
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_S3_BUCKET: sumologic-osc-ci-builds
+      OTC_VERSION: ${{ needs.build_packages.outputs.otc_version }}
+      OTC_BUILD_NUMBER: ${{ needs.build_packages.outputs.otc_build_number }}
     steps:
       - uses: actions/checkout@v4
 
@@ -266,78 +166,28 @@ jobs:
           path: ./install-script/install.ps1
           if-no-files-found: error
 
-  publish_release:
-    name: Publish Release
-    runs-on: ubuntu-latest
-    needs:
-      - build_packages
-      - determine_version
-    permissions:
-      contents: write
-    if: inputs.release
-    env:
-      OTC_APP_VERSION: v${{ needs.determine_version.outputs.otc_version }}-sumo-${{ needs.determine_version.outputs.otc_sumo_version }}
-      RELEASE_TAG_NAME: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
-    steps:
-      - name: Download all packages stored as artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
+      - name: Store install scripts on S3
+        run: |
+          version=${OTC_VERSION}-${OTC_BUILD_NUMBER}
+          s3_path="${version}/"
+          aws s3 cp install-script/install.ps1 s3://${AWS_S3_BUCKET}/${s3_path}
+          aws s3 cp install-script/install.sh s3://${AWS_S3_BUCKET}/${s3_path}
 
-      # Create the release tag separately to add a message to it
-      # NOTE: As per the github API, we need to create the tag object first, and then the git reference
-      - name: Create release tag
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const tagRequest = await github.rest.git.createTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: '${{ env.RELEASE_TAG_NAME }}',
-              message: `App Version: ${{ env.OTC_APP_VERSION }}`,
-              object: context.sha,
-              type: 'commit',
-              tagger: {
-                name: "${{ github.actor }}",
-                email: "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com",
-              },
-            })
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ env.RELEASE_TAG_NAME }}',
-              sha: tagRequest.data.sha
-            })
-
-      - uses: ncipollo/release-action@v1
-        with:
-          name: v${{ needs.determine_version.outputs.otc_version }}-${{ github.run_number }}
-          commit: ${{ github.sha }}
-          tag: ${{ env.RELEASE_TAG_NAME }}
-
-          draft: true
-          generateReleaseNotes: true
-          prerelease: false
-
-          allowUpdates: true
-          omitBodyDuringUpdate: true
-          omitNameDuringUpdate: true
-
-          artifacts: "artifacts/*/*"
-          artifactErrorsFailBuild: true
-          replacesArtifacts: true
-
-          body: |
-            This release packages [${{ env.OTC_APP_VERSION }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/${{ env.OTC_APP_VERSION }}).
-
-            The changelog below is for the package itself, rather than the Sumo Logic Distribution for OpenTelemetry Collector.
+      - name: Create latest_version file
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          version=${OTC_VERSION}-${OTC_BUILD_NUMBER}
+          echo "${version}" >> latest_version
+          aws s3 cp --content-type "text/plain" latest_version \
+          s3://${AWS_S3_BUCKET}/
 
   test-install-script:
     name: Test Install Script
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 60
     needs:
-      - determine_version
       - build_packages
     strategy:
       fail-fast: false
@@ -352,7 +202,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      OTC_VERSION: ${{ needs.determine_version.outputs.otc_version }}
+      OTC_VERSION: ${{ needs.build_packages.outputs.otc_version }}
       OTC_BUILD_NUMBER: ${{ github.run_number }}
       PACKAGECLOUD_MASTER_TOKEN: ${{ secrets.PACKAGECLOUD_MASTER_TOKEN }}
       PACKAGECLOUD_REPO: ci-builds
@@ -386,11 +236,16 @@ jobs:
           ls -l artifacts/
           ls -l artifacts/**/*
 
-      - name: Set DARWIN_PKG_URL
+      - name: Set DARWIN_PKG_URL (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
           fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> $GITHUB_ENV
+
+      - name: Set S3_BUCKET (macOS)
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
+        run: |
+          echo S3_BUCKET="sumologic-osc-ci-builds" >> $GITHUB_ENV
 
       - name: Run install script tests (*nix)
         if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows'
@@ -401,4 +256,8 @@ jobs:
         shell: powershell
         if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows'
         working-directory: install-script/test
+        env:
+          S3_BUCKET: sumologic-osc-ci-builds
+          OVERRIDE_ARCH: x64
+          SKIP_ARCH_DETECTION: 1
         run: make test

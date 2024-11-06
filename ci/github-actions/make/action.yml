@@ -4,7 +4,16 @@ inputs:
   target:
     required: true
     type: string
-  packagecloud-token:
+  gh_token:
+    required: false
+    type: string
+  packagecloud_token:
+    required: false
+    type: string
+  aws-access-key-id:
+    required: false
+    type: string
+  aws-secret-access-key:
     required: false
     type: string
 
@@ -12,7 +21,10 @@ runs:
   using: 'docker'
   image: '../../../Dockerfile'
   env:
-    PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud-token }}
+    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+    GH_TOKEN: ${{ inputs.gh_token }}
+    PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud_token }}
   args:
     - make
     - ${{ inputs.target }}

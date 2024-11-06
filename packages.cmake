@@ -6,17 +6,40 @@ function(append_to_publish_targets)
     set_property(GLOBAL PROPERTY _all_publish_targets "${tmp}")
 endfunction()
 
+function(download_github_artifact _slug _workflow_id _remote_filename _target)
+  if(TARGET ${_target})
+    message(STATUS "Target already exists: ${_remote_filename}")
+  else()
+    message(STATUS "Creating target: ${_remote_filename}")
+    set(_cmd_str "${GH_PROGRAM} run download -R ${_gh_slug} ${_gh_workflow} -n ${_remote_filename}")
+    separate_arguments(_cmd UNIX_COMMAND "${_cmd_str}")
+    add_custom_command(
+      OUTPUT ${_remote_filename}
+      COMMAND ${_cmd}
+      COMMENT "Downloading ${_remote_filename} from GitHub"
+      VERBATIM
+    )
+    add_custom_target(${_target} ALL DEPENDS ${_remote_filename})
+  endif()
+endfunction()
+
 # Build CPackConfig, create a target for building the package and add the target
 # to the list of all package targets
 macro(build_cpack_config)
   require_variables(
     "CPACK_PACKAGE_FILE_NAME"
+    "GH_WORKFLOW_ID"
     "PACKAGE_FILE_EXTENSION"
-    "OTC_BINARY"
-    "OTC_CONFIG_BINARY"
-    "SOURCE_OTC_BINARY"
-    "SOURCE_OTC_CONFIG_BINARY"
+    "OTC_BIN"
+    "OTC_CONFIG_BIN"
+    "REMOTE_OTC_BIN"
   )
+
+  set(_gh_slug "SumoLogic/sumologic-otel-collector")
+  set(_gh_workflow "${GH_WORKFLOW_ID}")
+
+  download_github_artifact(${_gh_slug} ${_gh_workflow} ${REMOTE_OTC_BIN} ${OTC_BIN})
+  download_github_artifact(${_gh_slug} ${_gh_workflow} ${REMOTE_OTC_CONFIG_BIN} ${OTC_CONFIG_BIN})
 
   # Set a GitHub output with a name matching ${target_name}-pkg and a value
   # equal to the filename of the package that will be built. This provides
@@ -24,96 +47,6 @@ macro(build_cpack_config)
   # workflow artifact.
   set(package_file_name "${CPACK_PACKAGE_FILE_NAME}.${PACKAGE_FILE_EXTENSION}")
   set_github_output("package_name" "${package_file_name}")
-
-  # Set a GitHub output with a name matching ${target_name}-otc-bin and a value
-  # equal to the name of the otelcol-sumo binary artifact that we want GitHub
-  # Actions to fetch from the sumologic-otel-collector's GitHub Workflow
-  # artifacts. This is only used when the OTC_ARTIFACTS_SOURCE environment
-  # variable is set to "github-artifacts" which disables fetching artifacts from
-  # a GitHub Release.
-  if(DEFINED ENV{OTC_ARTIFACTS_SOURCE})
-    if($ENV{OTC_ARTIFACTS_SOURCE} STREQUAL "github-artifacts")
-      require_variables(
-        "GH_ARTIFACTS_DIR"
-        "GH_OUTPUT_OTC_BIN"
-        "GH_OUTPUT_OTC_CONFIG_BIN"
-      )
-
-      file(MAKE_DIRECTORY "${GH_ARTIFACTS_DIR}")
-      file(CHMOD_RECURSE "${GH_ARTIFACTS_DIR}"
-        DIRECTORY_PERMISSIONS
-          OWNER_WRITE OWNER_READ OWNER_EXECUTE
-          GROUP_WRITE GROUP_READ GROUP_EXECUTE
-          WORLD_WRITE WORLD_READ WORLD_EXECUTE
-      )
-      set_github_output("otc-bin" "${GH_OUTPUT_OTC_BIN}")
-      set_github_output("otc-config-bin" "${GH_OUTPUT_OTC_CONFIG_BIN}")
-    else()
-      message(FATAL_ERROR
-        "Unsupported value for OTC_ARTIFACTS_SOURCE environment variable: $ENV{OTC_ARTIFACTS_SOURCE}"
-      )
-    endif()
-
-    # Create a target, if the target does not yet exist, for copying the
-    # otelcol-sumo binary from the gh-actions directory to the artifacts
-    # directory
-    if(TARGET "${SOURCE_OTC_BINARY}")
-      message(STATUS "Target already exists: ${SOURCE_OTC_BINARY}")
-    else()
-      message(STATUS "Creating target: ${SOURCE_OTC_BINARY}")
-      file(MAKE_DIRECTORY "${SOURCE_OTC_BINARY_DIR}")
-      add_custom_target("${SOURCE_OTC_BINARY}"
-        ALL
-        COMMAND ${CMAKE_COMMAND} -E copy ${GH_ARTIFACT_OTC_BINARY_PATH} ${SOURCE_OTC_BINARY_PATH}
-        VERBATIM
-      )
-    endif()
-
-    # Create a target, if the target does not yet exist, for copying the
-    # otelcol-config binary from the gh-actions directory to the artifacts
-    # directory
-    if(TARGET "${SOURCE_OTC_CONFIG_BINARY}")
-      message(STATUS "Target already exists: ${SOURCE_OTC_CONFIG_BINARY}")
-    else()
-      message(STATUS "Creating target: ${SOURCE_OTC_CONFIG_BINARY}")
-      file(MAKE_DIRECTORY "${SOURCE_OTC_CONFIG_BINARY_DIR}")
-      add_custom_target("${SOURCE_OTC_CONFIG_BINARY}"
-        ALL
-        COMMAND ${CMAKE_COMMAND} -E copy ${GH_ARTIFACT_OTC_CONFIG_BINARY_PATH} ${SOURCE_OTC_CONFIG_BINARY_PATH}
-        VERBATIM
-      )
-    endif()
-  else()
-    # Create a target for downloading the otelcol-sumo binary from GitHub
-    # Releases if the target does not exist yet
-    if(TARGET "${SOURCE_OTC_BINARY}")
-      message(STATUS "Target already exists: ${SOURCE_OTC_BINARY}")
-    else()
-      message(STATUS "Creating target: ${SOURCE_OTC_BINARY}")
-      require_variables("OTC_GIT_TAG")
-      create_otelcol_sumo_target(
-        "${SOURCE_OTC_BINARY}"
-        "${OTC_BINARY}"
-        "${OTC_GIT_TAG}"
-        "${SOURCE_OTC_BINARY_DIR}"
-      )
-    endif()
-
-    # Create a target for downloading the otelcol-config binary from GitHub
-    # Releases if the target does not exist yet
-    if(TARGET "${SOURCE_OTC_CONFIG_BINARY}")
-      message(STATUS "Target already exists: ${SOURCE_OTC_CONFIG_BINARY}")
-    else()
-      message(STATUS "Creating target: ${SOURCE_OTC_CONFIG_BINARY}")
-      require_variables("OTC_GIT_TAG")
-      create_otelcol_sumo_target(
-        "${SOURCE_OTC_CONFIG_BINARY}"
-        "${OTC_CONFIG_BINARY}"
-        "${OTC_GIT_TAG}"
-        "${SOURCE_OTC_CONFIG_BINARY_DIR}"
-      )
-    endif()
-  endif()
 
   set(_package_file "${CPACK_PACKAGE_FILE_NAME}.${PACKAGE_FILE_EXTENSION}")
   set(_package_output "${CMAKE_BINARY_DIR}/${_package_file}")
@@ -134,6 +67,13 @@ macro(build_cpack_config)
   foreach(_pc_distro ${packagecloud_distros})
     create_packagecloud_publish_target(${_pc_user} ${_pc_repo} ${_pc_distro} ${_package_output})
   endforeach()
+
+  # Add a target for uploading the package to Amazon S3
+  set(_s3_channel "ci-builds")
+  set(_version "${OTC_VERSION}-${BUILD_NUMBER}")
+  set(_s3_bucket "sumologic-osc-${_s3_channel}")
+  set(_s3_path "${_version}/")
+  create_s3_cp_target(${_s3_bucket} ${_s3_path} ${_package_output})
 
   # Add a publish-package target to publish the package built above
   get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
@@ -180,6 +120,18 @@ function(create_wait_for_packagecloud_indexing_target _pc_user _pc_repo _pkg_pat
 
   add_custom_target(wait-for-packagecloud-indexing
     DEPENDS ${_pc_output})
+endfunction()
+
+# Create an Amazon S3 publish target for uploading a package to an S3 bucket.
+function(create_s3_cp_target _s3_bucket _s3_path _pkg_path)
+    set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
+    separate_arguments(_s3_cp_cmd UNIX_COMMAND "aws s3 cp ${_pkg_path} s3://${_s3_bucket}/${_s3_path}")
+    add_custom_command(OUTPUT ${_s3_output}
+        COMMAND ${_s3_cp_cmd}
+        DEPENDS ${_pkg_path}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        VERBATIM)
+    append_to_publish_targets(${_s3_output})
 endfunction()
 
 # Sets a GitHub output parameter by appending a statement to the file defined by
