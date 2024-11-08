@@ -559,7 +559,7 @@ function uninstall() {
 
 function upgrade() {
     case "${OS_TYPE}" in
-    "linux") upgrade_linux ;;
+    "linux") upgrade_linux "${VERSION}" ;;
     *)
       echo "upgrading is not supported by this script for OS: ${OS_TYPE}"
       exit 1
@@ -568,15 +568,35 @@ function upgrade() {
 
 }
 
+function upgrade_command_linux() {
+    if [[ -z "${VERSION}" ]]; then
+        case $(get_package_manager) in
+            yum | dnf)
+                echo "yum update otelcol-sumo --quiet -y"
+                ;;
+            apt-get)
+                echo "apt-get update --quiet && apt-get install otelcol-sumo --quiet -y --only-upgrade"
+                ;;
+        esac
+    else
+        case $(get_package_manager) in
+            yum | dnf)
+                echo "yum update \"otelcol-sumo-${VERSION}\" --quiet -y"
+                ;;
+            apt-get)
+                echo "apt-get update --quiet && apt-get install \"otelcol-sumo=${VERSION}\" --quiet -y --only-upgrade"
+                ;;
+        esac
+    fi
+}
+
 function upgrade_linux() {
-    case $(get_package_manager) in
-        yum | dnf)
-            yum update otelcol-sumo --quiet -y
-            ;;
-        apt-get)
-            apt-get update --quiet && apt-get upgrade otelcol-sumo --quiet -y
-            ;;
-    esac
+    if [[ -z "${VERSION}" ]]; then
+        echo "Upgrading to the latest version of otelcol-sumo"
+    else
+        echo "Upgrading to otelcol-sumo version ${VERSION}"
+    fi
+    eval "$(upgrade_command_linux)"
 }
 
 # uninstall otelcol-sumo on darwin
@@ -884,17 +904,8 @@ function install_linux_package() {
     esac
 }
 
-function show_upgrade_instructions() {
-    echo -n "Upgrades can be performed using the native package manager: "
-
-    case $(get_package_manager) in
-        yum | dnf)
-            echo "yum update otelcol-sumo -y"
-            ;;
-        apt-get)
-            echo "apt-get update && apt-get upgrade otelcol-sumo -y"
-            ;;
-    esac
+function show_upgrade_instructions_linux() {
+    echo "Upgrades can be performed using the native package manager: $(upgrade_command_linux)"
 }
 
 function check_deprecated_linux_flags() {
@@ -913,7 +924,7 @@ function check_deprecated_linux_flags() {
 
     if [[ -n "${DOWNLOAD_ONLY}" ]]; then
         echo "--download-only is only supported on darwin"
-        show_upgrade_instructions
+        show_upgrade_instructions_linux "${VERSION}"
         exit 1
     fi
 }
@@ -925,7 +936,12 @@ function is_package_installed() {
             yum --cacheonly list --installed otelcol-sumo > /dev/null 2>&1
             ;;
         apt-get)
-            dpkg --status otelcol-sumo > /dev/null 2>&1
+            status="$(dpkg-query -Wf '${db:Status-Status}' otelcol-sumo)"
+            if [[ $? != 0 || "${status}" != "installed" ]]; then
+                false
+            else
+                true
+            fi
             ;;
     esac
 }
@@ -1198,9 +1214,11 @@ if has_prepackaging_installation; then
    HAD_PREPACKAGING_INSTALLATION="true"
 fi
 
+echo "Version specified: ${VERSION}"
+
 if is_package_installed; then
     echo "The otelcol-sumo package is already installed"
-    show_upgrade_instructions
+    show_upgrade_instructions_linux
     exit 1
 fi
 
