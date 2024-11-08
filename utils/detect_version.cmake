@@ -16,7 +16,7 @@ function(detect_version _artifact_bin _working_dir)
 
   message(STATUS "Version output: ${_version_output}")
 
-  string(REGEX MATCH ".* v([0-9]+\.[0-9]+\.[0-9]+)\-sumo\-([0-9]+)\-.*" _ ${_version_output})
+  string(REGEX MATCH ".* ([0-9]+\.[0-9]+\.[0-9]+)\-sumo\-([0-9]+)\-.*" _ ${_version_output})
 
   if(NOT CMAKE_MATCH_COUNT EQUAL 2)
     message(FATAL_ERROR "Could not parse version information from version output")
