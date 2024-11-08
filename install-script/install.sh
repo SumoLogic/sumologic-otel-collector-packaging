@@ -566,13 +566,12 @@ function upgrade() {
 function upgrade_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum update --quiet -y
+            yum update otelcol-sumo --quiet -y
             ;;
         apt-get)
-            apt-get update --quiet && apt-get upgrade --quiet -y
+            apt-get update --quiet && apt-get upgrade otelcol-sumo --quiet -y
             ;;
     esac
-
 }
 
 # uninstall otelcol-sumo on darwin
@@ -880,6 +879,19 @@ function install_linux_package() {
     esac
 }
 
+function show_upgrade_instructions() {
+    echo -n "Upgrades can be performed using the native package manager: "
+
+    case $(get_package_manager) in
+        yum | dnf)
+            echo "yum update otelcol-sumo -y"
+            ;;
+        apt-get)
+            echo "apt-get update && apt-get upgrade otelcol-sumo -y"
+            ;;
+    esac
+}
+
 function check_deprecated_linux_flags() {
     if [[ -n "${BINARY_BRANCH}" ]]; then
         echo "warning: --binary-branch is deprecated"
@@ -895,7 +907,8 @@ function check_deprecated_linux_flags() {
     fi
 
     if [[ -n "${DOWNLOAD_ONLY}" ]]; then
-        echo "--download-only is only supported on darwin, use 'install.sh --upgrade' to upgrade otelcol-sumo"
+        echo "--download-only is only supported on darwin"
+        show_upgrade_instructions
         exit 1
     fi
 }
@@ -1178,6 +1191,12 @@ if has_prepackaging_installation; then
    # We can now proceed and install using the packages and attempt to restore
    # the configuration later.
    HAD_PREPACKAGING_INSTALLATION="true"
+fi
+
+if is_package_installed; then
+    echo "The otelcol-sumo package is already installed"
+    show_upgrade_instructions
+    exit 1
 fi
 
 install_linux_package "${package_name}"
