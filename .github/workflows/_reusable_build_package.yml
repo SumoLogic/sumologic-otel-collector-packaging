@@ -143,10 +143,11 @@ jobs:
         id: get-otc-version
         if: inputs.cmake_target == 'otc_linux_amd64_deb'
         working-directory: build/version_detection
-        run: |
+        run: >
           version=$(./otelcol-sumo --version |
-          sed -E -n 's/.* v([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
-          echo otc_version="${version}" >> $GITHUB_OUTPUT
+          sed -E -n 's/.* ([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
+          echo otc_version="${version}" >> $GITHUB_OUTPUT &&
+          if [[ "$version" == "" ]]; then exit 1; fi
 
       - name: Build Makefile
         id: cmake-linux
@@ -279,7 +280,7 @@ jobs:
         working-directory: ./build/version_detection
         run: >
           version=$(./otelcol-sumo.exe --version |
-          sed -E -n 's/.* v([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
+          sed -E -n 's/.* ([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
           echo product_version="${version}.${{ inputs.otc_build_number }}" >> $GITHUB_OUTPUT &&
           echo version="${version}-${{ inputs.otc_build_number }}" >> $GITHUB_OUTPUT
 
