@@ -88,6 +88,7 @@ USER_ENV_DIRECTORY=""
 UNINSTALL=""
 UPGRADE=""
 SUMO_BINARY_PATH=""
+SUMO_CONFIG_BINARY_PATH=""
 COMMON_CONFIG_PATH=""
 PURGE=""
 DOWNLOAD_ONLY=""
@@ -163,6 +164,7 @@ function set_defaults() {
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
     CONFIG_DIRECTORY="/etc/otelcol-sumo"
     SUMO_BINARY_PATH="/usr/local/bin/otelcol-sumo"
+    SUMO_CONFIG_BINARY_PATH="/usr/local/bin/otelcol-config"
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
 
@@ -400,6 +402,9 @@ function verify_installation() {
         echo "WARNING: ${SUMO_BINARY_PATH} is not in \$PATH"
         otel_command="${SUMO_BINARY_PATH}"
     fi
+    if ! command -v otelcol-config; then
+        echo "WARNING: ${SUMO_CONFIG_BINARY_PATH} is not in \$PATH"
+    fi
     echo "Running ${otel_command} --version to verify installation"
     OUTPUT="$(${otel_command} --version || true)"
     readonly OUTPUT
@@ -473,7 +478,7 @@ function setup_config() {
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
         echo -e "Installing ${OS_TYPE} hostmetrics configuration"
-        otelcol-config --enable-hostmetrics
+        "${SUMO_CONFIG_BINARY_PATH}" --enable-hostmetrics
     fi
 
     ## Check if there is anything to update in configuration
@@ -534,7 +539,7 @@ function setup_config_darwin() {
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
         echo -e "Installing ${OS_TYPE} hostmetrics configuration"
-        otelcol-config --enable-hostmetrics
+        "${SUMO_CONFIG_BINARY_PATH}" --enable-hostmetrics
     fi
 }
 
@@ -554,7 +559,7 @@ function uninstall() {
 
 function upgrade() {
     case "${OS_TYPE}" in
-    "linux") upgrade_linux ;;
+    "linux") upgrade_linux "${VERSION}" ;;
     *)
       echo "upgrading is not supported by this script for OS: ${OS_TYPE}"
       exit 1
@@ -563,16 +568,35 @@ function upgrade() {
 
 }
 
-function upgrade_linux() {
-    case $(get_package_manager) in
-        yum | dnf)
-            yum update --quiet -y
-            ;;
-        apt-get)
-            apt-get update --quiet && apt-get upgrade --quiet -y
-            ;;
-    esac
+function upgrade_command_linux() {
+    if [[ -z "${VERSION}" ]]; then
+        case $(get_package_manager) in
+            yum | dnf)
+                echo "yum update otelcol-sumo --quiet -y"
+                ;;
+            apt-get)
+                echo "apt-get update --quiet && apt-get install otelcol-sumo --quiet -y --only-upgrade"
+                ;;
+        esac
+    else
+        case $(get_package_manager) in
+            yum | dnf)
+                echo "yum update \"otelcol-sumo-${VERSION}\" --quiet -y"
+                ;;
+            apt-get)
+                echo "apt-get update --quiet && apt-get install \"otelcol-sumo=${VERSION}\" --quiet -y --only-upgrade"
+                ;;
+        esac
+    fi
+}
 
+function upgrade_linux() {
+    if [[ -z "${VERSION}" ]]; then
+        echo "Upgrading to the latest version of otelcol-sumo"
+    else
+        echo "Upgrading to otelcol-sumo version ${VERSION}"
+    fi
+    eval "$(upgrade_command_linux)"
 }
 
 # uninstall otelcol-sumo on darwin
@@ -595,7 +619,7 @@ function uninstall_darwin() {
 function uninstall_linux() {
     case $(get_package_manager) in
         yum | dnf)
-            yum remove --quiet -yes otelcol-sumo
+            yum remove --quiet -y otelcol-sumo
             ;;
         apt-get)
             if [[ "${PURGE}" == "true" ]]; then
@@ -649,8 +673,8 @@ function get_launchd_token() {
 }
 
 function get_user_api_url() {
-    if command -v otelcol-config &> /dev/null; then
-        KV=$(otelcol-config --read-kv .extensions.sumologic.api_base_url)
+    if command -v "${SUMO_CONFIG_BINARY_PATH}" &> /dev/null; then
+        KV=$("${SUMO_CONFIG_BINARY_PATH}" --read-kv .extensions.sumologic.api_base_url)
         if [[ "${KV}" != "null" ]]; then
             echo "${KV}"
         fi
@@ -658,8 +682,8 @@ function get_user_api_url() {
 }
 
 function get_user_opamp_endpoint() {
-    if command -v otelcol-config &> /dev/null; then
-        KV=$(otelcol-config --read-kv .extensions.opamp.endpoint)
+    if command -v "${SUMO_CONFIG_BINARY_PATH}" &> /dev/null; then
+        KV=$("${SUMO_CONFIG_BINARY_PATH}" --read-kv .extensions.opamp.endpoint)
         if [[ "${KV}" != "null" ]]; then
             echo "${KV}"
         fi
@@ -671,7 +695,7 @@ function write_installation_token() {
     local token
     readonly token="${1}"
 
-    otelcol-config --set-installation-token "$token"
+    "${SUMO_CONFIG_BINARY_PATH}" --set-installation-token "$token"
 }
 
 # write ${ENV_TOKEN} to launchd configuration file
@@ -708,7 +732,7 @@ function write_installation_token_launchd() {
 
 # write sumologic ephemeral: true to user configuration file
 function write_ephemeral_true() {
-    otelcol-config --enable-ephemeral
+    "${SUMO_CONFIG_BINARY_PATH}" --enable-ephemeral
 }
 
 # write api_url to user configuration file
@@ -716,7 +740,7 @@ function write_api_url() {
     local api_url
     readonly api_url="${1}"
 
-    otelcol-config --set-api-url "$api_url"
+    "${SUMO_CONFIG_BINARY_PATH}" --set-api-url "$api_url"
 }
 
 # write opamp endpoint to user configuration file
@@ -724,7 +748,7 @@ function write_opamp_endpoint() {
     local opamp_endpoint
     readonly opamp_endpoint="${1}"
 
-    otelcol-config --set-opamp-endpoint "$opamp_endpoint"
+    "${SUMO_CONFIG_BINARY_PATH}" --set-opamp-endpoint "$opamp_endpoint"
 }
 
 # write tags to user configuration file
@@ -732,13 +756,13 @@ function write_tags() {
     arr=("$@")
     for field in "${arr[@]}";
     do
-        otelcol-config --add-tag "$field"
+        "${SUMO_CONFIG_BINARY_PATH}" --add-tag "$field"
     done
 }
 
 # configure and enable the opamp extension for remote management
 function write_opamp_extension() {
-    otelcol-config --enable-remote-control
+    "${SUMO_CONFIG_BINARY_PATH}" --enable-remote-control
 }
 
 # NB: this function is only for Darwin
@@ -880,6 +904,10 @@ function install_linux_package() {
     esac
 }
 
+function show_upgrade_instructions_linux() {
+    echo "Upgrades can be performed using the native package manager: $(upgrade_command_linux)"
+}
+
 function check_deprecated_linux_flags() {
     if [[ -n "${BINARY_BRANCH}" ]]; then
         echo "warning: --binary-branch is deprecated"
@@ -895,7 +923,8 @@ function check_deprecated_linux_flags() {
     fi
 
     if [[ -n "${DOWNLOAD_ONLY}" ]]; then
-        echo "--download-only is only supported on darwin, use 'install.sh --upgrade' to upgrade otelcol-sumo"
+        echo "--download-only is only supported on darwin"
+        show_upgrade_instructions_linux "${VERSION}"
         exit 1
     fi
 }
@@ -907,7 +936,12 @@ function is_package_installed() {
             yum --cacheonly list --installed otelcol-sumo > /dev/null 2>&1
             ;;
         apt-get)
-            dpkg --status otelcol-sumo > /dev/null 2>&1
+            status="$(dpkg-query -Wf '${db:Status-Status}' otelcol-sumo)"
+            if [[ $? != 0 || "${status}" != "installed" ]]; then
+                false
+            else
+                true
+            fi
             ;;
     esac
 }
@@ -1018,9 +1052,9 @@ function get_user_token() {
 
   # Check yaml configuration for a token
   if [[ -z "${token}" ]]; then
-    if command -v otelcol-config &> /dev/null; then
+    if command -v "${SUMO_CONFIG_BINARY_PATH}" &> /dev/null; then
       local output=""
-      output=$(otelcol-config --read-kv .extensions.sumologic.installation_token)
+      output=$("${SUMO_CONFIG_BINARY_PATH}" --read-kv .extensions.sumologic.installation_token)
       if [[ "${output}" != "null" ]]; then
         token="${output}"
       fi
@@ -1178,6 +1212,14 @@ if has_prepackaging_installation; then
    # We can now proceed and install using the packages and attempt to restore
    # the configuration later.
    HAD_PREPACKAGING_INSTALLATION="true"
+fi
+
+echo "Version specified: ${VERSION}"
+
+if is_package_installed; then
+    echo "The otelcol-sumo package is already installed"
+    show_upgrade_instructions_linux
+    exit 1
 fi
 
 install_linux_package "${package_name}"
