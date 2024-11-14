@@ -10,7 +10,6 @@ macro(set_otc_rpm_settings)
     # Mark config files to prevent package upgrades from replacing the file by
     # default
     "%config(noreplace) /etc/otelcol-sumo/sumologic.yaml"
-    "%config(noreplace) /etc/otelcol-sumo/conf.d/common.yaml"
     "%config(noreplace) /etc/otelcol-sumo/env/token.env"
   )
 
