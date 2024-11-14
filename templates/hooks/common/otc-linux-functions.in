@@ -15,12 +15,24 @@ set_file_ownership()
 
 set_capabilities()
 {
-    echo -e "Setting the CAP_DAC_READ_SEARCH Linux capability on the " \
-        "collector binary to allow it to read host metrics from /proc " \
-        "directory: setcap 'cap_dac_read_search=ep' \"@OTC_BIN_PATH@\""
-    echo -e "You can remove it with the following command: " \
-        "sudo setcap -r \"@OTC_BIN_PATH@\""
-    echo -e "Without this capability, the collector will not be able to " \
-        "collect some of the host metrics."
-    setcap 'cap_dac_read_search=ep' "@OTC_BIN_PATH@"
+    if command -v setcap &> /dev/null; then
+        echo -e "Setting the CAP_DAC_READ_SEARCH Linux capability on the " \
+            "collector binary to allow it to read host metrics from the " \
+            "/proc directory: " \
+            "setcap 'cap_dac_read_search=ep' \"@OTC_BIN_PATH@\""
+        echo -e "You can remove it with the following command: " \
+            "sudo setcap -r \"@OTC_BIN_PATH@\""
+        echo -e "Without this capability, the collector will not be able to " \
+            "collect some of the host metrics."
+        setcap 'cap_dac_read_search=ep' "@OTC_BIN_PATH@"
+    else
+        echo -e "WARNING: setcap command not found"
+        echo -e "The CAP_DAC_READ_SEARCH Linux capability should be set on " \
+            "the collector binary to allow it to read host metrics from " \
+            "the /proc directory. It is recommended to install the setcap " \
+            "command and then run: " \
+            "sudo setcap 'cap_dac_read_search=ep' \"@OTC_BIN_PATH@\""
+        echo -e "Without this capability, the collector will not be able to " \
+            "collect some of the host metrics."
+    fi
 }
