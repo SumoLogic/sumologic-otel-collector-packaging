@@ -20,8 +20,7 @@ trap 'on_exit "$BASH_COMMAND" "$?" "$LINENO"' EXIT
 
 # verify the script is being run as root
 id="$(id -u)"
-if [ "$id" -ne "0" ]
-then
+if [ "$id" -ne "0" ]; then
   echo "Must be run as root to run this script"
   expected_error=1
   exit 1
@@ -47,7 +46,6 @@ system_files=(
 expected_collector_files=(
   "etc/otelcol-sumo"
   "etc/otelcol-sumo/conf.d"
-  "etc/otelcol-sumo/conf.d/common.yaml"
   "etc/otelcol-sumo/conf.d-available"
   "etc/otelcol-sumo/conf.d-available/ephemeral.yaml"
   "etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
@@ -78,7 +76,7 @@ function install_package() {
 
   # extract choices xml from meta package, override the choices to enable
   # optional choices, and then install using the new choice selections
-  installer -showChoiceChangesXML -pkg "$mpkg" -target / > "$choices_xml"
+  installer -showChoiceChangesXML -pkg "$mpkg" -target / >"$choices_xml"
   override_choices
   installer -applyChoiceChangesXML "$choices_xml" -pkg "$mpkg" -target /
 }
@@ -88,7 +86,7 @@ function override_choices() {
   count=$(plutil -convert raw -o - "$choices_xml")
 
   # loop through each installation choice
-  for (( j=0; j < "$count"; j++ )); do
+  for ((j = 0; j < "$count"; j++)); do
     choice_id_key="${j}.choiceIdentifier"
     choice_attr_key="${j}.choiceAttribute"
     attr_setting_key="${j}.attributeSetting"
@@ -175,13 +173,13 @@ cd "$expanded_dir" || exit
 
 # create an array of all packages
 all_pkgs=()
-while IFS=  read -r -d $'\0'; do
+while IFS= read -r -d $'\0'; do
   all_pkgs+=("$REPLY")
 done < <(find . -name "*.pkg" -type d -print0)
 
 # create an array of collector packages (only one is expected)
 collector_pkg=()
-while IFS=  read -r -d $'\0'; do
+while IFS= read -r -d $'\0'; do
   collector_pkg+=("$REPLY")
 done < <(find . -name "*-otelcol-sumo.pkg" -type d -print0)
 
@@ -205,7 +203,7 @@ fi
 collector_pkg_name="$(echo "${collector_pkg[0]}" | cut -d/ -f2-)"
 cd "${collector_pkg_name}/Payload" || exit
 all_collector_files=()
-while IFS=  read -r -d $'\0'; do
+while IFS= read -r -d $'\0'; do
   all_collector_files+=("$REPLY")
 done < <(find . ! -name '.' -print0)
 
