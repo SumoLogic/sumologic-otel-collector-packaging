@@ -1,5 +1,0 @@
-SumoLogic/sumologic-otel-collector:
-  - source: assets/sumologic.yaml
-    dest: assets/sumologic.yaml
-  - source: assets/sumologic-windows.yaml
-    dest: assets/sumologic-windows.yaml
