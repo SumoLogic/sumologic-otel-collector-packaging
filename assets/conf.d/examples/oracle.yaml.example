@@ -40,6 +40,19 @@ receivers:
       - /var/log/oracle/auditlogs/oracle*.log
     multiline:
       line_start_pattern: ^<AuditRecord>
+  oracledb/localhost:
+    endpoint: localhost:1521
+    service: FREE
+    collection_interval: 5m
+    username: C##oracle_admin
+    password: password
+    metrics:
+      oracledb.sessions.limit:
+        enabled: true
+      oracledb.consistent_gets:
+        enabled: true
+      oracledb.db_block_gets:
+        enabled: true
 processors:
   resource/oracle_resource_attributes/localhost:
     attributes:
@@ -52,6 +65,9 @@ processors:
       - key: _contentType
         value: OpenTelemetry
         action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
       - key: db.cluster.name
         value: test
         action: insert
@@ -60,8 +76,27 @@ processors:
       - key: _source
         value: oracle/filelog
         action: insert
+  resource/oracle_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: oracle/oracledb
+        action: insert
+      - key: _sourceName
+        value: oracle
+        action: insert
 service:
   pipelines:
+    metrics/oracle/localhost:
+      receivers:
+        - oracledb/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/oracle_resource_attributes/localhost
+        - resource/oracle_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
     logs/oracle/localhost:
       receivers:
         - filelog/oracle/alertlogs/localhost
@@ -69,9 +104,9 @@ service:
         - filelog/oracle/auditlogs/localhost
       processors:
         - memory_limiter
+        - resourcedetection/system
         - resource/oracle_resource_attributes/localhost
         - batch
-        - resourcedetection/system
         - resource/oracle_resource_attributes/logs/localhost
       exporters:
         - sumologic
