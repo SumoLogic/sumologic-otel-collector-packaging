@@ -177,9 +177,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkGroupExists,
 				checkHomeDirectoryCreated,
 			},
-			// TODO(JK): this succeeds when testing locally but fails in CI,
-			// I need to determine why this is the case
-			installCode: 1,
+			installCode: 0,
 		},
 		{
 			name: "installation token, remotely-managed, and ephemeral",
@@ -204,9 +202,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkGroupExists,
 				checkHomeDirectoryCreated,
 			},
-			// TODO(JK): this succeeds when testing locally but fails in CI,
-			// I need to determine why this is the case
-			installCode: 1,
+			installCode: 0,
 		},
 		{
 			name: "same installation token in launchd config",
