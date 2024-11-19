@@ -56,7 +56,7 @@ param (
 
 # If the environment variable SKIP_ARCH_DETECTION is set and is not
 # equal to "0" then set $SkipArchDetection to $True.
-if ($env:SKIP_ARCH_DETECTION -ne "" -and $env:SKIP_ARCH_DETECTION -ne "0") {
+if ($env:SKIP_ARCH_DETECTION -ne $null -and $env:SKIP_ARCH_DETECTION -ne "" -and $env:SKIP_ARCH_DETECTION -ne "0") {
     $SkipArchDetection = $True
 }
 
@@ -348,7 +348,7 @@ try {
         Write-Host "Detected architecture:`t${archName}"
     } else {
         if ($OverrideArch -eq "") {
-            Write-Error "OverrideArch flag must be set when using SkipArchDetection"
+            Write-Error "OverrideArch flag must be set when using SkipArchDetection" -ErrorAction Stop
         }
         Write-Host "Skipping architecture detection"
     }
@@ -370,7 +370,7 @@ try {
 
     if ($Fips -eq $true) {
         if ($osName -ne "Win32NT" -or $archName -ne "x64") {
-            Write-Error "Error: The FIPS-approved binary is only available for windows/amd64"
+            Write-Error "Error: The FIPS-approved binary is only available for windows/amd64" -ErrorAction Stop
         }
     }
 
@@ -451,7 +451,7 @@ try {
     }
     msiexec.exe /i "$msiPath" /passive $msiProperties
 } catch [HttpRequestException] {
-    Write-Error $_.Exception.InnerException.Message
+    Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 }
 
 Write-Host "Installation successful"
