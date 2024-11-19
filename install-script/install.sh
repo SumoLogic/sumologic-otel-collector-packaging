@@ -120,6 +120,11 @@ PACKAGECLOUD_ORG="${PACKAGECLOUD_ORG:-sumologic}"
 PACKAGECLOUD_REPO="${PACKAGECLOUD_REPO:-stable}"
 PACKAGECLOUD_MASTER_TOKEN="${PACKAGECLOUD_MASTER_TOKEN:-}"
 
+# Used to overwrite the download URL for the Darwin package. This is useful for
+# testing in CI where we have to be sure we're testing the package that was
+# built and not the latest package uploaded to S3.
+DARWIN_PKG_URL="${DARWIN_PKG_URL:-}"
+
 ############################ Functions
 
 function usage() {
