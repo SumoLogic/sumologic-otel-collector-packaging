@@ -3,6 +3,7 @@
 *.log
 tmp/
 build/
+*.swp
 
 # WiX toolset
 *.msi

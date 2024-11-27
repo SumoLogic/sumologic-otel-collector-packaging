@@ -574,34 +574,40 @@ function upgrade() {
 }
 
 function upgrade_command_linux() {
+    local package_name
+    readonly package_name="${1}"
+
     if [[ -z "${VERSION}" ]]; then
         case $(get_package_manager) in
             yum | dnf)
-                echo "yum update otelcol-sumo --quiet -y"
+                echo "yum update ${package_name} --quiet -y"
                 ;;
             apt-get)
-                echo "apt-get update --quiet && apt-get install otelcol-sumo --quiet -y --only-upgrade"
+                echo "apt-get update --quiet && apt-get install ${package_name} --quiet -y --only-upgrade"
                 ;;
         esac
     else
         case $(get_package_manager) in
             yum | dnf)
-                echo "yum update \"otelcol-sumo-${VERSION}\" --quiet -y"
+                echo "yum update \"${package_name}-${VERSION}\" --quiet -y"
                 ;;
             apt-get)
-                echo "apt-get update --quiet && apt-get install \"otelcol-sumo=${VERSION}\" --quiet -y --only-upgrade"
+                echo "apt-get update --quiet && apt-get install \"${package_name}=${VERSION}\" --quiet -y --only-upgrade"
                 ;;
         esac
     fi
 }
 
 function upgrade_linux() {
+    local package_name
+    readonly package_name="${1}"
+
     if [[ -z "${VERSION}" ]]; then
-        echo "Upgrading to the latest version of otelcol-sumo"
+        echo "Upgrading to the latest version of ${package_name}"
     else
-        echo "Upgrading to otelcol-sumo version ${VERSION}"
+        echo "Upgrading to ${package_name} version ${VERSION}"
     fi
-    eval "$(upgrade_command_linux)"
+    eval "$(upgrade_command_linux "${package_name}")"
 }
 
 # uninstall otelcol-sumo on darwin
@@ -910,10 +916,16 @@ function install_linux_package() {
 }
 
 function show_upgrade_instructions_linux() {
-    echo "Upgrades can be performed using the native package manager: $(upgrade_command_linux)"
+    local package_name
+    readonly package_name="${1}"
+
+    echo "Upgrades can be performed using the native package manager: $(upgrade_command_linux "${package_name}")"
 }
 
 function check_deprecated_linux_flags() {
+    local package_name
+    readonly package_name="${1}"
+
     if [[ -n "${BINARY_BRANCH}" ]]; then
         echo "warning: --binary-branch is deprecated"
         exit 1
@@ -929,19 +941,22 @@ function check_deprecated_linux_flags() {
 
     if [[ -n "${DOWNLOAD_ONLY}" ]]; then
         echo "--download-only is only supported on darwin"
-        show_upgrade_instructions_linux "${VERSION}"
+        show_upgrade_instructions_linux "${package_name}"
         exit 1
     fi
 }
 
 function is_package_installed() {
+    local package_name
+    readonly package_name="${1}"
+
     case $(get_package_manager) in
         yum | dnf)
             # TODO: refine exact command
-            yum --cacheonly list --installed otelcol-sumo > /dev/null 2>&1
+            yum --cacheonly list --installed "${package_name}" > /dev/null 2>&1
             ;;
         apt-get)
-            status="$(dpkg-query -Wf '${db:Status-Status}' otelcol-sumo)"
+            status="$(dpkg-query -Wf '${db:Status-Status}' "${package_name}")"
             if [[ $? != 0 || "${status}" != "installed" ]]; then
                 false
             else
@@ -955,7 +970,7 @@ function is_package_installed() {
 # kind of installation that was performed by downloading artifacts from Github,
 # before we moved to using distribution packages.
 function has_prepackaging_installation() {
-    if command -v otelcol-sumo > /dev/null 2>&1 && ! is_package_installed; then
+    if command -v otelcol-sumo > /dev/null 2>&1 && ! is_package_installed otelcol-sumo && ! is_package_installed otelcol-sumo-fips; then
         true
     else
         false
@@ -991,37 +1006,6 @@ function uninstall_prepackaging_installation() {
     userdel --remove --force "${SYSTEM_USER}" 2>/dev/null || true
     groupdel "${SYSTEM_USER}" 2>/dev/null || true
 }
-
-############################ Main code
-
-OS_TYPE="$(get_os_type)"
-ARCH_TYPE="$(get_arch_type)"
-readonly OS_TYPE ARCH_TYPE
-
-echo -e "Detected OS type:\t${OS_TYPE}"
-echo -e "Detected architecture:\t${ARCH_TYPE}"
-
-set_defaults
-parse_options "$@"
-set_tmpdir
-check_dependencies
-check_deprecated_linux_flags
-
-readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE CONFIG_DIRECTORY UNINSTALL
-readonly USER_ENV_DIRECTORY CONFIG_DIRECTORY COMMON_CONFIG_PATH
-readonly INSTALL_HOSTMETRICS
-readonly REMOTELY_MANAGED
-readonly CURL_MAX_TIME
-readonly LAUNCHD_CONFIG LAUNCHD_ENV_KEY LAUNCHD_TOKEN_KEY
-
-if [[ "${UNINSTALL}" == "true" ]]; then
-    uninstall
-    exit 0
-fi
-if [[ "${UPGRADE}" == "true" ]]; then
-    upgrade
-    exit 0
-fi
 
 # get_installation_token returns the value of SUMOLOGIC_INSTALLATION_TOKEN
 # (set by a flag or environment variable) when it is not empty, otherwise it
@@ -1068,6 +1052,47 @@ function get_user_token() {
 
   echo "${token}"
 }
+
+
+############################ Main code
+
+OS_TYPE="$(get_os_type)"
+ARCH_TYPE="$(get_arch_type)"
+readonly OS_TYPE ARCH_TYPE
+
+echo -e "Detected OS type:\t${OS_TYPE}"
+echo -e "Detected architecture:\t${ARCH_TYPE}"
+
+set_defaults
+parse_options "$@"
+set_tmpdir
+
+package_name=""
+if [[ "${FIPS}" == "true" ]]; then
+  echo "Getting FIPS-compliant binary"
+  package_name=otelcol-sumo-fips
+else
+  package_name=otelcol-sumo
+fi
+
+check_dependencies
+check_deprecated_linux_flags "${package_name}"
+
+readonly SUMOLOGIC_INSTALLATION_TOKEN API_BASE_URL OPAMP_API_URL FIELDS CONTINUE CONFIG_DIRECTORY UNINSTALL
+readonly USER_ENV_DIRECTORY CONFIG_DIRECTORY COMMON_CONFIG_PATH
+readonly INSTALL_HOSTMETRICS
+readonly REMOTELY_MANAGED
+readonly CURL_MAX_TIME
+readonly LAUNCHD_CONFIG LAUNCHD_ENV_KEY LAUNCHD_TOKEN_KEY
+
+if [[ "${UNINSTALL}" == "true" ]]; then
+    uninstall
+    exit 0
+fi
+if [[ "${UPGRADE}" == "true" ]]; then
+    upgrade
+    exit 0
+fi
 
 # Load & cache user token
 USER_TOKEN="$(get_user_token)"
@@ -1196,14 +1221,6 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     exit 0
 fi
 
-package_name=""
-if [[ "${FIPS}" == "true" ]]; then
-  echo "Getting FIPS-compliant binary"
-  package_name=otelcol-sumo-fips
-else
-  package_name=otelcol-sumo
-fi
-
 if has_prepackaging_installation; then
    # Display a warning and information message here?
    echo 'Pre-packaging installation detected'
@@ -1221,9 +1238,9 @@ fi
 
 echo "Version specified: ${VERSION}"
 
-if is_package_installed; then
-    echo "The otelcol-sumo package is already installed"
-    show_upgrade_instructions_linux
+if is_package_installed "${package_name}"; then
+    echo "The ${package_name} package is already installed"
+    show_upgrade_instructions_linux "${package_name}"
     exit 1
 fi
 
