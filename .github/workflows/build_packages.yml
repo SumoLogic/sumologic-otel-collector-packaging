@@ -2,7 +2,7 @@
 # specific to each workflow. This ensures that each package has an
 # OTC_BUILD_NUMBER that is greater than previous runs which allows package
 # upgrades from one build to the next.
-name: 'Build packages'
+name: "Build packages"
 
 # Sets the name of the CI run based on whether the run was triggered with or
 # without a workflow_id set.
@@ -16,7 +16,7 @@ run-name: >
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
   workflow_dispatch:
     inputs:
@@ -55,7 +55,7 @@ jobs:
       - name: Set output workflow
         id: workflow
         run: |
-            echo "id=${{ inputs.workflow_id || steps.latest-workflow.outputs.id }}" >> $GITHUB_OUTPUT
+          echo "id=${{ inputs.workflow_id || steps.latest-workflow.outputs.id }}" >> $GITHUB_OUTPUT
 
       - name: Output Remote Workflow URL
         run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ steps.workflow.outputs.id }}
@@ -250,7 +250,7 @@ jobs:
       - name: Run install script tests (*nix)
         if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows'
         working-directory: install-script/test
-        run: make test
+        run: umask 0077 && make test
 
       - name: Run install script tests (Windows)
         shell: powershell
