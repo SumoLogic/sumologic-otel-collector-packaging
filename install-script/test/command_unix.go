@@ -138,7 +138,9 @@ func exitCode(cmd *exec.Cmd) (int, error) {
 }
 
 func runScript(ch check) (int, []string, []string, error) {
-	cmd := exec.Command("bash", ch.installOptions.string()...)
+	opts := []string{"umask", "007", "&&"}
+	opts = append(opts, ch.installOptions.string()...)
+	cmd := exec.Command("bash", opts...)
 	cmd.Env = ch.installOptions.buildEnvs()
 	output := []string{}
 
