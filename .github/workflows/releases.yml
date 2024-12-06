@@ -1,4 +1,4 @@
-name: 'Publish release'
+name: "Publish release"
 
 run-name: >
   ${{ format('Publish Release for Workflow: {0}', inputs.workflow_id) }}
@@ -27,6 +27,8 @@ jobs:
       sumo-version: ${{ steps.get-version.outputs.sumo-version }}
       binary-version: ${{ steps.get-version.outputs.binary-version }}
       version: ${{ steps.get-version.outputs.version }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
