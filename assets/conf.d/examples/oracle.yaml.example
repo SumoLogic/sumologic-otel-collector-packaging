@@ -101,6 +101,16 @@ service:
       receivers:
         - filelog/oracle/alertlogs/localhost
         - filelog/oracle/listenerlogs/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/oracle_resource_attributes/localhost
+        - batch
+        - resource/oracle_resource_attributes/logs/localhost
+      exporters:
+        - sumologic
+    logs/oracle/audit/localhost:
+      receivers:
         - filelog/oracle/auditlogs/localhost
       processors:
         - memory_limiter
