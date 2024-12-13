@@ -59,6 +59,9 @@ on:
       otc_version:
         description: "The version of the package"
         value: ${{ jobs.build_package.outputs.otc_version }}
+      otc_sumo_version:
+        description: "The sumo version of the collector binary"
+        value: ${{ jobs.build_package.outputs.otc_sumo_version }}
       otc_build_number:
         description: "The build number of the package"
         value: ${{ jobs.build_package.outputs.otc_build_number }}
@@ -75,6 +78,7 @@ jobs:
     outputs:
       otc_version: ${{ steps.get-otc-version.outputs.otc_version }}
       otc_build_number: ${{ steps.get-build-number.outputs.otc_build_number }}
+      otc_sumo_version: ${{ steps.get-sumo-version.outputs.otc_sumo_version }}
       package_path: ${{ steps.package.outputs.path }}
     steps:
       - name: Checkout
@@ -147,6 +151,16 @@ jobs:
           version=$(./otelcol-sumo --version |
           sed -E -n 's/.* ([0-9]+\.[0-9]+\.[0-9]+)\-sumo.*/\1/p') &&
           echo otc_version="${version}" >> $GITHUB_OUTPUT &&
+          if [[ "$version" == "" ]]; then exit 1; fi
+
+      - name: Output Sumo Version
+        id: get-sumo-version
+        if: inputs.cmake_target == 'otc_linux_amd64_deb'
+        working-directory: build/version_detection
+        run: >
+          version=$(./otelcol-sumo --version |
+          sed -E -n 's/.* [0-9]+\.[0-9]+\.[0-9]+\-sumo-([0-9]+).*/\1/p') &&
+          echo otc_sumo_version="${version}" >> $GITHUB_OUTPUT &&
           if [[ "$version" == "" ]]; then exit 1; fi
 
       - name: Build Makefile
