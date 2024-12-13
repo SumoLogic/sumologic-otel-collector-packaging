@@ -20,7 +20,7 @@ defaults:
 jobs:
   get-version:
     name: Get application version info for this revision
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       git-sha: ${{ steps.get-version.outputs.git-sha }}
       otc-version: ${{ steps.set-versions.outputs.otc_version }}
@@ -95,7 +95,7 @@ jobs:
   # artifact.
   install-script:
     name: Store install script
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - get-version
     steps:

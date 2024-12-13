@@ -31,7 +31,7 @@ on:
 
 jobs:
   determine_workflow:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Determine workflow_id
     outputs:
       workflow_id: ${{ steps.workflow.outputs.id }}
@@ -95,16 +95,16 @@ jobs:
       matrix:
         include:
           - target: otc_linux_amd64_deb
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_linux_amd64_rpm
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_linux_arm64_deb
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_linux_arm64_rpm
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_darwin_amd64_productbuild
             runs_on: macos-latest
@@ -119,16 +119,16 @@ jobs:
             build_tool: wix
           # fips targets
           - target: otc_fips_linux_amd64_deb
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_fips_linux_amd64_rpm
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_fips_linux_arm64_deb
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_fips_linux_arm64_rpm
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_fips_windows_amd64_wix
             runs_on: windows-2019
@@ -178,7 +178,7 @@ jobs:
 
   install-script:
     name: Store install script
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build_packages
     env:
