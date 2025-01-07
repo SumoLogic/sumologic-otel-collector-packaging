@@ -19,14 +19,15 @@ defaults:
 
 jobs:
   get-version:
-    name: Get application version for this revision
+    name: Get application version info for this revision
     runs-on: ubuntu-24.04
     outputs:
       git-sha: ${{ steps.get-version.outputs.git-sha }}
-      otc-version: ${{ steps.get-version.outputs.otc-version }}
-      sumo-version: ${{ steps.get-version.outputs.sumo-version }}
-      binary-version: ${{ steps.get-version.outputs.binary-version }}
-      version: ${{ steps.get-version.outputs.version }}
+      otc-version: ${{ steps.set-versions.outputs.otc_version }}
+      otc-build-number: ${{ steps.set-versions.outputs.otc_build_number }}
+      otc-sumo-version: ${{ steps.set-versions.outputs.otc_sumo_version }}
+      package-version: ${{ steps.set-versions.outputs.package_version }}
+      binary-version: ${{ steps.set-versions.outputs.binary_version }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -41,50 +42,41 @@ jobs:
           url="${repo_url}/actions/runs/${{ inputs.workflow_id }}"
           echo ::notice title=Workflow URL::${url}
 
-      - name: Determine Workflow Run ID from workflow
-        id: get-run-number
-        run: |
-          workflow="11673248730"
-          run_number=$(gh run view "${workflow}" --json number -t '{{.number}}')
-          echo "run-number=$run_number" >> $GITHUB_OUTPUT
-
-      - name: Output Workflow Run Number
-        run: |
-          run_number=${{ steps.get-run-number.outputs.run-number }}
-          echo ::notice title=Workflow Run Number::${run_number}
-
-      - name: Download otelcol-sumo artifact from workflow
+      - name: Download version artifacts from workflow
         uses: actions/download-artifact@v4
         with:
-          name: otelcol-sumo-linux_amd64
+          pattern: "*.txt"
           path: artifacts/
           merge-multiple: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.workflow_id }}
 
-      - name: Determine version from artifact
-        id: get-version
+      - name: Set version outputs
+        id: set-versions
         run: |
-          artifact="artifacts/otelcol-sumo-linux_amd64"
-          chmod +x "${artifact}"
-          script="ci/get_version_from_binary.sh"
-          core="$("$script" core "${artifact}")"
-          sumo="$("$script" sumo "${artifact}")"
-          run_number=${{ steps.get-run-number.outputs.run-number }}
-          echo "otc-version=$core" >> $GITHUB_OUTPUT
-          echo "sumo-version=$sumo" >> $GITHUB_OUTPUT
-          echo "binary-version=${core}-sumo-${sumo}" >> $GITHUB_OUTPUT
-          echo "version=${core}-${run_number}" >> $GITHUB_OUTPUT
+          otc_version="$(cat artifacts/otc-version.txt)"
+          otc_build_number="$(cat artifacts/otc-build-number.txt)"
+          otc_sumo_version="$(cat artifacts/otc-sumo-version.txt)"
+          echo otc_version="${otc_version}" >> $GITHUB_OUTPUT
+          echo otc_build_number="${otc_build_number}" >> $GITHUB_OUTPUT
+          echo otc_sumo_version="${otc_sumo_version}" >> $GITHUB_OUTPUT
+          echo package_version="${otc_version}-${otc_build_number}" >> $GITHUB_OUTPUT
+          echo binary_version="${otc_version}-sumo-${otc_sumo_version}" >> $GITHUB_OUTPUT
 
-      - name: Output Binary Version
+      - name: Output OTC Version
         run: |
-          binary_version=${{ steps.get-version.outputs.binary-version }}
-          echo ::notice title=Binary Version::${binary_version}
+          version="${{ steps.set-versions.outputs.otc_version }}"
+          echo ::notice title=OTC Version::${version}
 
-      - name: Output Package Version
+      - name: Output OTC Build Number
         run: |
-          package_version=${{ steps.get-version.outputs.version }}
-          echo ::notice title=Package Version::${package_version}
+          version="${{ steps.set-versions.outputs.otc_build_number }}"
+          echo ::notice title=OTC Build Number::${version}
+
+      - name: Output OTC Sumo Version
+        run: |
+          version=${{ steps.set-version.outputs.otc_sumo_version }}
+          echo ::notice title=OTC Sumo Version::${version}
 
       - name: Determine Git SHA of workflow
         id: get-sha
@@ -141,11 +133,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.workflow_id }}
 
+      - name: List all artifacts
+        run: ls -l artifacts/
+
       - uses: ncipollo/release-action@v1
         with:
-          name: v${{ needs.get-version.outputs.version }}
+          name: v${{ needs.get-version.outputs.package-version }}
           commit: ${{ needs.get-version.outputs.git-sha }}
-          tag: v${{ needs.get-version.outputs.version }}
+          tag: v${{ needs.get-version.outputs.package-version }}
 
           draft: true
           generateReleaseNotes: true
@@ -155,16 +150,11 @@ jobs:
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
 
-          artifacts: "artifacts/*/*"
+          artifacts: "artifacts/*"
           artifactErrorsFailBuild: true
-          replacesArtifacts: true
+          replacesArtifacts: false
 
           body: |
-            This release packages
-            [${{ needs.get-version.outputs.version }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/v${{ needs.get-version.outputs.binary-version }}).
+            This release packages Sumo Logic Distributions for OpenTelemetry Collector [${{ needs.get-version.outputs.binary-version }}](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/v${{ needs.get-version.outputs.binary-version }}).
 
-            The changelog below is for the package itself, rather than the Sumo
-            Logic Distribution for OpenTelemetry Collector. The changelog for
-            the Sumo Logic Distribution for OpenTelemetry Collector can be found
-            on the collector's
-            [release page](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/v${{ needs.get-version.outputs.binary-version }}).
+            The changelog below is for the package itself, rather than the Sumo Logic Distribution for OpenTelemetry Collector. The changelog for the Sumo Logic Distribution for OpenTelemetry Collector can be found on the collector's [release page](https://github.com/SumoLogic/sumologic-otel-collector/releases/tag/v${{ needs.get-version.outputs.binary-version }}).
