@@ -452,8 +452,6 @@ function setup_config() {
 
     echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-        echo "Warning: remote management is currently in beta."
-
         write_opamp_extension
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" ]]; then
@@ -513,8 +511,6 @@ function setup_config_darwin() {
 
     echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
-        echo "Warning: remote management is currently in beta."
-
         write_opamp_extension
 
         if [[ -n "${OPAMP_API_URL}" ]]; then
