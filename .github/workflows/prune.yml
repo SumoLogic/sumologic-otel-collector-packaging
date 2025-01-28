@@ -8,9 +8,6 @@ on:
     # may be delayed or cancelled due to high loads from other customers'
     # scheduled jobs.
     - cron: "22 13 * * *"
-  push:
-    branches:
-      - "**"
 
 jobs:
   packagecloud:
