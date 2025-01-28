@@ -15,6 +15,7 @@ on:
 jobs:
   packagecloud:
     runs-on: ubuntu-24.04
+    secrets:
     steps:
       - uses: actions/checkout@v4
 
@@ -25,5 +26,7 @@ jobs:
 
       - name: Run packagecloudpruner
         working-directory: ci/cmd/packagecloudpruner
+        env:
+          PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         run: >-
           go run .
