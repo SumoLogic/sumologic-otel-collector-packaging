@@ -1,6 +1,6 @@
 module github.com/sumologic/sumologic-otel-collector-packaging/ci
 
-go 1.23
+go 1.22
 
 require (
 	github.com/avast/retry-go v2.4.2+incompatible
