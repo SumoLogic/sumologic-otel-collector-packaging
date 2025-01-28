@@ -24,6 +24,6 @@ jobs:
           go-version: stable
 
       - name: Run packagecloudpruner
-        working-directory: cmd/packagecloudpruner
+        working-directory: ci/cmd/packagecloudpruner
         run: >-
           go run .
