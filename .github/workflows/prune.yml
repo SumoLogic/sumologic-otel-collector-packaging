@@ -15,7 +15,6 @@ on:
 jobs:
   packagecloud:
     runs-on: ubuntu-24.04
-    secrets:
     steps:
       - uses: actions/checkout@v4
 
