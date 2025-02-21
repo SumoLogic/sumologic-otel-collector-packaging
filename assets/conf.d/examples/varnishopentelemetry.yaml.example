@@ -1,0 +1,47 @@
+receivers:
+  filelog/varnish/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/varnish/varnish*.log
+processors:
+  resource/varnish_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: varnish
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: webengine.system
+        value: varnish
+        action: insert
+      - key: webengine.cluster.name
+        value: test
+        action: insert
+  resource/varnish_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: varnish/filelog
+        action: insert
+service:
+  pipelines:
+    logs/varnish/localhost:
+      receivers:
+        - filelog/varnish/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/varnish_resource_attributes/localhost
+        - batch
+        - resource/varnish_resource_attributes/logs/localhost
+      exporters:
+        - sumologic

@@ -1,0 +1,88 @@
+receivers:
+  mongodb/localhost:
+    hosts:
+      - endpoint: localhost:27017
+    username: admin
+    password: password
+    collection_interval: 1m
+    tls:
+      insecure: true
+      insecure_skip_verify: true
+    metrics:
+      mongodb.document.operation.count:
+        enabled: true
+      mongodb.operation.repl.count:
+        enabled: true
+      mongodb.uptime:
+        enabled: true
+      mongodb.operation.latency.time:
+        enabled: true
+  filelog/mongodb/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: json_parser
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/mongodb/mongodb.log
+processors:
+  resource/mongodb_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: mongodb
+        action: insert
+      - key: sumo.datasource
+        value: mongodb
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
+      - key: db.cluster.name
+        value: test
+        action: insert
+  resource/mongodb_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: mongodb/mongodb
+        action: insert
+      - key: _sourceName
+        value: mongodb
+        action: insert
+  resource/mongodb_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: mongodb/filelog
+        action: insert
+service:
+  pipelines:
+    metrics/mongodb/localhost:
+      receivers:
+        - mongodb/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/mongodb_resource_attributes/localhost
+        - resource/mongodb_resource_attributes/metrics/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/mongodb/localhost:
+      receivers:
+        - filelog/mongodb/localhost
+      processors:
+        - memory_limiter
+        - batch
+        - resourcedetection/system
+        - resource/mongodb_resource_attributes/localhost
+        - resource/mongodb_resource_attributes/logs/localhost
+      exporters:
+        - sumologic
