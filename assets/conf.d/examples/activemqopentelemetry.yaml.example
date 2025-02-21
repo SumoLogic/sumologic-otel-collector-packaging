@@ -1,0 +1,117 @@
+receivers:
+  jmx/activemqmetrics/localhost:
+    jar_path: /opt/opentelemetry-jmx-metrics.jar
+    endpoint: localhost:11099
+    target_system: activemq
+    collection_interval: 60s
+    username: monitorRole
+    password: password
+    log_level: info
+  hostmetrics/activemqprocessmetrics/localhost:
+    collection_interval: 1m
+    scrapers:
+      process:
+        include:
+          names:
+            - java
+          match_type: regexp
+        mute_process_exe_error: true
+        mute_process_io_error: true
+        mute_process_name_error: true
+        metrics:
+          process.cpu.utilization:
+            enabled: true
+          process.memory.utilization:
+            enabled: true
+          process.disk.operations:
+            enabled: true
+  filelog/activemqserverLogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    multiline:
+      line_start_pattern: ^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{1,2}:\d{1,2}
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /opt/bitnami/activemq/data/activemq.log
+  filelog/activemqauditLogs/localhost:
+    multiline:
+      line_start_pattern: ^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{1,2}:\d{1,2}
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /opt/bitnami/activemq/data/audit.log
+processors:
+  resource/activemq_resource_attributes/localhost:
+    attributes:
+      - key: messaging.system
+        value: activemq
+        action: insert
+      - key: sumo.datasource
+        value: activemq
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: messaging.node.name
+        action: insert
+        from_attribute: host.name
+      - key: messaging.cluster.name
+        value: activemq_cluster
+        action: insert
+      - key: _sourceCategory
+        value: otel/activemq
+        action: insert
+  resource/activemq_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: activemq/jmx
+        action: insert
+      - key: _sourceName
+        value: activemq
+        action: insert
+  resource/activemq_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: activemq/filelog
+        action: insert
+service:
+  pipelines:
+    metrics/activemqmetrics/localhost:
+      receivers:
+        - jmx/activemqmetrics/localhost
+        - hostmetrics/activemqprocessmetrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/activemq_resource_attributes/metrics/localhost
+        - resource/activemq_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/activemq/localhost:
+      receivers:
+        - filelog/activemqserverLogs/localhost
+        - filelog/activemqauditLogs/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/activemq_resource_attributes/logs/localhost
+        - resource/activemq_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
