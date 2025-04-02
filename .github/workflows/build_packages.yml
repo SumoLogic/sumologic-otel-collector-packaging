@@ -141,7 +141,7 @@ jobs:
   # release workflow to determine the version information for a given workflow.
   version-files:
     name: Create & upload version files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build_packages
     env:
@@ -233,7 +233,7 @@ jobs:
       matrix:
         include:
           - arch_os: linux_amd64
-            runs_on: ubuntu-20.04
+            runs_on: ubuntu-24.04
           - arch_os: darwin_amd64
             runs_on: macos-latest
           - arch_os: windows_amd64
