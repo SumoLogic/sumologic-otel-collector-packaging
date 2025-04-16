@@ -12,7 +12,7 @@ assignees: ''
 |                                                      |                   |
 |------------------------------------------------------|-------------------|
 | Release owner                                        | [name]            |
-| New Collector versions                                   | [Version Number]  |
+| New Collector versions                               | [Version Number]  |
 | Current Agent versions                               | [Version Number]  |
 | Jira filter to all the tickets to be part of Release | [link(update it)] |
 
