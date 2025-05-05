@@ -14,8 +14,8 @@ el_8()
 el_9()
 
 # Supported Fedora versions
-fedora_40()
 fedora_41()
+fedora_42()
 
 # Supported openSUSE versions
 opensuse_15_5()

@@ -9,10 +9,10 @@
 # Fedora only supports the last two releases.
 ##
 
-# Fedora 41
-function(fedora_41)
-  set(_distro_name "Fedora 41")
-  set(_distro_index_name "fedora/41")
+# Fedora 42
+function(fedora_42)
+  set(_distro_name "Fedora 42")
+  set(_distro_index_name "fedora/42")
   set(_supported_architectures
     "aarch64"
     "x86_64"
@@ -22,10 +22,10 @@ function(fedora_41)
   check_architecture_support()
 endfunction()
 
-# Fedora 40
-function(fedora_40)
-  set(_distro_name "Fedora 40")
-  set(_distro_index_name "fedora/40")
+# Fedora 41
+function(fedora_41)
+  set(_distro_name "Fedora 41")
+  set(_distro_index_name "fedora/41")
   set(_supported_architectures
     "aarch64"
     "x86_64"
