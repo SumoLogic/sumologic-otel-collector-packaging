@@ -1,0 +1,86 @@
+receivers:
+  filelog/artifactory/logs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/opt/jfrog/artifactory/logs/artifactory.log
+  filelog/artifactory/accesslogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/opt/jfrog/artifactory/logs/access.log
+  filelog/artifactory/requestlogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/opt/jfrog/artifactory/logs/request.log
+  filelog/artifactory/trafficlogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/opt/jfrog/artifactory/logs/traffic.*.log
+processors:
+  resource/artifactory_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: artifactory
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: _sourceCategory
+        value: otel/artifactory
+        action: insert
+  resource/artifactory_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: artifactory/filelog
+        action: insert
+service:
+  pipelines:
+    logs/artifactory/localhost:
+      receivers:
+        - filelog/artifactory/logs/localhost
+        - filelog/artifactory/accesslogs/localhost
+        - filelog/artifactory/requestlogs/localhost
+        - filelog/artifactory/trafficlogs/localhost
+      processors:
+        - memory_limiter
+        - resource/artifactory_resource_attributes/localhost
+        - batch
+        - resourcedetection/system
+        - resource/artifactory_resource_attributes/logs/localhost
+      exporters:
+        - sumologic
