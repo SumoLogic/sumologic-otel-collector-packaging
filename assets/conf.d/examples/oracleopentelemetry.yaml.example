@@ -1,0 +1,122 @@
+receivers:
+  filelog/oracle/alertlogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/oracle/alertlogs/oracle*.log
+  filelog/oracle/listenerlogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/oracle/listernerlogs/oracle*.log
+  filelog/oracle/auditlogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/oracle/auditlogs/oracle*.log
+    multiline:
+      line_start_pattern: ^<AuditRecord>
+  oracledb/localhost:
+    endpoint: localhost:1521
+    service: FREE
+    collection_interval: 5m
+    username: C##oracle_admin
+    password: password
+    metrics:
+      oracledb.sessions.limit:
+        enabled: true
+      oracledb.consistent_gets:
+        enabled: true
+      oracledb.db_block_gets:
+        enabled: true
+processors:
+  resource/oracle_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: oracle
+        action: insert
+      - key: sumo.datasource
+        value: oracle
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
+      - key: db.cluster.name
+        value: test
+        action: insert
+  resource/oracle_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: oracle/filelog
+        action: insert
+  resource/oracle_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: oracle/oracledb
+        action: insert
+      - key: _sourceName
+        value: oracle
+        action: insert
+service:
+  pipelines:
+    metrics/oracle/localhost:
+      receivers:
+        - oracledb/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/oracle_resource_attributes/localhost
+        - resource/oracle_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
+    logs/oracle/localhost:
+      receivers:
+        - filelog/oracle/alertlogs/localhost
+        - filelog/oracle/listenerlogs/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/oracle_resource_attributes/localhost
+        - batch
+        - resource/oracle_resource_attributes/logs/localhost
+      exporters:
+        - sumologic
+    logs/oracle/audit/localhost:
+      receivers:
+        - filelog/oracle/auditlogs/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/oracle_resource_attributes/localhost
+        - batch
+        - resource/oracle_resource_attributes/logs/localhost
+      exporters:
+        - sumologic
