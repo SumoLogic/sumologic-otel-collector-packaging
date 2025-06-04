@@ -1,0 +1,3 @@
+extensions:
+  sumologic:
+    time_zone: "UTC"

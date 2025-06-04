@@ -50,6 +50,8 @@ ARG_SHORT_EPHEMERAL='E'
 ARG_LONG_EPHEMERAL='ephemeral'
 ARG_SHORT_TIMEOUT='m'
 ARG_LONG_TIMEOUT='download-timeout'
+ARG_SHORT_TIMEZONE='z'
+ARG_LONG_TIMEZONE='timezone'
 
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
@@ -63,6 +65,7 @@ readonly ARG_SHORT_INSTALL_HOSTMETRICS ARG_LONG_INSTALL_HOSTMETRICS
 readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
 readonly ARG_SHORT_EPHEMERAL ARG_LONG_EPHEMERAL
 readonly ARG_SHORT_TIMEOUT ARG_LONG_TIMEOUT
+readonly ARG_SHORT_TIMEZONE ARG_LONG_TIMEZONE
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
 
 ############################ Variables (see set_defaults function for default values)
@@ -95,6 +98,7 @@ DOWNLOAD_ONLY=""
 INSTALL_HOSTMETRICS=false
 REMOTELY_MANAGED=false
 EPHEMERAL=false
+TIMEZONE="UTC"
 
 LAUNCHD_CONFIG=""
 LAUNCHD_ENV_KEY=""
@@ -156,6 +160,7 @@ Supported arguments:
   -${ARG_SHORT_REMOTELY_MANAGED}, --${ARG_LONG_REMOTELY_MANAGED}                Remotely manage the collector configuration with Sumo Logic.
   -${ARG_SHORT_EPHEMERAL}, --${ARG_LONG_EPHEMERAL}                       Delete the collector from Sumo Logic after 12 hours of inactivity.
   -${ARG_SHORT_TIMEOUT}, --${ARG_LONG_TIMEOUT} <timeout>      Timeout in seconds after which download will fail. Default is ${CURL_MAX_TIME}.
+  -${ARG_SHORT_TIMEZONE}, --${ARG_LONG_TIMEZONE}                       TIMEZONE for the collector.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
@@ -262,6 +267,9 @@ function parse_options() {
       "--${ARG_LONG_EPHEMERAL}")
         set -- "$@" "-${ARG_SHORT_EPHEMERAL}"
         ;;
+      "--${ARG_LONG_TIMEZONE}")
+        set -- "$@" "-${ARG_SHORT_TIMEZONE}"
+        ;;
       -*)
         echo "Unknown option ${arg}"; usage; exit 2 ;;
       *)
@@ -274,7 +282,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -309,6 +317,7 @@ function parse_options() {
       "${ARG_SHORT_INSTALL_HOSTMETRICS}") INSTALL_HOSTMETRICS=true ;;
       "${ARG_SHORT_REMOTELY_MANAGED}") REMOTELY_MANAGED=true ;;
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
+      "${ARG_SHORT_TIMEZONE}") TIMEZONE="UTC" ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
       "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
@@ -462,6 +471,10 @@ function setup_config() {
             write_ephemeral_true
         fi
 
+        if [[ -n "${TIMEZONE}" ]]; then
+            write_timezone "${TIMEZONE}"
+        fi
+
         if [[ -n "${API_BASE_URL}" ]]; then
             write_api_url "${API_BASE_URL}"
         fi
@@ -520,6 +533,10 @@ function setup_config_darwin() {
 
     if [[ "${EPHEMERAL}" == "true" ]]; then
         write_ephemeral_true
+    fi
+
+    if [[ -n "${TIMEZONE}" ]]; then
+        write_timezone "${TIMEZONE}"
     fi
 
     if [[ -n "${API_BASE_URL}"  ]]; then
@@ -740,6 +757,12 @@ function write_installation_token_launchd() {
 # write sumologic ephemeral: true to user configuration file
 function write_ephemeral_true() {
     "${SUMO_CONFIG_BINARY_PATH}" --enable-ephemeral
+}
+
+function write_timezone() {
+    local timezone
+    readonly timezone="${1}"
+    "${SUMO_CONFIG_BINARY_PATH}" --set-timezone "$timezone"
 }
 
 # write api_url to user configuration file

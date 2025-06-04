@@ -63,6 +63,24 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "installation token and timezone",
+			options: installOptions{
+				installToken: installToken,
+				timezone:     "Europe/Prague",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkTimezoneConfigFileCreated(timezoneConfigPath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
+		{
 			name: "installation token and hostmetrics",
 			options: installOptions{
 				installToken:       installToken,

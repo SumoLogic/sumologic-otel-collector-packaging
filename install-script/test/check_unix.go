@@ -45,6 +45,18 @@ func checkEphemeralConfigFileNotCreated(p string) func(c check) bool {
 	}
 }
 
+func checkTimezoneConfigFileCreated(p string) func(c check) bool {
+	return func(c check) bool {
+		return assert.FileExists(c.test, p, "timezone config file has not been created")
+	}
+}
+
+func checkTimezoneConfigFileNotCreated(p string) func(c check) bool {
+	return func(c check) bool {
+		return assert.NoFileExists(c.test, p, "timezone config file has been created")
+	}
+}
+
 func checkEphemeralEnabledInRemote(p string) func(c check) bool {
 	return func(c check) bool {
 		yamlFile, err := os.ReadFile(p)
