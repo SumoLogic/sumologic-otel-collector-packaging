@@ -98,7 +98,7 @@ DOWNLOAD_ONLY=""
 INSTALL_HOSTMETRICS=false
 REMOTELY_MANAGED=false
 EPHEMERAL=false
-TIMEZONE="UTC"
+TIMEZONE=""
 
 LAUNCHD_CONFIG=""
 LAUNCHD_ENV_KEY=""
@@ -177,6 +177,7 @@ function set_defaults() {
     SUMO_CONFIG_BINARY_PATH="/usr/local/bin/otelcol-config"
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
+    TIMEZONE="UTC"
 
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
