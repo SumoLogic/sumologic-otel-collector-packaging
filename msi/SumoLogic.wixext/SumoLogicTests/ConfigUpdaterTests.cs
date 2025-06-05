@@ -167,6 +167,27 @@ namespace SumoLogicTests
             Assert.AreEqual(config.OpAmpApi, endpoint.ToString());
         }
 
+        public void TimezoneAssertions(Config config, StreamReader sr)
+        {
+            YamlStream ys = new YamlStream();
+            ys.Load(sr);
+            YamlMappingNode root = (YamlMappingNode)ys.Documents[0].RootNode;
+
+            Assert.IsTrue(root.Children.ContainsKey("extensions"));
+            Assert.AreEqual(YamlNodeType.Mapping, root.Children["extensions"].NodeType);
+            var extensions = (YamlMappingNode)root.Children["extensions"];
+
+            Assert.IsTrue(extensions.Children.ContainsKey("sumologic"));
+            Assert.AreEqual(YamlNodeType.Mapping, extensions.Children["sumologic"].NodeType);
+            var sumologic = (YamlMappingNode)extensions.Children["sumologic"];
+
+            Assert.IsTrue(sumologic.Children.ContainsKey("time_zone"));
+            Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["time_zone"].NodeType);
+            var endpoint = (YamlScalarNode)sumologic.Children["time_zone"];
+            Assert.AreEqual(config.Timezone, endpoint.ToString());
+        }
+
+
         [TestMethod]
         public void TestUpdate_WithExtensionsBlock()
         {
@@ -451,6 +472,34 @@ namespace SumoLogicTests
                 ms.Seek(0, SeekOrigin.Begin);
 
                 OpAmpApiAssertions(config, sr);
+            }
+        }
+
+
+        [TestMethod]
+        public void TestUpdate_Timezone()
+        {
+            var filePath = Path.Combine(testDataPath, "with-extensions-block.yaml");
+            var config = new Config { InstallationToken = "foobar", RemotelyManaged = true, Timezone = "UTC" };
+            config.SetCollectorFieldsFromTags(@"foo=bar,baz=kaz,xaz=yaz");
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                var configUpdater = new ConfigUpdater(new StreamReader(filePath));
+                configUpdater.Update(config);
+                configUpdater.Save(new StreamWriter(ms));
+
+                ms.Seek(0, SeekOrigin.Begin);
+
+                StreamReader sr = new StreamReader(ms);
+                while (!sr.EndOfStream)
+                {
+                    Console.WriteLine(sr.ReadLine());
+                }
+
+                ms.Seek(0, SeekOrigin.Begin);
+
+                TimezoneAssertions(config, sr);
             }
         }
 

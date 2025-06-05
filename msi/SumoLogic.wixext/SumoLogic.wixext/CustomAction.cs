@@ -24,6 +24,7 @@ namespace SumoLogic.wixext
         private const string pConfigFolder = "ConfigFolder";
         private const string pOpAmpFolder = "OpAmpFolder";
         private const string pOpAmpApi = "OpAmpApi";
+        private const string pTimezone = "Timezone";
         private const string pConfigFragmentsFolder = "ConfigFragmentsFolder";
 
         // WiX features
@@ -70,6 +71,7 @@ namespace SumoLogic.wixext
             var ephemeral = (session.CustomActionData.ContainsKey(pEphemeral) && session.CustomActionData[pEphemeral] == "true");
             var opAmpFolder = session.CustomActionData[pOpAmpFolder];
             var opAmpApi = session.CustomActionData[pOpAmpApi];
+            var timezone = session.CustomActionData[pTimezone];
             var api = session.CustomActionData[pApi];
 
             if (remotelyManaged && string.IsNullOrEmpty(opAmpFolder))
@@ -80,7 +82,7 @@ namespace SumoLogic.wixext
 
             // Load config from disk and replace values
             Config config = new Config { InstallationToken = installationToken, RemotelyManaged = remotelyManaged, Ephemeral = ephemeral,
-                OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api };
+                OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api, Timezone = timezone };
             config.SetCollectorFieldsFromTags(tags);
 
             var configFile = remotelyManaged ? sumoLogicConfigPath : commonConfigPath;

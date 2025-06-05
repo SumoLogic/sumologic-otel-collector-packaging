@@ -13,6 +13,7 @@ namespace SumoLogic.wixext
         public string OpAmpFolder { get; set; }
         public string Api { get; set; }
         public string OpAmpApi { get; set; }
+        public string Timezone { get; set; }
 
         public Config() {
             this.CollectorFields = new Dictionary<string, string>();

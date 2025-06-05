@@ -27,6 +27,9 @@ param (
     # Ephemeral option enabled
     [bool] $Ephemeral,
 
+    # The Timezone option is used to specify the timezone of the collector.
+    [bool] $Timezone,
+
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
 
@@ -444,6 +447,9 @@ try {
     }
     if ($Ephemeral -eq $true) {
         $msiAddLocal += "EPHEMERAL"
+    }
+    if ($Timezone.Length -gt 0) {
+        $msiProperties += "TIMEZONE=`"${Timezone}`""
     }
     if ($msiAddLocal.Count -gt 0) {
         $addLocalStr = $msiAddLocal -Join ","

@@ -84,6 +84,9 @@
     <!-- The OpAmp UrL if overriden -->
     <Property Id="OPAMPAPI" Hidden="yes" />
 
+    <!-- The Timezone if overriden -->
+    <Property Id="TIMEZONE" Hidden="yes" />
+
     <!-- UI Properties -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
@@ -102,7 +105,7 @@
     <CustomAction Id="UpdateConfigActionData1" Property="UpdateConfigAction1"
       Value="CommonConfigPath=[ConfigFragmentsFolder]common.yaml;SumoLogicConfigPath=[ConfigFolder]sumologic.yaml;InstallToken=[INSTALLTOKEN];InstallationToken=[INSTALLATIONTOKEN]" />
     <CustomAction Id="UpdateConfigActionData2" Property="UpdateConfigAction2"
-      Value="Tags=[TAGS];OpAmpFolder=[OpAmpFolder];OpAmpApi=[OPAMPAPI];Ephemeral=[EPHEMERALSELECTED];RemotelyManaged=[REMOTELYMANAGEDSELECTED];Api=[API]" />
+      Value="Tags=[TAGS];OpAmpFolder=[OpAmpFolder];OpAmpApi=[OPAMPAPI];Timezone=[TIMEZONE];Ephemeral=[EPHEMERALSELECTED];RemotelyManaged=[REMOTELYMANAGEDSELECTED];Api=[API]" />
     <CustomAction Id="UpdateConfigActionData" Property="UpdateConfigAction" Value="[UpdateConfigAction1];[UpdateConfigAction2]" />
 
     <!-- Before updating the config files set the properties indicating whether or not the remotely managed and ephemeral features are selected -->
