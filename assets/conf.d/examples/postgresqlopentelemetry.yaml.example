@@ -1,0 +1,123 @@
+receivers:
+  postgresql/localhost:
+    endpoint: localhost:5432
+    username: admin
+    password: null
+    transport: tcp
+    collection_interval: 1m
+    metrics:
+      postgresql.tup_updated:
+        enabled: true
+      postgresql.tup_returned:
+        enabled: true
+      postgresql.tup_fetched:
+        enabled: true
+      postgresql.sequential_scans:
+        enabled: true
+      postgresql.tup_inserted:
+        enabled: true
+      postgresql.blks_hit:
+        enabled: true
+      postgresql.tup_deleted:
+        enabled: true
+      postgresql.blks_read:
+        enabled: true
+      postgresql.deadlocks:
+        enabled: true
+      postgresql.database.locks:
+        enabled: true
+  filelog/postgresql/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/lib/postgresql/:version:/main/log/postgresql*.log
+processors:
+  resource/postgresql_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: postgresql
+        action: insert
+      - key: sumo.datasource
+        value: postgresql
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
+      - key: db.cluster.name
+        value: postgresqlOtelCluster
+        action: insert
+  resource/postgresql/split_schema_table/localhost:
+    attributes:
+      - key: postgresql.table.name
+        pattern: (?P<schema>[^.]*)\.
+        action: extract
+      - key: postgresql.table.name
+        pattern: (?P<table>[^.]*$)
+        action: extract
+  resource/postgresql/rename_attr/localhost:
+    attributes:
+      - key: db.schema
+        from_attribute: schema
+        action: insert
+      - key: db.sql.table
+        from_attribute: table
+        action: insert
+      - key: schema
+        action: delete
+      - key: table
+        action: delete
+      - action: insert
+        from_attribute: postgresql.database.name
+        key: db.name
+      - action: delete
+        key: postgresql.database.name
+  resource/postgresql_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: postgresql/postgresql
+        action: insert
+      - key: _sourceName
+        value: postgresql
+        action: insert
+  resource/postgresql_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: postgresql/filelog
+        action: insert
+service:
+  pipelines:
+    metrics/postgresql/localhost:
+      receivers:
+        - postgresql/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/postgresql_resource_attributes/metrics/localhost
+        - resource/postgresql_resource_attributes/localhost
+        - resource/postgresql/split_schema_table/localhost
+        - resource/postgresql/rename_attr/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/postgresql/localhost:
+      receivers:
+        - filelog/postgresql/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/postgresql_resource_attributes/logs/localhost
+        - resource/postgresql_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic

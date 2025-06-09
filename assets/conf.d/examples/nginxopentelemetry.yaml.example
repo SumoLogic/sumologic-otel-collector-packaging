@@ -1,0 +1,87 @@
+receivers:
+  nginx/localhost:
+    endpoint: http://localhost:80/status
+  filelog/nginx/accessLogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/nginx/access*.log
+  filelog/nginx/errorLogs/localhost:
+    multiline:
+      line_start_pattern: ^\[\S{3}\s\S{3}\s\d{1,2}\s[^\]]+\].*
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/nginx/error*.log
+processors:
+  resource/nginx_resource_attributes/localhost:
+    attributes:
+      - key: webengine.system
+        value: nginx
+        action: insert
+      - key: sumo.datasource
+        value: nginx
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: webengine.node.name
+        action: insert
+        from_attribute: host.name
+      - key: webengine.cluster.name
+        value: nginx_cluster
+        action: insert
+  resource/nginx_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: nginx/nginx
+        action: insert
+      - key: _sourceName
+        value: nginx
+        action: insert
+  resource/nginx_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: nginx/filelog
+        action: insert
+service:
+  pipelines:
+    metrics/nginx/localhost:
+      receivers:
+        - nginx/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/nginx_resource_attributes/metrics/localhost
+        - resource/nginx_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/nginx/localhost:
+      receivers:
+        - filelog/nginx/accessLogs/localhost
+        - filelog/nginx/errorLogs/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/nginx_resource_attributes/logs/localhost
+        - resource/nginx_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
