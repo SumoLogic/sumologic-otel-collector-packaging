@@ -370,7 +370,7 @@ jobs:
   test_wixext:
     name: Test (SumoLogic.wixext)
     if: inputs.build_tool == 'wix'
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - name: Checkout
         uses: actions/checkout@v4
