@@ -480,7 +480,7 @@ namespace SumoLogicTests
         public void TestUpdate_Timezone()
         {
             var filePath = Path.Combine(testDataPath, "with-extensions-block.yaml");
-            var config = new Config { InstallationToken = "foobar", RemotelyManaged = true, Timezone = "UTC" };
+            var config = new Config { InstallationToken = "foobar", Timezone = "UTC" };
             config.SetCollectorFieldsFromTags(@"foo=bar,baz=kaz,xaz=yaz");
 
             using (MemoryStream ms = new MemoryStream())
