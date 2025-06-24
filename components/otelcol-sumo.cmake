@@ -28,7 +28,7 @@ macro(default_otc_darwin_install)
   install_otc_sumologic_yaml()
   install_otc_darwin_hostmetrics_yaml()
   install_otc_ephemeral_yaml()
-  install_otc_timezone_yaml(
+  install_otc_timezone_yaml()
   install_otc_binary()
   install_otc_config_binary()
   install_otc_uninstall_script()
