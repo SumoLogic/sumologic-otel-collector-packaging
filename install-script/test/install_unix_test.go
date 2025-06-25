@@ -119,7 +119,7 @@ func TestInstallScript(t *testing.T) {
 				opampEndpoint:   "wss://example.com",
 			},
 			preChecks: notInstalledChecks,
-			postChecks: []checkFunc{g
+			postChecks: []checkFunc{
 				checkBinaryCreated,
 				checkBinaryIsRunning,
 				checkConfigCreated,
