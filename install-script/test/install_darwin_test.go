@@ -77,7 +77,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
 				checkUserConfigCreated,
 				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
-				checkTimezoneConfigFileCreated(timezoneConfigPath),
+				checkTimezoneConfigFileNotCreated(timezoneConfigPath),
 				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
