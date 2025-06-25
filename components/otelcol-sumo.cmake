@@ -10,7 +10,6 @@ macro(default_otc_linux_install)
   install_otc_sumologic_yaml()
   install_otc_linux_hostmetrics_yaml()
   install_otc_ephemeral_yaml()
-  install_otc_timezone_yaml()
   install_otc_token_env()
   install_otc_binary()
   install_otc_config_binary()
@@ -28,7 +27,6 @@ macro(default_otc_darwin_install)
   install_otc_sumologic_yaml()
   install_otc_darwin_hostmetrics_yaml()
   install_otc_ephemeral_yaml()
-  install_otc_timezone_yaml()
   install_otc_binary()
   install_otc_config_binary()
   install_otc_uninstall_script()
@@ -333,22 +331,6 @@ macro(install_otc_ephemeral_yaml)
   )
   install(
     FILES "${ASSETS_DIR}/conf.d/ephemeral.yaml"
-    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
-    PERMISSIONS
-      OWNER_READ OWNER_WRITE
-      GROUP_READ GROUP_WRITE
-    COMPONENT otelcol-sumo
-  )
-endmacro()
-
-# e.g. /etc/otelcol-sumo/conf.d-available/timezone.yaml
-macro(install_otc_timezone_yaml)
-  require_variables(
-    "ASSETS_DIR"
-    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
-  )
-  install(
-    FILES "${ASSETS_DIR}/conf.d/timezone.yaml"
     DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
     PERMISSIONS
       OWNER_READ OWNER_WRITE

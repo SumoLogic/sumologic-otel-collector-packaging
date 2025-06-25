@@ -63,24 +63,6 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
-			name: "installation token and timezone",
-			options: installOptions{
-				installToken: installToken,
-				timezone:     "Europe/Prague",
-			},
-			preChecks: notInstalledChecks,
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-				checkTimezoneConfigFileCreated(timezoneConfigPath),
-				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
-				checkEphemeralNotEnabledInRemote(sumoRemotePath),
-				checkHostmetricsConfigNotCreated,
-				checkTokenEnvFileCreated,
-			},
-		},
-		{
 			name: "installation token and hostmetrics",
 			options: installOptions{
 				installToken:       installToken,
@@ -145,6 +127,24 @@ func TestInstallScript(t *testing.T) {
 				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
 				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkOpAmpEndpointSet,
+			},
+		},
+		{
+			name: "installation token, remotely-managed and timezone",
+			options: installOptions{
+				installToken: installToken,
+				timezone:     "Europe/Prague",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkTimezoneConfigInRemote(sumoRemotePath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
 			},
 		},
 		{

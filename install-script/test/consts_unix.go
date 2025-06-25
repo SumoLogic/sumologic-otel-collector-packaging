@@ -22,7 +22,6 @@ const (
 	installTokenEnv     = "SUMOLOGIC_INSTALLATION_TOKEN"
 	apiBaseURL          = "https://open-collectors.sumologic.com"
 	ephemeralConfigPath = confDPath + "/ephemeral.yaml"
-	timezoneConfigPath  = confDPath + "/timezone.yaml"
 
 	curlTimeoutErrorCode = 28
 
