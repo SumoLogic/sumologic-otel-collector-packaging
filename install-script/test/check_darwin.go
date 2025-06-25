@@ -169,13 +169,6 @@ func preActionInstallPackageWithDifferentTags(c check) bool {
 	return assert.NoError(c.test, c.err)
 }
 
-func preActionInstallPackageWithNoAPIBaseURL(c check) bool {
-	c.installOptions.installToken = installToken
-	c.installOptions.apiBaseURL = emptyAPIBaseURL
-	c.code, c.output, c.errorOutput, c.err = runScript(c)
-	return assert.NoError(c.test, c.err)
-}
-
 func preActionInstallPackageWithNoTags(c check) bool {
 	c.installOptions.installToken = installToken
 	c.installOptions.tags = nil

@@ -168,6 +168,29 @@ func TestInstallScript(t *testing.T) {
 				checkTags,
 			},
 		},
+		{
+			name: "adding api base url",
+			options: installOptions{
+				apiBaseURL: mockAPIBaseURL,
+			},
+			preActions: []checkFunc{preActionInstallPackageWithNoAPIBaseURL},
+			preChecks: []checkFunc{
+				checkBinaryCreated,
+				checkConfigCreated,
+				// The user config file will only exist if non-default values
+				// are used for otelcol-config managed settings such as the
+				// API URL or tags
+				checkUserConfigNotCreated,
+				checkUserExists,
+			},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkConfigCreated,
+				checkUserConfigCreated,
+				checkAPIBaseURLInConfig,
+			},
+			installCode: 0,
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {

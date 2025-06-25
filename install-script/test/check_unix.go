@@ -159,3 +159,10 @@ func PathHasOwner(t *testing.T, path string, ownerName string, groupName string)
 	}
 	return assert.Equal(t, groupName, group.Name, "%s should be owned by group '%s'", path, groupName)
 }
+
+func preActionInstallPackageWithNoAPIBaseURL(c check) bool {
+	c.installOptions.installToken = installToken
+	c.installOptions.apiBaseURL = emptyAPIBaseURL
+	c.code, c.output, c.errorOutput, c.err = runScript(c)
+	return assert.NoError(c.test, c.err)
+}
