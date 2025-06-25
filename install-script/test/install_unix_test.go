@@ -119,7 +119,7 @@ func TestInstallScript(t *testing.T) {
 				opampEndpoint:   "wss://example.com",
 			},
 			preChecks: notInstalledChecks,
-			postChecks: []checkFunc{
+			postChecks: []checkFunc{g
 				checkBinaryCreated,
 				checkBinaryIsRunning,
 				checkConfigCreated,
@@ -132,8 +132,9 @@ func TestInstallScript(t *testing.T) {
 		{
 			name: "installation token, remotely-managed and timezone",
 			options: installOptions{
-				installToken: installToken,
-				timezone:     "Europe/Prague",
+				installToken:    installToken,
+				remotelyManaged: true,
+				timezone:        "Europe/Prague",
 			},
 			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
