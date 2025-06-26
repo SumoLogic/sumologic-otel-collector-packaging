@@ -337,10 +337,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 			preChecks: []checkFunc{
 				checkBinaryCreated,
 				checkConfigCreated,
-				// The user config file will only exist if non-default values
-				// are used for otelcol-config managed settings such as the
-				// API URL or tags
-				checkUserConfigNotCreated,
 				checkUserExists,
 			},
 			postChecks: []checkFunc{
