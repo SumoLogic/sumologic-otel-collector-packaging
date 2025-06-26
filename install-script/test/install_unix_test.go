@@ -77,6 +77,7 @@ func TestInstallScript(t *testing.T) {
 				checkHostmetricsConfigCreated,
 				checkHostmetricsOwnershipAndPermissions(systemUser, systemGroup),
 			},
+			installCode: 0,
 		},
 		{
 			name: "installation token and remotely-managed",
