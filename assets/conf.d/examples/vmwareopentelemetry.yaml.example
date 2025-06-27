@@ -7,6 +7,12 @@ receivers:
     tls:
       insecure: true
       insecure_skip_verify: true
+      vcenter.host.memory.capacity:
+        enabled: true
+      vcenter.vm.cpu.time:
+        enabled: true
+      vcenter.vm.memory.granted:
+        enabled: true
 processors:
   resource/vmware_resource_attributes/localhost:
     attributes:
