@@ -1,0 +1,105 @@
+receivers:
+  jmx/tomcatmetrics/localhost:
+    jar_path: /etc/otelcol-sumo/opentelemetry-jmx-metrics.jar
+    endpoint: localhost:11211
+    target_system: tomcat
+    collection_interval: 1m
+    username: sumo_jmx
+    password: safe_password
+    log_level: info
+  filelog/tomcat/access/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/share/tomcat/logs/access.log
+  filelog/tomcat/catalina/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/share/tomcat/logs/catalina.log
+  filelog/tomcat/gc/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/share/tomcat/logs/gc.log
+processors:
+  resource/tomcat_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: tomcat
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: webengine.system
+        value: tomcat
+        action: insert
+      - key: webengine.node.name
+        action: insert
+        from_attribute: host.name
+      - key: webengine.cluster.name
+        value: test
+        action: insert
+  resource/tomcat_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: tomcat/filelog
+        action: insert
+  resource/tomcat_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: tomcat/jmx
+        action: insert
+      - key: _sourceName
+        value: tomcat
+        action: insert
+service:
+  pipelines:
+    metrics/tomcat/localhost:
+      receivers:
+        - jmx/tomcatmetrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/tomcat_resource_attributes/localhost
+        - resource/tomcat_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
+    logs/tomcat/localhost:
+      receivers:
+        - filelog/tomcat/access/localhost
+        - filelog/tomcat/catalina/localhost
+        - filelog/tomcat/gc/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/tomcat_resource_attributes/logs/localhost
+        - resource/tomcat_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic

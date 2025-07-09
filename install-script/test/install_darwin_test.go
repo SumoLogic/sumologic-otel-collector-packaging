@@ -205,6 +205,30 @@ func TestInstallScriptDarwin(t *testing.T) {
 			installCode: 0,
 		},
 		{
+			name: "installation token, remotely-managed, and timezone",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				timezone:        "UTC",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkRemoteConfigDirectoryCreated,
+				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
+				checkUserConfigNotCreated,
+				checkTimezoneConfigInRemote(sumoRemotePath),
+				checkLaunchdConfigCreated,
+				checkTokenInLaunchdConfig,
+				checkUserExists,
+				checkGroupExists,
+				checkHomeDirectoryCreated,
+			},
+			installCode: 0,
+		},
+		{
 			name: "same installation token in launchd config",
 			options: installOptions{
 				installToken: installToken,
@@ -313,10 +337,6 @@ func TestInstallScriptDarwin(t *testing.T) {
 			preChecks: []checkFunc{
 				checkBinaryCreated,
 				checkConfigCreated,
-				// The user config file will only exist if non-default values
-				// are used for otelcol-config managed settings such as the
-				// API URL or tags
-				checkUserConfigNotCreated,
 				checkUserExists,
 			},
 			postChecks: []checkFunc{

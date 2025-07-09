@@ -95,6 +95,13 @@ namespace SumoLogic.wixext
                 sumologic.Children["api_base_url"] = config.Api;
             }
 
+            if (!string.IsNullOrEmpty(config.Timezone))
+            {
+                EnsureScalarKey(sumologic, "time_zone");
+                sumologic.Children["time_zone"] = config.Timezone;
+            }
+
+
             // Make sure the sumologic processor node is a map node, otherwise an empty string
             // is generated as the value instead of an empty node.
             if (root.Children.ContainsKey("processors"))

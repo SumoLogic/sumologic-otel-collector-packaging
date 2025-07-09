@@ -28,6 +28,7 @@ type installOptions struct {
 	downloadOnly       bool
 	dontKeepDownloads  bool
 	version            string
+	timezone           string
 }
 
 func (io *installOptions) string() []string {
@@ -66,6 +67,10 @@ func (io *installOptions) string() []string {
 
 	if io.ephemeral {
 		opts = append(opts, "--ephemeral")
+	}
+
+	if io.timezone != "" {
+		opts = append(opts, "--timezone", io.timezone)
 	}
 
 	if len(io.tags) > 0 {

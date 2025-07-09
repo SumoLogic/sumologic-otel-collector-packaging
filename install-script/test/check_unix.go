@@ -23,7 +23,8 @@ type configExtensions struct {
 }
 
 type sumologicExt struct {
-	Ephemeral bool `yaml:"ephemeral,omitempty"`
+	Ephemeral bool   `yaml:"ephemeral,omitempty"`
+	Timezone  string `yaml:"timezone,omitempty"`
 }
 
 func checkAbortedDueToNoToken(c check) bool {
@@ -42,6 +43,23 @@ func checkEphemeralConfigFileCreated(p string) func(c check) bool {
 func checkEphemeralConfigFileNotCreated(p string) func(c check) bool {
 	return func(c check) bool {
 		return assert.NoFileExists(c.test, p, "ephemeral config file has been created")
+	}
+}
+
+func checkTimezoneConfigInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
+			return false
+		}
+
+		var config configRoot
+
+		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+
+		return config.Extensions.Sumologic.Timezone != ""
 	}
 }
 

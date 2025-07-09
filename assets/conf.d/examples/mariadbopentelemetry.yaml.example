@@ -1,0 +1,63 @@
+receivers:
+  filelog/mariadb/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/mariadb/mariadb-error.log
+  filelog/mariadb/slow_transcations/localhost:
+    multiline:
+      line_start_pattern: ^#\sTime:\s.
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /var/log/mariadb/slow_query.log
+processors:
+  resource/mariadb_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: mariadb
+        action: insert
+      - key: sumo.datasource
+        value: mariadb
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: db.cluster.name
+        value: mariadb
+        action: insert
+  resource/mariadb_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: mariadb/filelog
+        action: insert
+service:
+  pipelines:
+    logs/mariadb/localhost:
+      receivers:
+        - filelog/mariadb/localhost
+        - filelog/mariadb/slow_transcations/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/mariadb_resource_attributes/logs/localhost
+        - resource/mariadb_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic

@@ -1,0 +1,465 @@
+receivers:
+  filelog/iis/accesslogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - C:\inetpub\Logs\LogFiles\W3SVC**.log
+  filelog/iis/httperrorlogs/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - C:\Windows\System32\LogFiles\HTTPERR\*.*
+  windowsperfcounters/localhost:
+    collection_interval: 5m
+    metrics:
+      win.app.pool.was.Current.Application.Pool.State: null
+      win.app.pool.was.Current.Application.Pool.Uptime: null
+      win.app.pool.was.Current.Worker.Processes: null
+      win.app.pool.was.Maximum.Worker.Processes: null
+      win.app.pool.was.Recent.Worker.Process.Failures: null
+      win.app.pool.was.Time.Since.Last.Worker.Process.Failure: null
+      win.app.pool.was.Total.Application.Pool.Recycles: null
+      win.app.pool.was.Total.Application.Pool.Uptime: null
+      win.app.pool.was.Total.Worker.Process.Failures: null
+      win.app.pool.was.Total.Worker.Process.Ping.Failures: null
+      win.app.pool.was.Total.Worker.Process.Shutdown.Failures: null
+      win.app.pool.was.Total.Worker.Process.Startup.Failures: null
+      win.app.pool.was.Total.Worker.Processes.Created: null
+      win.aspnet.Application.Restarts: null
+      win.aspnet.Applications.Running: null
+      win.aspnet.Request.Execution.Time: null
+      win.aspnet.Request.Wait.Time: null
+      win.aspnet.Requests.Current: null
+      win.aspnet.Requests.Queued: null
+      win.aspnet.Requests.Rejected: null
+      win.aspnet.State.Server.Sessions.Abandoned: null
+      win.aspnet.State.Server.Sessions.Active: null
+      win.aspnet.State.Server.Sessions.Timed.Out: null
+      win.aspnet.State.Server.Sessions.Total: null
+      win.aspnet.Worker.Process.Restarts: null
+      win.aspnet.Worker.Processes.Running: null
+      win.aspnet.app.Cache.Total.Entries: null
+      win.aspnet.app.Cache.Total.Hit.Ratio: null
+      win.aspnet.app.Cache.Total.Turnover.Rate: null
+      win.aspnet.app.Compilations.Total: null
+      win.aspnet.app.Errors.Total.per.Sec: null
+      win.aspnet.app.Output.Cache.Entries: null
+      win.aspnet.app.Output.Cache.Hit.Ratio: null
+      win.aspnet.app.Output.Cache.Hits: null
+      win.aspnet.app.Output.Cache.Turnover.Rate: null
+      win.aspnet.app.Pipeline.Instance.Count: null
+      win.aspnet.app.Requests.Executing: null
+      win.aspnet.app.Requests.in.Application.Queue: null
+      win.aspnet.app.Requests.per.Sec: null
+      win.http.queues.CurrentQueueSize: null
+      win.http.queues.RejectedRequests: null
+      win.websvc.Anonymous.Users.per.sec: null
+      win.websvc.Bytes.Received.per.sec: null
+      win.websvc.Bytes.Sent.per.sec: null
+      win.websvc.Bytes.Total.per.sec: null
+      win.websvc.Current.Blocked.Async.IO.Requests: null
+      win.websvc.Current.CGI.Requests: null
+      win.websvc.Current.Connections: null
+      win.websvc.Current.ISAPI.Extension.Requests: null
+      win.websvc.Current.NonAnonymous.Users: null
+      win.websvc.Delete.Requests.per.sec: null
+      win.websvc.Files.Received.per.sec: null
+      win.websvc.Files.Sent.per.sec: null
+      win.websvc.Files.per.sec: null
+      win.websvc.Get.Requests.per.sec: null
+      win.websvc.Head.Requests.per.sec: null
+      win.websvc.Locked.Errors.per.sec: null
+      win.websvc.NonAnonymous.Users.per.sec: null
+      win.websvc.Not.Found.Errors.per.sec: null
+      win.websvc.Options.Requests.per.sec: null
+      win.websvc.Post.Requests.per.sec: null
+      win.websvc.Put.Requests.per.sec: null
+      win.websvc.Service.Uptime: null
+      win.websvc.Total.Allowed.Async.IO.Requests: null
+      win.websvc.Total.Blocked.Async.IO.Requests: null
+      win.websvc.Total.Bytes.Received: null
+      win.websvc.Total.Bytes.Sent: null
+      win.websvc.Total.Bytes.Transferred: null
+      win.websvc.Total.CGI.Requests: null
+      win.websvc.Total.Connection.Attempts.(all.instances): null
+      win.websvc.Total.Delete.Requests: null
+      win.websvc.Total.Files.Received: null
+      win.websvc.Total.Files.Sent: null
+      win.websvc.Total.Files.Transferred: null
+      win.websvc.Total.Get.Requests: null
+      win.websvc.Total.Head.Requests: null
+      win.websvc.Total.ISAPI.Extension.Requests: null
+      win.websvc.Total.Locked.Errors: null
+      win.websvc.Total.Logon.Attempts: null
+      win.websvc.Total.Method.Requests: null
+      win.websvc.Total.Method.Requests.per.sec: null
+      win.websvc.Total.NonAnonymous.Users: null
+      win.websvc.Total.Not.Found.Errors: null
+      win.websvc.Total.Options.Requests: null
+      win.websvc.Total.Post.Requests: null
+      win.websvc.Total.Put.Requests: null
+      win.websvc.Total.Rejected.Async.IO.Requests: null
+      win.websvc.Total.count.of.failed.CAL.requests.for.SSL.connections: null
+      win.websvc.Total.count.of.failed.CAL.requests.for.authenticated.users: null
+      win.websvc.cache.Active.Flushed.Entries: null
+      win.websvc.cache.Current.File.Cache.Memory.Usage: null
+      win.websvc.cache.Current.Files.Cached: null
+      win.websvc.cache.Current.Metadata.Cached: null
+      win.websvc.cache.Current.URIs.Cached: null
+      win.websvc.cache.File.Cache.Flushes: null
+      win.websvc.cache.File.Cache.Hits: null
+      win.websvc.cache.File.Cache.Hits.per: null
+      win.websvc.cache.File.Cache.Misses: null
+      win.websvc.cache.Maximum.File.Cache.Memory.Usage: null
+      win.websvc.cache.Metadata.Cache.Flushes: null
+      win.websvc.cache.Metadata.Cache.Hits: null
+      win.websvc.cache.Metadata.Cache.Hits.per: null
+      win.websvc.cache.Metadata.Cache.Misses: null
+      win.websvc.cache.Output.Cache.Current.Flushed.Items: null
+      win.websvc.cache.Output.Cache.Current.Hits.per: null
+      win.websvc.cache.Output.Cache.Current.Items: null
+      win.websvc.cache.Output.Cache.Current.Memory.Usage: null
+      win.websvc.cache.Output.Cache.Total.Flushed.Items: null
+      win.websvc.cache.Total.Files.Cached: null
+      win.websvc.cache.Total.Flushed.Files: null
+      win.websvc.cache.Total.Flushed.Metadata: null
+      win.websvc.cache.Total.Flushed.URIs: null
+      win.websvc.cache.Total.Metadata.Cached: null
+      win.websvc.cache.Total.URIs.Cached: null
+      win.websvc.cache.URI.Cache.Flushes: null
+      win.websvc.cache.URI.Cache.Hits: null
+      win.websvc.cache.URI.Cache.Hits.per: null
+      win.websvc.cache.URI.Cache.Misses: null
+    perfcounters:
+      - counters:
+          - metric: win.http.queues.CurrentQueueSize
+            name: CurrentQueueSize
+          - metric: win.http.queues.RejectedRequests
+            name: RejectedRequests
+        instances:
+          - '*'
+        object: HTTP Service Request Queues
+      - counters:
+          - metric: win.aspnet.app.Cache.Total.Entries
+            name: Cache Total Entries
+          - metric: win.aspnet.app.Cache.Total.Hit.Ratio
+            name: Cache Total Hit Ratio
+          - metric: win.aspnet.app.Cache.Total.Turnover.Rate
+            name: Cache Total Turnover Rate
+          - metric: win.aspnet.app.Output.Cache.Entries
+            name: Output Cache Entries
+          - metric: win.aspnet.app.Output.Cache.Hits
+            name: Output Cache Hits
+          - metric: win.aspnet.app.Output.Cache.Hit.Ratio
+            name: Output Cache Hit Ratio
+          - metric: win.aspnet.app.Output.Cache.Turnover.Rate
+            name: Output Cache Turnover Rate
+          - metric: win.aspnet.app.Compilations.Total
+            name: Compilations Total
+          - metric: win.aspnet.app.Errors.Total.per.Sec
+            name: Errors Total/Sec
+          - metric: win.aspnet.app.Pipeline.Instance.Count
+            name: Pipeline Instance Count
+          - metric: win.aspnet.app.Requests.Executing
+            name: Requests Executing
+          - metric: win.aspnet.app.Requests.in.Application.Queue
+            name: Requests in Application Queue
+          - metric: win.aspnet.app.Requests.per.Sec
+            name: Requests/Sec
+        instances:
+          - '*'
+        object: ASP.NET Applications
+      - counters:
+          - metric: win.aspnet.Application.Restarts
+            name: Application Restarts
+          - metric: win.aspnet.Applications.Running
+            name: Applications Running
+          - metric: win.aspnet.Request.Execution.Time
+            name: Request Execution Time
+          - metric: win.aspnet.Request.Wait.Time
+            name: Request Wait Time
+          - metric: win.aspnet.Requests.Current
+            name: Requests Current
+          - metric: win.aspnet.Requests.Queued
+            name: Requests Queued
+          - metric: win.aspnet.Requests.Rejected
+            name: Requests Rejected
+          - metric: win.aspnet.State.Server.Sessions.Abandoned
+            name: State Server Sessions Abandoned
+          - metric: win.aspnet.State.Server.Sessions.Active
+            name: State Server Sessions Active
+          - metric: win.aspnet.State.Server.Sessions.Timed.Out
+            name: State Server Sessions Timed Out
+          - metric: win.aspnet.State.Server.Sessions.Total
+            name: State Server Sessions Total
+          - metric: win.aspnet.Worker.Process.Restarts
+            name: Worker Process Restarts
+          - metric: win.aspnet.Worker.Processes.Running
+            name: Worker Processes Running
+        instances:
+          - '*'
+        object: ASP.NET
+      - counters:
+          - metric: win.websvc.Service.Uptime
+            name: Service Uptime
+          - metric: win.websvc.Current.Connections
+            name: Current Connections
+          - metric: win.websvc.Bytes.Sent.per.sec
+            name: Bytes Sent/sec
+          - metric: win.websvc.Total.Bytes.Sent
+            name: Total Bytes Sent
+          - metric: win.websvc.Bytes.Received.per.sec
+            name: Bytes Received/sec
+          - metric: win.websvc.Total.Bytes.Received
+            name: Total Bytes Received
+          - metric: win.websvc.Bytes.Total.per.sec
+            name: Bytes Total/sec
+          - metric: win.websvc.Total.Bytes.Transferred
+            name: Total Bytes Transferred
+          - metric: win.websvc.Get.Requests.per.sec
+            name: Get Requests/sec
+          - metric: win.websvc.Total.Get.Requests
+            name: Total Get Requests
+          - metric: win.websvc.Post.Requests.per.sec
+            name: Post Requests/sec
+          - metric: win.websvc.Total.Post.Requests
+            name: Total Post Requests
+          - metric: win.websvc.Put.Requests.per.sec
+            name: Put Requests/sec
+          - metric: win.websvc.Total.Put.Requests
+            name: Total Put Requests
+          - metric: win.websvc.Delete.Requests.per.sec
+            name: Delete Requests/sec
+          - metric: win.websvc.Total.Delete.Requests
+            name: Total Delete Requests
+          - metric: win.websvc.Head.Requests.per.sec
+            name: Head Requests/sec
+          - metric: win.websvc.Options.Requests.per.sec
+            name: Options Requests/sec
+          - metric: win.websvc.Total.Head.Requests
+            name: Total Head Requests
+          - metric: win.websvc.Total.Method.Requests
+            name: Total Method Requests
+          - metric: win.websvc.Total.Options.Requests
+            name: Total Options Requests
+          - metric: win.websvc.Anonymous.Users.per.sec
+            name: Anonymous Users/sec
+          - metric: win.websvc.NonAnonymous.Users.per.sec
+            name: NonAnonymous Users/sec
+          - metric: win.websvc.Files.Sent.per.sec
+            name: Files Sent/sec
+          - metric: win.websvc.Total.Files.Sent
+            name: Total Files Sent
+          - metric: win.websvc.Files.Received.per.sec
+            name: Files Received/sec
+          - metric: win.websvc.Total.Files.Received
+            name: Total Files Received
+          - metric: win.websvc.Files.per.sec
+            name: Files/sec
+          - metric: win.websvc.Total.Files.Transferred
+            name: Total Files Transferred
+          - metric: win.websvc.Not.Found.Errors.per.sec
+            name: Not Found Errors/sec
+          - metric: win.websvc.Locked.Errors.per.sec
+            name: Locked Errors/sec
+          - metric: win.websvc.Total.Method.Requests.per.sec
+            name: Total Method Requests/sec
+          - metric: win.websvc.Total.Allowed.Async.IO.Requests
+            name: Total Allowed Async I/O Requests
+          - metric: win.websvc.Total.Blocked.Async.IO.Requests
+            name: Total Blocked Async I/O Requests
+          - metric: win.websvc.Current.Blocked.Async.IO.Requests
+            name: Current Blocked Async I/O Requests
+          - metric: win.websvc.Current.CGI.Requests
+            name: Current CGI Requests
+          - metric: win.websvc.Current.ISAPI.Extension.Requests
+            name: Current ISAPI Extension Requests
+          - metric: win.websvc.Current.NonAnonymous.Users
+            name: Current NonAnonymous Users
+          - metric: win.websvc.Total.CGI.Requests
+            name: Total CGI Requests
+          - metric: win.websvc.Total.Connection.Attempts.(all.instances)
+            name: Total Connection Attempts (all instances)
+          - metric: win.websvc.Total.ISAPI.Extension.Requests
+            name: Total ISAPI Extension Requests
+          - metric: win.websvc.Total.Locked.Errors
+            name: Total Locked Errors
+          - metric: win.websvc.Total.Logon.Attempts
+            name: Total Logon Attempts
+          - metric: win.websvc.Total.NonAnonymous.Users
+            name: Total NonAnonymous Users
+          - metric: win.websvc.Total.Not.Found.Errors
+            name: Total Not Found Errors
+          - metric: win.websvc.Total.Rejected.Async.IO.Requests
+            name: Total Rejected Async I/O Requests
+          - metric: win.websvc.Total.count.of.failed.CAL.requests.for.authenticated.users
+            name: Total count of failed CAL requests for authenticated users
+          - metric: win.websvc.Total.count.of.failed.CAL.requests.for.SSL.connections
+            name: Total count of failed CAL requests for SSL connections
+        instances:
+          - '*'
+        object: Web Service
+      - counters:
+          - metric: win.websvc.cache.Current.Files.Cached
+            name: Current Files Cached
+          - metric: win.websvc.cache.Active.Flushed.Entries
+            name: Active Flushed Entries
+          - metric: win.websvc.cache.Total.Files.Cached
+            name: Total Files Cached
+          - metric: win.websvc.cache.Total.Flushed.Files
+            name: Total Flushed Files
+          - metric: win.websvc.cache.File.Cache.Hits
+            name: File Cache Hits
+          - metric: win.websvc.cache.File.Cache.Misses
+            name: File Cache Misses
+          - metric: win.websvc.cache.File.Cache.Hits.per
+            name: File Cache Hits %
+          - metric: win.websvc.cache.File.Cache.Flushes
+            name: File Cache Flushes
+          - metric: win.websvc.cache.Current.File.Cache.Memory.Usage
+            name: Current File Cache Memory Usage
+          - metric: win.websvc.cache.Maximum.File.Cache.Memory.Usage
+            name: Maximum File Cache Memory Usage
+          - metric: win.websvc.cache.Current.URIs.Cached
+            name: Current URIs Cached
+          - metric: win.websvc.cache.Total.URIs.Cached
+            name: Total URIs Cached
+          - metric: win.websvc.cache.Total.Flushed.URIs
+            name: Total Flushed URIs
+          - metric: win.websvc.cache.URI.Cache.Hits
+            name: URI Cache Hits
+          - metric: win.websvc.cache.URI.Cache.Misses
+            name: URI Cache Misses
+          - metric: win.websvc.cache.URI.Cache.Hits.per
+            name: URI Cache Hits %
+          - metric: win.websvc.cache.URI.Cache.Flushes
+            name: URI Cache Flushes
+          - metric: win.websvc.cache.Current.Metadata.Cached
+            name: Current Metadata Cached
+          - metric: win.websvc.cache.Total.Metadata.Cached
+            name: Total Metadata Cached
+          - metric: win.websvc.cache.Total.Flushed.Metadata
+            name: Total Flushed Metadata
+          - metric: win.websvc.cache.Metadata.Cache.Hits
+            name: Metadata Cache Hits
+          - metric: win.websvc.cache.Metadata.Cache.Misses
+            name: Metadata Cache Misses
+          - metric: win.websvc.cache.Metadata.Cache.Hits.per
+            name: Metadata Cache Hits %
+          - metric: win.websvc.cache.Metadata.Cache.Flushes
+            name: Metadata Cache Flushes
+          - metric: win.websvc.cache.Output.Cache.Current.Flushed.Items
+            name: Output Cache Current Flushed Items
+          - metric: win.websvc.cache.Output.Cache.Current.Hits.per
+            name: Output Cache Current Hits %
+          - metric: win.websvc.cache.Output.Cache.Current.Items
+            name: Output Cache Current Items
+          - metric: win.websvc.cache.Output.Cache.Current.Memory.Usage
+            name: Output Cache Current Memory Usage
+          - metric: win.websvc.cache.Output.Cache.Total.Flushed.Items
+            name: Output Cache Total Flushed Items
+        instances:
+          - '*'
+        object: Web Service Cache
+      - counters:
+          - metric: win.app.pool.was.Current.Application.Pool.State
+            name: Current Application Pool State
+          - metric: win.app.pool.was.Current.Application.Pool.Uptime
+            name: Current Application Pool Uptime
+          - metric: win.app.pool.was.Current.Worker.Processes
+            name: Current Worker Processes
+          - metric: win.app.pool.was.Maximum.Worker.Processes
+            name: Maximum Worker Processes
+          - metric: win.app.pool.was.Recent.Worker.Process.Failures
+            name: Recent Worker Process Failures
+          - metric: win.app.pool.was.Time.Since.Last.Worker.Process.Failure
+            name: Time Since Last Worker Process Failure
+          - metric: win.app.pool.was.Total.Application.Pool.Recycles
+            name: Total Application Pool Recycles
+          - metric: win.app.pool.was.Total.Application.Pool.Uptime
+            name: Total Application Pool Uptime
+          - metric: win.app.pool.was.Total.Worker.Process.Failures
+            name: Total Worker Process Failures
+          - metric: win.app.pool.was.Total.Worker.Process.Ping.Failures
+            name: Total Worker Process Ping Failures
+          - metric: win.app.pool.was.Total.Worker.Process.Shutdown.Failures
+            name: Total Worker Process Shutdown Failures
+          - metric: win.app.pool.was.Total.Worker.Process.Startup.Failures
+            name: Total Worker Process Startup Failures
+          - metric: win.app.pool.was.Total.Worker.Processes.Created
+            name: Total Worker Processes Created
+        instances:
+          - '*'
+        object: APP_POOL_WAS
+processors:
+  resource/iis_resource_attributes/localhost:
+    attributes:
+      - key: webengine.system
+        value: iis
+        action: insert
+      - key: sumo.datasource
+        value: iis
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: webengine.node.name
+        action: insert
+        from_attribute: host.name
+      - key: webengine.cluster
+        value: test
+        action: insert
+  resource/iis_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: iis/filelog
+        action: insert
+  resource/iis_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: iis/windowsperfcounters
+        action: insert
+      - key: _sourceName
+        value: iis
+        action: insert
+service:
+  pipelines:
+    metrics/iis/localhost:
+      receivers:
+        - windowsperfcounters/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/iis_resource_attributes/localhost
+        - resource/iis_resource_attributes/metrics/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/iis/localhost:
+      receivers:
+        - filelog/iis/accesslogs/localhost
+        - filelog/iis/httperrorlogs/localhost
+      processors:
+        - memory_limiter
+        - batch
+        - resourcedetection/system
+        - resource/iis_resource_attributes/localhost
+        - resource/iis_resource_attributes/logs/localhost
+      exporters:
+        - sumologic

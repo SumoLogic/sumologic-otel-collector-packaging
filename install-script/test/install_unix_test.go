@@ -130,6 +130,25 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "installation token, remotely-managed and timezone",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				timezone:        "Europe/Prague",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkTimezoneConfigInRemote(sumoRemotePath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
+		{
 			name: "configuration with tags",
 			options: installOptions{
 				installToken: installToken,
