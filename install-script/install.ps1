@@ -44,17 +44,7 @@ param (
     # SkipArchDetection will disable the detection of the CPU architecture.
     # CPU architecture detection is slow. Using OverrideArch with this flag
     # improves the overall time it takes to execute this script.
-    [bool] $SkipArchDetection,
-
-    # S3Bucket is used to specify which S3 bucket to download the MSI package
-    # from. The default value is set to the value of the S3_BUCKET environment
-    # variable.
-    [string] $S3Bucket = $env:S3_BUCKET,
-
-    # S3Region is used to specify which S3 region to download the MSI package
-    # from. The default value is set to the value of the S3_REGION environment
-    # variable.
-    [string] $S3Region = $env:S3_REGION
+    [bool] $SkipArchDetection
 )
 
 # If the environment variable SKIP_ARCH_DETECTION is set and is not
@@ -63,15 +53,10 @@ if ($env:SKIP_ARCH_DETECTION -ne $null -and $env:SKIP_ARCH_DETECTION -ne "" -and
     $SkipArchDetection = $True
 }
 
-if ($S3Bucket -eq "") {
-    $S3Bucket = "sumologic-osc-stable"
-}
 
-if ($S3Region -eq "") {
-    $S3Region = "us-west-2"
-}
 
-$S3URI = "https://" + $S3Bucket + ".s3." + $S3Region + ".amazonaws.com"
+
+$CDN_URI = "https://dphbqueem3otv.cloudfront.net"
 
 ##
 # Security tweaks
@@ -270,7 +255,7 @@ function Get-LatestVersion {
         [HttpClient] $HttpClient
     )
 
-    $URI = $S3URI + "/latest_version"
+    $URI = $CDN_URI + "/latest_version"
     $request = [HttpRequestMessage]::new()
     $request.Method = "GET"
     $request.RequestURI = $URI
@@ -417,7 +402,7 @@ try {
     # Download MSI
     $msiLanguage = "en-US"
     $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${archName}${fipsSuffix}.msi"
-    $msiURI = $S3URI + "/" + $Version + "/" + $msiFileName
+    $msiURI = $CDN_URI + "/" + $Version + "/" + $msiFileName
     $msiPath = "${env:TEMP}\${msiFileName}"
     Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
 
