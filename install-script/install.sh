@@ -1081,7 +1081,7 @@ function get_user_token() {
 if [ "${S3_BUCKET}" = "sumologic-osc-stable" ]; then
     DOWNLOAD_URI="$CDN_URI"
 else
-    DOWNLOAD_URI="$S3URI"
+    DOWNLOAD_URI="$S3_URI"
 fi
 
 echo "DOWNLOAD_URI = $DOWNLOAD_URI"
