@@ -1,0 +1,134 @@
+receivers:
+  sqlserver/localhost:
+    collection_interval: 5m
+    username: admin
+    password: password
+    server: 0.0.0.0
+    port: 1433
+    instance_name: analyticsDB
+    computer_name: ip-172-31-23-44
+    resource_attributes:
+      sqlserver.computer.name:
+        enabled: true
+      sqlserver.instance.name:
+        enabled: true
+    metrics:
+      sqlserver.database.backup_or_restore.rate:
+        enabled: true
+      sqlserver.database.count:
+        enabled: true
+      sqlserver.database.execution.errors:
+        enabled: true
+      sqlserver.database.full_scan.rate:
+        enabled: true
+      sqlserver.database.io:
+        enabled: true
+      sqlserver.database.latency:
+        enabled: true
+      sqlserver.database.operations:
+        enabled: true
+      sqlserver.database.tempdb.space:
+        enabled: true
+      sqlserver.database.tempdb.version_store.size:
+        enabled: true
+      sqlserver.deadlock.rate:
+        enabled: true
+      sqlserver.index.search.rate:
+        enabled: true
+      sqlserver.lock.timeout.rate:
+        enabled: true
+      sqlserver.login.rate:
+        enabled: true
+      sqlserver.logout.rate:
+        enabled: true
+      sqlserver.memory.grants.pending.count:
+        enabled: true
+      sqlserver.memory.usage:
+        enabled: true
+      sqlserver.page.buffer_cache.free_list.stalls.rate:
+        enabled: true
+      sqlserver.page.lookup.rate:
+        enabled: true
+      sqlserver.processes.blocked:
+        enabled: true
+      sqlserver.replica.data.rate:
+        enabled: true
+      sqlserver.resource_pool.disk.throttled.read.rate:
+        enabled: true
+      sqlserver.resource_pool.disk.throttled.write.rate:
+        enabled: true
+      sqlserver.table.count:
+        enabled: true
+      sqlserver.transaction.delay:
+        enabled: true
+      sqlserver.transaction.mirror_write.rate:
+        enabled: true
+  filelog/sqlserver/localhost:
+    encoding: utf-16le
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - C:\Program Files\Microsoft SQL Server\:MSSQL_folder_name:\MSSQL\Log\ERRORLOG*
+processors:
+  resource/sqlserver_resource_attributes/localhost:
+    attributes:
+      - key: db.system
+        value: sqlserver
+        action: insert
+      - key: sumo.datasource
+        value: sqlserver
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: db.node.name
+        action: insert
+        from_attribute: host.name
+      - key: db.cluster.name
+        value: test
+        action: insert
+  resource/sqlserver_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: sqlserver/sqlserver
+        action: insert
+      - key: _sourceName
+        value: sqlserver
+        action: insert
+  resource/sqlserver_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: sqlserver/filelog
+        action: insert
+service:
+  pipelines:
+    metrics/sqlserver/localhost:
+      receivers:
+        - sqlserver/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/sqlserver_resource_attributes/metrics/localhost
+        - resource/sqlserver_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
+    logs/sqlserver/localhost:
+      receivers:
+        - filelog/sqlserver/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/sqlserver_resource_attributes/logs/localhost
+        - resource/sqlserver_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
