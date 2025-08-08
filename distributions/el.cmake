@@ -5,6 +5,23 @@
 # Architectures: https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/considerations_in_adopting_rhel_8/architectures_considerations-in-adopting-rhel-8
 ##
 
+# Enterprise Linux 10
+#
+# End of Full Support: May 31, 2030
+# End of Maintenance Support: May 31, 2035
+# End of Extended Life Cycle Support: May 31, 2038
+function(el_10)
+  set(_distro_name "Enterprise Linux 10.0")
+  set(_distro_index_name "el/10")
+  set(_supported_architectures
+    "aarch64"
+    "ppc64le"
+    "s390x"
+    "x86_64"
+  )
+  check_architecture_support()
+endfunction()
+
 # Enterprise Linux 9
 #
 # End of Full Support: May 31, 2027
@@ -15,7 +32,7 @@ function(el_9)
   set(_distro_index_name "el/9")
   set(_supported_architectures
     "aarch64"
-    "ppc64"
+    "ppc64le"
     "s390x"
     "x86_64"
   )
@@ -32,7 +49,7 @@ function(el_8)
   set(_distro_index_name "el/8")
   set(_supported_architectures
     "aarch64"
-    "ppc64"
+    "ppc64le"
     "s390x"
     "x86_64"
   )
@@ -50,6 +67,7 @@ function(el_7)
   set(_supported_architectures
     "aarch64"
     "ppc64"
+    "ppc64le"
     "s390x"
     "x86_64"
   )

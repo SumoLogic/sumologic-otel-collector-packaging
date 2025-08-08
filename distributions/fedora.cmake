@@ -16,7 +16,9 @@ function(fedora_42)
   set(_supported_architectures
     "aarch64"
     "x86_64"
-    "ppc64"
+    "mips64el"
+    "mipsel"
+    "ppc64le"
     "s390x"
   )
   check_architecture_support()
@@ -29,7 +31,9 @@ function(fedora_41)
   set(_supported_architectures
     "aarch64"
     "x86_64"
-    "ppc64"
+    "mips64el"
+    "mipsel"
+    "ppc64le"
     "s390x"
   )
   check_architecture_support()

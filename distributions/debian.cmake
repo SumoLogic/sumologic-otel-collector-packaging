@@ -91,25 +91,3 @@ function(debian_stretch)
   )
   check_architecture_support()
 endfunction()
-
-# Debian 8 Jessie
-#
-# End of LTS Support: 2020-06-30
-# End of Extended LTS Support: 2025-06-30
-function(debian_jessie)
-  set(_distro_name "Debian 8 Jessie")
-  set(_distro_index_name "debian/jessie")
-  set(_supported_architectures
-    "amd64"
-    "arm64"
-    "armel"
-    "armhf"
-    "i386"
-    "mips"
-    "mipsel"
-    "powerpc"
-    "ppc64el"
-    "s390x"
-  )
-  check_architecture_support()
-endfunction()

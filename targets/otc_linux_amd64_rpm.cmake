@@ -12,27 +12,28 @@ amazon_2023()
 el_7()
 el_8()
 el_9()
+el_10()
 
 # Supported Fedora versions
 fedora_41()
 fedora_42()
 
 # Supported openSUSE versions
-opensuse_15_5()
 opensuse_15_6()
 
 # Supported Oracle Linux versions
 ol_7()
 ol_8()
 ol_9()
+ol_10()
 
 # Supported SUSE Linux Enterprise Server versions
 sles_12_5()
-sles_15_2()
 sles_15_3()
 sles_15_4()
 sles_15_5()
 sles_15_6()
+sles_15_7()
 
 set_common_settings()
 set_otc_settings()
