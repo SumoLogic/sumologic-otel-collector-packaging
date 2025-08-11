@@ -252,7 +252,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download macOS package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ needs.build_package.outputs.package_path }}
           path: artifacts/
