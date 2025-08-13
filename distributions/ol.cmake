@@ -5,6 +5,20 @@
 # Architectures: https://en.wikipedia.org/wiki/Oracle_Linux#Release_history
 ##
 
+# Oracle Linux 10
+#
+# End of Basic/Premier Support: June, 2035
+# End of Extended Support: June, 2038
+function(ol_10)
+  set(_distro_name "Oracle Linux 10.0")
+  set(_distro_index_name "ol/10")
+  set(_supported_architectures
+    "aarch64"
+    "x86_64"
+  )
+  check_architecture_support()
+endfunction()
+
 # Oracle Linux 9
 #
 # End of Basic/Premier Support: June 30, 2032

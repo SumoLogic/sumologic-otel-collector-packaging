@@ -89,13 +89,14 @@ endfunction()
 # End of Ubuntu Pro Support: April 2026
 # End of Legacy Support: April 2028
 function(ubuntu_xenial)
-  set(_distro_name "Ubuntu 18.04 Xenial Xerus")
+  set(_distro_name "Ubuntu 16.04 Xenial Xerus")
   set(_distro_index_name "ubuntu/xenial")
   set(_supported_architectures
     "amd64"
     "arm64"
     "armhf"
     "i386"
+    "powerpc"
     "ppc64el"
     "s390x"
   )
@@ -108,15 +109,16 @@ endfunction()
 # End of Ubuntu Pro Support: April 2024
 # End of Legacy Support: April 2026
 function(ubuntu_trusty)
-  set(_distro_name "Ubuntu 16.04 Trusty Tahr")
+  set(_distro_name "Ubuntu 14.04 Trusty Tahr")
   set(_distro_index_name "ubuntu/trusty")
   set(_supported_architectures
     "amd64"
     "arm64"
     "armhf"
+    "armel"
     "i386"
-    "ppc64el"
     "powerpc"
+    "ppc64el"
   )
   check_architecture_support()
 endfunction()
