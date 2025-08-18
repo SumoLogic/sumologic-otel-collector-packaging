@@ -14,87 +14,35 @@ Collector binaries.
 
 ## Promote packages & artifacts
 
-Perform the following steps to promote packages & artifacts from the
-`release-candidates` channel to the `stable` channel.
+The repository packages and artifacts in Amazon S3 need to be promoted to make
+them available to the public. Follow one of the two options to trigger the
+promotion in GitHub Actions.
 
-It is **important** to perform these steps **in order**.
+### Option 1 - Use the `gh` cli tool to trigger promotion
 
-### Update latest release candidate version
-
-Each channel in Amazon S3 requires a `latest_version` file to point to a version
-that exists in that channel. This `latest_version` file is used by the install
-script to determine the latest available version on macOS and Windows systems.
-As the version that is being promoted will no longer be available in the release
-candidates channel, the `latest_version` file must first be updated to a
-previously available version.
-
-#### Determine previous release candidate version
-
-Packagecloud promotion removes packages from the source repository where as
-promotion in Amazon S3 does not. As a result the previous version should be
-determined from Packagecloud.
-
-1. Browse to the [release-candidates repository][pc_release_candidates] on the
-Packagecloud website.
-
-1. Packages are listed by most recently uploaded. The previous version can be
-found by scrolling through the list of packages until the version previous to
-the version to be released is found. There will likely be several pages to
-scroll through before finding the previous version. E.g. If the version being
-released is `0.124.0-2054` the previous release candidate version could be
-`0.124.0-2030`.
-
-#### Update the latest version file
-
-Run the following commands to update the latest version file in the release
-candidates bucket. Be sure to change the version in the `echo` command to the
-previous release candidate version from the previous step.
+The promotion process can be triggered by using the following command (be sure
+to replace `VERSION` with the version of the packages to promote).
 
 ```shell
-echo '0.124.0-2030' > latest_version
-aws s3 cp latest_version s3://sumologic-osc-release-candidates/latest_version --content-type text/plain
+PAGER=""; VERSION="0.124.0-2054"; \
+gh workflow run promote-release-candidate.yml \
+-R sumologic/sumologic-otel-collector-packaging -f "version=${VERSION}"
 ```
 
-### Promote the packages
+The status of running workflows can be viewed with the `gh run watch` command.
+You will have to manually select the correct workflow run. The name of the run
+should have a title similiar to `Promote Release Candidate: x`). Once you
+have selected the correct run the screen will periodically update to show the
+status of the run's jobs.
 
-1. Browse to the [release-candidates repository][pc_release_candidates].
+#### Option 2 - Use the GitHub website to trigger promotion
 
-1. Use the search bar at the top of the page to search for the version to
-promote (e.g. `0.124.0-2054`). There should be around 4 pages of results.
+Navigate to the [Promote release candidate][promote_rc_workflow] workflow in
+GitHub Actions. Find and click the `Run workflow` button on the right-hand side
+of the page. Fill in the version of the packages to promote. Click the
+`Run workflow` button to trigger the release.
 
-1. Click the checkbox to select all packages on the page.
-
-1. Click `promote`.
-
-1. Select `sumologic/stable`.
-
-1. Click `Promote X packages` where X is the number of packages being promoted.
-
-1. Refresh the page and repeat the previous steps until there are no more
-packages to left to promote.
-
-### Promote the artifacts
-
-Now that the new packages are available in the stable channel in Packagecloud,
-the artifacts in the Amazon S3 release candidates bucket can be promoted. Run
-the following command, replacing the value for `VERSION` with the version to be
-promoted:
-
-```shell
-export VERSION="0.124.0-2054"
-aws s3 cp --recursive "s3://sumologic-osc-release-candidates/${VERSION}/" "s3://sumologic-osc-stable/${VERSION}/"
-```
-
-### Update latest stable version
-
-All of the packages and artifacts have been promoted. It is now safe to update
-the `latest_version` file in the stable channel. Run the following command,
-replacing the version in the `echo` command to the version to be promoted:
-
-```shell
-echo '0.124.0-2054' > latest_version
-aws s3 cp latest_version s3://sumologic-osc-stable/latest_version --content-type text/plain
-```
+![Triggering promotion][promote_0]
 
 ## Create a GitHub Release
 
@@ -205,8 +153,9 @@ After verifying that the release text and all links are good, publish the releas
 [build_workflow]: https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/workflows/build_packages.yml?query=branch%3Amain
 [changelog]: https://github.com/SumoLogic/sumologic-otel-collector/blob/main/CHANGELOG.md
 [collector_release]: https://github.com/SumoLogic/sumologic-otel-collector/blob/main/docs/release.md
-[pc_release_candidates]: https://packagecloud.io/sumologic/release-candidates
+[promote_0]: ../images/promote_0.png
+[promote_rc_workflow]: https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/workflows/promote-release-candidates.yml
 [release_0]: ../images/release_0.png
 [release_1]: ../images/release_1.png
-[release_1]: ../images/release_2.png
+[release_2]: ../images/release_2.png
 [releases_workflow]: https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/workflows/releases.yml

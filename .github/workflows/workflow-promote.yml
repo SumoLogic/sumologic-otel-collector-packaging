@@ -5,6 +5,9 @@
 
 name: Workflow - Promote
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

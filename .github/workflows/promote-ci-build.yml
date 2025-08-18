@@ -1,7 +1,10 @@
 name: Promote CI build
 
+permissions:
+  contents: read
+
 run-name: >
-  ${{ format('Promote CI build: {0}', inputs.version) }}
+  ${{ format('Promote CI Build: {0}', inputs.version) }}
 
 on:
   workflow_dispatch:
