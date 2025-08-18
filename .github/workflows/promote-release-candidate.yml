@@ -1,0 +1,26 @@
+name: Promote release candidate
+
+run-name: >
+  ${{ format('Promote release candidate: {0}', inputs.version) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The package version to promote.
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  promote:
+    name: Packages & artifacts
+    uses: ./.github/workflows/workflow-promote.yml
+    with:
+      destination-channel: stable
+      source-channel: release-candidates
+      version: ${{ inputs.version }}
+    secrets: inherit
