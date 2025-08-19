@@ -11,23 +11,33 @@ Packagecloud.
 Amazon S3 stores builds for all platforms. It serves as both a backup and a way
 to serve the install scripts & non-Linux packages to the public.
 
-### Layout
+#### Layout
 
-#### latest_version
+##### latest_version
 
 The Amazon S3 buckets contain a `latest_version` file in the root of the bucket.
 This file contains the latest package version available in the bucket.
 
-#### Version directory
+##### Version directory
 
 Each build has a directory with the package version for its name. The directory
 holds all of the packages & install scripts for that build.
+
+#### Retention
+
+Objects in the `ci-builds` channel are pruned after 30 days by the Lifecycle
+configuration for the bucket.
 
 ### Packagecloud
 
 Packagecloud provides APT & YUM repositories for Linux packages. These
 repositories provide a simple, native way to upgrade the collector without the
 install script.
+
+#### Retention
+
+Packages in the `ci-builds` channel are pruned after 30 days by the `Prune` job
+in GitHub Actions.
 
 ## Channels & Build Once, Promote Many
 
