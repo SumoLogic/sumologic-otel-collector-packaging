@@ -39,6 +39,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify channels
+        run: |
+          src="${{ inputs.source-channel }}"
+          dst="${{ inputs.destination-channel }}"
+
+          if [ "$src" = "ci-builds" ]; then
+            if [ "$dst" = "release-candidates" ]; then
+              exit 0
+            fi
+          fi
+
+          if [ "$src" = "release-candidates" ]; then
+            if [ "$dst" = "stable" ]; then
+              exit 0
+            fi
+          fi
+
+          echo "Unsupported channels combination: ${src} -> ${dst}"
+          exit 1
+
       - name: Install packagecloud-go
         run: go install github.com/amdprophet/packagecloud-go@v0.5.0
 
