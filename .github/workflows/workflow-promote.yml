@@ -1,0 +1,160 @@
+#################################################################################
+# A reusable workflow to promote images & indexes from one channel to another
+# for a given workflow run.
+#################################################################################
+
+name: Workflow - Promote
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      destination-channel:
+        description: |
+          The destination channel to promote packages to. Valid values are:
+          - release-candidates
+          - stable
+        type: string
+      source-channel:
+        description: |
+          The source channel to promote packages from. Valid values are:
+          - ci-builds
+          - release-candidates
+        type: string
+      version:
+        description: The package version to promote.
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  promote:
+    name: Promote
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify channels
+        run: |
+          src="${{ inputs.source-channel }}"
+          dst="${{ inputs.destination-channel }}"
+
+          if [ "$src" = "ci-builds" ]; then
+            if [ "$dst" = "release-candidates" ]; then
+              exit 0
+            fi
+          fi
+
+          if [ "$src" = "release-candidates" ]; then
+            if [ "$dst" = "stable" ]; then
+              exit 0
+            fi
+          fi
+
+          echo "Unsupported channels combination: ${src} -> ${dst}"
+          exit 1
+
+      - name: Install packagecloud-go
+        run: go install github.com/amdprophet/packagecloud-go@v0.5.0
+
+      - name: Run packagecloud cmd
+        run: packagecloud
+
+      - name: Get latest package version (source channel)
+        id: latest-source
+        run: |
+          repo="sumologic/${{ inputs.source-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions latest "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      - name: Compare version to latest (source channel)
+        id: compare-source
+        run: |
+          version="${{ inputs.version }}"
+          latest="${{ steps.latest-source.outputs.version }}"
+          packagecloud versions compare "${version}" "${latest}" | tee result
+
+          echo "result=$(cat result)" >> "$GITHUB_OUTPUT"
+
+      # NOTE: If the version we're trying to promote is equal to the latest
+      # version available in the source repository then we need to update the
+      # latest_version file in the source repository.
+      - name: Get previous package version (source channel)
+        if: steps.compare-source.outputs.result == 'equal'
+        id: previous-source
+        run: |
+          repo="sumologic/${{ inputs.source-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions previous "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      - name: Set latest version to previous (source channel)
+        if: steps.compare-source.outputs.result == 'equal'
+        run: |
+          previous="${{ steps.previous-source.outputs.version }}"
+          channel="${{ inputs.source-channel }}"
+          bucket="sumologic-osc-${channel}"
+          file="latest_version"
+          uri="s3://${bucket}/${file}"
+
+          echo "${previous}" >> "${file}"
+          aws s3 cp "${file}" "${uri}" --content-type plain
+
+      - name: Promote packages
+        run: |
+          src="sumologic/${{ inputs.source-channel }}"
+          dst="sumologic/${{ inputs.destination-channel }}"
+          version="${{ inputs.version }}"
+
+          packagecloud promote by-search "${src}" "${dst}" -q "${version}"
+
+      - name: Promote artifacts
+        run: |
+          src="sumologic-osc-${{ inputs.source-channel }}"
+          dst="sumologic-osc-${{ inputs.destination-channel }}"
+          version="${{ inputs.version }}"
+          src_uri="s3://${src}/${version}"
+          dst_uri="s3://${dst}/${version}"
+
+          aws s3 cp --recursive "${src_uri}" "${dst_uri}"
+
+      - name: Get latest package version (destination channel)
+        id: latest-destination
+        run: |
+          repo="sumologic/${{ inputs.destination-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions latest "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      - name: Compare version to latest (destination channel)
+        id: compare-destination
+        run: |
+          version="${{ inputs.version }}"
+          latest="${{ steps.latest-destination.outputs.version }}"
+          packagecloud versions compare "${version}" "${latest}" | tee result
+
+          echo "result=$(cat result)" >> "$GITHUB_OUTPUT"
+
+      # NOTE: If the version we're trying to promote doesn't match the latest
+      # version available in the destination repository then we can skip
+      # updating the latest_version file in the destination repository.
+      - name: Set latest version to latest (destination channel)
+        if: steps.compare-destination.outputs.result == 'greater'
+        run: |
+          version="${{ inputs.version }}"
+          channel="${{ inputs.destination-channel }}"
+          bucket="sumologic-osc-${channel}"
+          file="latest_version"
+          uri="s3://${bucket}/${file}"
+
+          echo "${version}" >> "${file}"
+          aws s3 cp "${file}" "${uri}" --content-type plain
