@@ -119,6 +119,8 @@ CURL_MAX_TIME=1800
 S3_BUCKET="${S3_BUCKET:-sumologic-osc-stable}"
 S3_REGION="${S3_REGION:-us-west-2}"
 S3_URI="https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com"
+CDN_URI="https://download-otel.sumologic.com"
+
 
 PACKAGECLOUD_ORG="${PACKAGECLOUD_ORG:-sumologic}"
 PACKAGECLOUD_REPO="${PACKAGECLOUD_REPO:-stable}"
@@ -368,7 +370,7 @@ function check_dependencies() {
 function get_latest_s3_package_version() {
     curl --retry 5 --connect-timeout 5 --max-time 30 --retry-delay 0 \
         --retry-max-time 150 -s \
-        "${S3_URI}/latest_version" | tr -d '\n'
+        "${DOWNLOAD_URI}/latest_version" | tr -d '\n'
 }
 
 # Get OS type (linux or darwin)
@@ -1076,6 +1078,14 @@ function get_user_token() {
 
 ############################ Main code
 
+if [ "${S3_BUCKET}" = "sumologic-osc-stable" ]; then
+    DOWNLOAD_URI="$CDN_URI"
+else
+    DOWNLOAD_URI="$S3_URI"
+fi
+
+echo "DOWNLOAD_URI = $DOWNLOAD_URI"
+
 OS_TYPE="$(get_os_type)"
 ARCH_TYPE="$(get_arch_type)"
 readonly OS_TYPE ARCH_TYPE
@@ -1189,7 +1199,7 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
         artifact_name="otelcol-sumo_${VERSION}-${package_arch}.pkg"
         readonly artifact_name
 
-        pkg_url="${S3_URI}/${VERSION}/${artifact_name}"
+        pkg_url="${DOWNLOAD_URI}/${VERSION}/${artifact_name}"
     else
         pkg_url="${DARWIN_PKG_URL}"
     fi
