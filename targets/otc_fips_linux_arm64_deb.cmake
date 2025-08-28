@@ -6,7 +6,6 @@ set(goarch "arm64")
 set(fips 1)
 
 # Supported Debian versions
-debian_jessie()
 debian_stretch()
 debian_buster()
 debian_bullseye()
