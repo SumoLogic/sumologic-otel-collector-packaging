@@ -119,7 +119,7 @@ CURL_MAX_TIME=1800
 S3_BUCKET="${S3_BUCKET:-sumologic-osc-stable}"
 S3_REGION="${S3_REGION:-us-west-2}"
 S3_URI="https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com"
-CDN_URI="https://dphbqueem3otv.cloudfront.net"
+CDN_URI="https://download-otel.sumologic.com"
 
 
 PACKAGECLOUD_ORG="${PACKAGECLOUD_ORG:-sumologic}"

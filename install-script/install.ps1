@@ -72,7 +72,7 @@ if ($S3Region -eq "") {
 }
 
 $S3URI = "https://" + $S3Bucket + ".s3." + $S3Region + ".amazonaws.com"
-$CDN_URI = "https://dphbqueem3otv.cloudfront.net"
+$CDN_URI = "https://download-otel.sumologic.com"
 
 if ($S3Bucket -eq "sumologic-osc-stable") {
     $DOWNLOAD_URI = $CDN_URI
