@@ -1,0 +1,24 @@
+service:
+  telemetry:
+    logs:
+      level: debug
+      development: false
+      encoding: json
+      processors:
+        - batch:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: https://collectors.sumologic.com/receiver/v1/otlp/FAKE_TOKEN_FOR_TESTING_PURPOSES_ONLY/v1/logs
+    metrics:
+      level: detailed
+      readers:
+        - periodic:
+            exporter:
+              otlp:
+                protocol: http/protobuf
+                endpoint: https://collectors.sumologic.com/receiver/v1/otlp/FAKE_TOKEN_FOR_TESTING_PURPOSES_ONLY/v1/metrics
+    resource:
+      _contentType: OpenTelemetry
+      sumo.datasource: otel_collector
+      _sourceCategory: otel/collector

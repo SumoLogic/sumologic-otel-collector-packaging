@@ -1,0 +1,29 @@
+name: Promote CI build
+
+permissions:
+  contents: read
+
+run-name: >
+  ${{ format('Promote CI Build: {0}', inputs.version) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The package version to promote.
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  promote:
+    name: Packages & artifacts
+    uses: ./.github/workflows/workflow-promote.yml
+    with:
+      destination-channel: release-candidates
+      source-channel: ci-builds
+      version: ${{ inputs.version }}
+    secrets: inherit

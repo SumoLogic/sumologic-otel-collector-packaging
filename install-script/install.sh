@@ -474,10 +474,6 @@ function setup_config() {
             write_ephemeral_true
         fi
 
-        if [[ -n "${TIMEZONE}" ]]; then
-            write_timezone "${TIMEZONE}"
-        fi
-
         if [[ -n "${API_BASE_URL}" ]]; then
             write_api_url "${API_BASE_URL}"
         fi
@@ -493,6 +489,10 @@ function setup_config() {
         # Return/stop function execution early as remaining logic only applies
         # to locally-managed installations
         return
+    fi
+
+    if [[ -n "${TIMEZONE}" ]]; then
+            write_timezone "${TIMEZONE}"
     fi
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then

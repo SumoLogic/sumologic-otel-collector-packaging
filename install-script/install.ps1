@@ -28,7 +28,7 @@ param (
     [bool] $Ephemeral,
 
     # The Timezone option is used to specify the timezone of the collector.
-    [bool] $Timezone,
+    [string] $Timezone,
 
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
