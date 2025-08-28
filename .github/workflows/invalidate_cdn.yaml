@@ -17,5 +17,5 @@ jobs:
           DISTRIBUTION: ${{ secrets.DISTRIBUTION_ID }}
           PATHS: "/*"
           AWS_REGION: "us-east-1"
-          AWS_ACCESS_KEY_ID: ${{ secrets.SUMOLOGIC_OTEL_CICD_USER_ACCESS_KEY_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
