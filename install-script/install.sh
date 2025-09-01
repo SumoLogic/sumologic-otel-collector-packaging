@@ -463,6 +463,9 @@ function setup_config() {
     echo 'We are going to get and set up a default configuration for you'
 
     echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
+    if [[ -n "${TIMEZONE}" ]]; then
+                write_timezone "${TIMEZONE}"
+    fi
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         write_opamp_extension
 
@@ -489,10 +492,6 @@ function setup_config() {
         # Return/stop function execution early as remaining logic only applies
         # to locally-managed installations
         return
-    fi
-
-    if [[ -n "${TIMEZONE}" ]]; then
-            write_timezone "${TIMEZONE}"
     fi
 
     if [[ "${INSTALL_HOSTMETRICS}" == "true" ]]; then
