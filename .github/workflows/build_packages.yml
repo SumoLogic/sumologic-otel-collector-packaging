@@ -283,6 +283,18 @@ jobs:
           fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> "$GITHUB_ENV"
 
+      - name: Set OTELCOL_SUMO_PACKAGE_PATH (macOS)
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
+        run: |
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
+          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> $GITHUB_ENV # this is a helper for an end-to-end test
+
+      - name: Set OTELCOL_SUMO_PACKAGE_PATH (ubuntu)
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' }}
+        run: |
+          fp="$(readlink -f artifacts/otelcol-sumo*.deb/otelcol-sumo*.deb)"
+          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> $GITHUB_ENV # this is a helper for an end-to-end test
+
       - name: Set S3_BUCKET (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
