@@ -22,3 +22,4 @@ service:
       _contentType: OpenTelemetry
       sumo.datasource: otel_collector
       _sourceCategory: otel/collector
+      deployment.environment: deploymentenvironment
