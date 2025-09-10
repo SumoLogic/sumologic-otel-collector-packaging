@@ -55,6 +55,10 @@ on:
         required: true
       aws_secret_access_key:
         required: true
+      SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID:
+        required: true
+      SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY:
+        required: true
     outputs:
       otc_version:
         description: "The version of the package"
