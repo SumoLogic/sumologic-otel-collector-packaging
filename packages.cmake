@@ -69,9 +69,14 @@ macro(build_cpack_config)
   endforeach()
 
   # Add a target for uploading the package to Amazon S3
-  set(_s3_channel "ci-builds")
   set(_version "${OTC_VERSION}-${BUILD_NUMBER}")
-  set(_s3_bucket "sumologic-osc-${_s3_channel}")
+  if(NOT DEFINED ENV{s3_bucket})
+    message(STATUS
+      "s3_bucket environment variable not detected."
+    )
+    return()
+  endif()
+  set(_s3_bucket "$ENV{s3_bucket}")
   set(_s3_path "${_version}/")
   create_s3_cp_target(${_s3_bucket} ${_s3_path} ${_package_output})
   create_s3_cp_target_new("sumo-otel-builds-dev-c64ec98a" ${_s3_path} ${_package_output})

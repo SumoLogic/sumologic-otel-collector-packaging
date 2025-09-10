@@ -16,6 +16,9 @@ inputs:
   aws-secret-access-key:
     required: false
     type: string
+  s3_bucket:
+    required: true
+    type: string
 
 runs:
   using: 'docker'
@@ -25,6 +28,7 @@ runs:
     AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
     GH_TOKEN: ${{ inputs.gh_token }}
     PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud_token }}
+    s3_bucket: ${{ inputs.s3_bucket}}
   args:
     - make
     - ${{ inputs.target }}
