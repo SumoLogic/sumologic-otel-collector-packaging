@@ -243,6 +243,7 @@ jobs:
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         run: |
           echo "AWS_ACCESS_KEY_ID_NEW length: ${#AWS_ACCESS_KEY_ID_NEW}"
+          echo "AWS_SECRET_ACCESS_KEY_NEW length: ${#AWS_SECRET_ACCESS_KEY_NEW}"
           make publish-package
 
       - name: Wait for Packagecloud packages to be indexed

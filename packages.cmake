@@ -136,7 +136,7 @@ endfunction()
 # Create an Amazon S3 publish target for uploading a package to an S3 bucket.
 function(create_s3_cp_target_new _s3_bucket _s3_path _pkg_path)
     set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
-    separate_arguments(_s3_cp_cmd UNIX_COMMAND "AWS_ACCESS_KEY_ID=$ENV{AWS_ACCESS_KEY_ID_NEW} AWS_SECRET_ACCESS_KEY=$ENV{AWS_SECRET_ACCESS_KEY_NEW} aws s3 cp ${_pkg_path} s3://${_s3_bucket}/${_s3_path}")
+    separate_arguments(_s3_cp_cmd UNIX_COMMAND "AWS_ACCESS_KEY_ID=AVFJIOIOIOIOIOIOIOIO AWS_SECRET_ACCESS_KEY=HHHFHFHFHFHFHFHFHFHFHFHFHFHHFHFHF aws s3 cp ${_pkg_path} s3://${_s3_bucket}/${_s3_path}")
     add_custom_command(OUTPUT ${_s3_output}
         COMMAND ${_s3_cp_cmd}
         DEPENDS ${_pkg_path}
