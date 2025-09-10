@@ -70,6 +70,12 @@ macro(build_cpack_config)
 
   # Add a target for uploading the package to Amazon S3
   set(_version "${OTC_VERSION}-${BUILD_NUMBER}")
+  if(NOT DEFINED ENV{s3_bucket})
+    message(STATUS
+      "s3_bucket environment variable not detected."
+    )
+    return()
+  endif()
   set(_s3_bucket "$ENV{s3_bucket}")
   set(_s3_path "${_version}/")
   create_s3_cp_target(${_s3_bucket} ${_s3_path} ${_package_output})
