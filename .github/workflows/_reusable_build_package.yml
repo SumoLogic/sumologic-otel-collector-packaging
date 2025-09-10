@@ -241,7 +241,9 @@ jobs:
           AWS_ACCESS_KEY_ID_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
-        run: make publish-package
+        run: |
+          echo "AWS_ACCESS_KEY_ID_NEW length: ${#AWS_ACCESS_KEY_ID_NEW}"
+          make publish-package
 
       - name: Wait for Packagecloud packages to be indexed
         if: runner.os == 'Linux'
