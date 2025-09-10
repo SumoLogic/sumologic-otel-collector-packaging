@@ -62,8 +62,8 @@ jobs:
       - name: Install packagecloud-go
         run: go install github.com/amdprophet/packagecloud-go/cmd/packagecloud@v0.5.0
 
-      - name: Run packagecloud cmd
-        run: packagecloud
+      - name: Add GOPATH bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Get latest package version (source channel)
         id: latest-source
