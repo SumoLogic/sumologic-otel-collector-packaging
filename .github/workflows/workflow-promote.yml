@@ -60,7 +60,7 @@ jobs:
           exit 1
 
       - name: Install packagecloud-go
-        run: go install github.com/amdprophet/packagecloud-go@v0.5.0
+        run: go install github.com/amdprophet/packagecloud-go/cmd/packagecloud@v0.5.0
 
       - name: Run packagecloud cmd
         run: packagecloud
