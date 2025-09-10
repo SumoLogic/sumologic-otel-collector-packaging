@@ -73,7 +73,12 @@ macro(build_cpack_config)
   set(_version "${OTC_VERSION}-${BUILD_NUMBER}")
   set(_s3_bucket "sumologic-osc-${_s3_channel}")
   set(_s3_path "${_version}/")
-  create_s3_cp_target(${_s3_bucket} ${_s3_path} ${_package_output})
+  create_s3_cp_target(${_s3_bucket} ${_s3_path} ${_package_output} "$ENV{AWS_ACCESS_KEY_ID}" "$ENV{AWS_SECRET_ACCESS_KEY}")
+
+  # Add a second target for uploading the package to a different Amazon S3 bucket
+  set(_s3_bucket_2 "sumologic-otel-cicd")
+  set(_s3_path_2 "${_version}/")
+  create_s3_cp_target(${_s3_bucket_2} ${_s3_path_2} ${_package_output} "$ENV{SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID}" "$ENV{SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY}")
 
   # Add a publish-package target to publish the package built above
   get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
@@ -123,15 +128,15 @@ function(create_wait_for_packagecloud_indexing_target _pc_user _pc_repo _pkg_pat
 endfunction()
 
 # Create an Amazon S3 publish target for uploading a package to an S3 bucket.
-function(create_s3_cp_target _s3_bucket _s3_path _pkg_path)
-    set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
-    separate_arguments(_s3_cp_cmd UNIX_COMMAND "aws s3 cp ${_pkg_path} s3://${_s3_bucket}/${_s3_path}")
-    add_custom_command(OUTPUT ${_s3_output}
-        COMMAND ${_s3_cp_cmd}
-        DEPENDS ${_pkg_path}
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        VERBATIM)
-    append_to_publish_targets(${_s3_output})
+function(create_s3_cp_target _s3_bucket _s3_path _pkg_path _aws_access_key _aws_secret_key)
+  set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
+  separate_arguments(_s3_cp_cmd UNIX_COMMAND "aws s3 cp ${_pkg_path} s3://${_s3_bucket}/${_s3_path}")
+  add_custom_command(OUTPUT ${_s3_output}
+    COMMAND ${CMAKE_COMMAND} -E env "AWS_ACCESS_KEY_ID=${_aws_access_key}" "AWS_SECRET_ACCESS_KEY=${_aws_secret_key}" ${_s3_cp_cmd}
+    DEPENDS ${_pkg_path}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM)
+  append_to_publish_targets(${_s3_output})
 endfunction()
 
 # Sets a GitHub output parameter by appending a statement to the file defined by
