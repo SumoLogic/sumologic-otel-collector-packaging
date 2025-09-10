@@ -36,6 +36,8 @@ jobs:
   promote:
     name: Promote
     runs-on: ubuntu-24.04
+    env:
+      PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
