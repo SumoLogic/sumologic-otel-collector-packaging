@@ -343,12 +343,13 @@ jobs:
           PLATFORM: ${{ inputs.package_arch }}
           PRODUCT_VERSION: ${{ steps.get-version.outputs.product_version }}
         run: |
-          msi="$(find "bin/${{ inputs.package_arch }}/en-US" -name "*.msi")"
           msbuild.exe -p:Configuration=Release \
             -p:Platform="$PLATFORM" \
             -p:ProductVersion="$PRODUCT_VERSION" \
             -p:FIPSEnabled="${{ inputs.fips }}" \
             -Restore
+
+          msi="$(find "bin/${{ inputs.package_arch }}/en-US" -name "*.msi")"
           package_path="./msi/wix/${msi}"
 
           {
