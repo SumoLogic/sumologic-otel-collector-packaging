@@ -71,8 +71,8 @@ macro(build_cpack_config)
   # Add a target for uploading the package to Amazon S3
   set(_version "${OTC_VERSION}-${BUILD_NUMBER}")
   set(_s3_path "${_version}/")
-  create_s3_cp_target_new("sumologic-osc-ci-builds" ${_s3_path} ${_package_output} "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY")
-  create_s3_cp_target_new("sumo-otel-builds-dev-c64ec98a" ${_s3_path} ${_package_output} "AWS_ACCESS_KEY_ID_NEW" "AWS_SECRET_ACCESS_KEY_NEW")
+  create_s3_cp_target("sumologic-osc-ci-builds" ${_s3_path} ${_package_output} "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY")
+  create_s3_cp_target("sumo-otel-builds-dev-c64ec98a" ${_s3_path} ${_package_output} "AWS_ACCESS_KEY_ID_NEW" "AWS_SECRET_ACCESS_KEY_NEW")
 
   # Add a publish-package target to publish the package built above
   get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
@@ -122,18 +122,7 @@ function(create_wait_for_packagecloud_indexing_target _pc_user _pc_repo _pkg_pat
 endfunction()
 
 # Create an Amazon S3 publish target for uploading a package to an S3 bucket.
-function(create_s3_cp_target _s3_bucket _s3_path _pkg_path)
-    set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
-    separate_arguments(_s3_cp_cmd UNIX_COMMAND "aws s3 cp ${_pkg_path} s3://${_s3_bucket}/${_s3_path}")
-    add_custom_command(OUTPUT ${_s3_output}
-        COMMAND ${_s3_cp_cmd}
-        DEPENDS ${_pkg_path}
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        VERBATIM)
-    append_to_publish_targets(${_s3_output})
-endfunction()
-
-function (create_s3_cp_target_new _s3_bucket _s3_path _pkg_path aws_key_id_env_var_name aws_secret_key_env_var_name)
+function (create_s3_cp_target _s3_bucket _s3_path _pkg_path aws_key_id_env_var_name aws_secret_key_env_var_name)
 
   set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
 
