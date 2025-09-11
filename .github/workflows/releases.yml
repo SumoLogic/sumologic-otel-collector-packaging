@@ -22,7 +22,7 @@ jobs:
     name: Get application version info for this revision
     runs-on: ubuntu-24.04
     outputs:
-      git-sha: ${{ steps.get-version.outputs.git-sha }}
+      git-sha: ${{ steps.get-sha.outputs.git-sha }}
       otc-version: ${{ steps.set-versions.outputs.otc_version }}
       otc-build-number: ${{ steps.set-versions.outputs.otc_build_number }}
       otc-sumo-version: ${{ steps.set-versions.outputs.otc_sumo_version }}
@@ -57,11 +57,14 @@ jobs:
           otc_version="$(cat artifacts/otc-version.txt)"
           otc_build_number="$(cat artifacts/otc-build-number.txt)"
           otc_sumo_version="$(cat artifacts/otc-sumo-version.txt)"
-          echo otc_version="${otc_version}" >> $GITHUB_OUTPUT
-          echo otc_build_number="${otc_build_number}" >> $GITHUB_OUTPUT
-          echo otc_sumo_version="${otc_sumo_version}" >> $GITHUB_OUTPUT
-          echo package_version="${otc_version}-${otc_build_number}" >> $GITHUB_OUTPUT
-          echo binary_version="${otc_version}-sumo-${otc_sumo_version}" >> $GITHUB_OUTPUT
+
+          {
+          echo otc_version="${otc_version}"
+          echo otc_build_number="${otc_build_number}"
+          echo otc_sumo_version="${otc_sumo_version}"
+          echo package_version="${otc_version}-${otc_build_number}"
+          echo binary_version="${otc_version}-sumo-${otc_sumo_version}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Output OTC Version
         run: |
@@ -75,7 +78,7 @@ jobs:
 
       - name: Output OTC Sumo Version
         run: |
-          version=${{ steps.set-version.outputs.otc_sumo_version }}
+          version=${{ steps.set-versions.outputs.otc_sumo_version }}
           echo ::notice title=OTC Sumo Version::${version}
 
       - name: Determine Git SHA of workflow
@@ -85,7 +88,7 @@ jobs:
         run: |
           workflow=${{ inputs.workflow_id }}
           sha="$(gh run view ${workflow} --json headSha -t '{{.headSha}}')"
-          echo "git-sha=$sha" >> $GITHUB_OUTPUT
+          echo "git-sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Output Git SHA
         run: |

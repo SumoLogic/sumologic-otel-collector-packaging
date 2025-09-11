@@ -2,13 +2,13 @@
 # specific to each workflow. This ensures that each package has an
 # OTC_BUILD_NUMBER that is greater than previous runs which allows package
 # upgrades from one build to the next.
-name: 'Build packages'
+name: "Build packages"
 
 # Sets the name of the CI run based on whether the run was triggered with or
 # without a workflow_id set.
 run-name: >
   ${{
-  inputs.workflow_id == '' && format('Build for Remote Workflow: latest-main')
+  inputs.workflow_id == '' && 'Build for Remote Workflow: latest-main'
   ||
   inputs.workflow_id != '' && format('Build for Remote Workflow: {0}', inputs.workflow_id)
   }}
@@ -16,7 +16,7 @@ run-name: >
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
   workflow_dispatch:
     inputs:
@@ -55,7 +55,7 @@ jobs:
       - name: Set output workflow
         id: workflow
         run: |
-            echo "id=${{ inputs.workflow_id || steps.latest-workflow.outputs.id }}" >> $GITHUB_OUTPUT
+          echo "id=${{ inputs.workflow_id || steps.latest-workflow.outputs.id }}" >> "$GITHUB_OUTPUT"
 
       - name: Output Remote Workflow URL
         run: echo ::notice title=Remote Workflow URL::https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ steps.workflow.outputs.id }}
@@ -209,20 +209,20 @@ jobs:
 
       - name: Store install scripts on S3
         run: |
-          version=${OTC_VERSION}-${OTC_BUILD_NUMBER}
+          version="${OTC_VERSION}-${OTC_BUILD_NUMBER}"
           s3_path="${version}/"
-          aws s3 cp install-script/install.ps1 s3://${AWS_S3_BUCKET}/${s3_path}
-          aws s3 cp install-script/install.sh s3://${AWS_S3_BUCKET}/${s3_path}
+          aws s3 cp install-script/install.ps1 "s3://${AWS_S3_BUCKET}/${s3_path}"
+          aws s3 cp install-script/install.sh "s3://${AWS_S3_BUCKET}/${s3_path}"
 
       - name: Create latest_version file
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          version=${OTC_VERSION}-${OTC_BUILD_NUMBER}
+          version="${OTC_VERSION}-${OTC_BUILD_NUMBER}"
           echo "${version}" >> latest_version
           aws s3 cp --content-type "text/plain" latest_version \
-          s3://${AWS_S3_BUCKET}/
+          "s3://${AWS_S3_BUCKET}/"
 
   test-install-script:
     name: Test Install Script
@@ -281,12 +281,12 @@ jobs:
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
           fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
-          echo DARWIN_PKG_URL="file://${fp}" >> $GITHUB_ENV
+          echo DARWIN_PKG_URL="file://${fp}" >> "$GITHUB_ENV"
 
       - name: Set S3_BUCKET (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
-          echo S3_BUCKET="sumologic-osc-ci-builds" >> $GITHUB_ENV
+          echo S3_BUCKET="sumologic-osc-ci-builds" >> "$GITHUB_ENV"
 
       - name: Run install script tests (*nix)
         if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows'
