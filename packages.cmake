@@ -69,11 +69,10 @@ macro(build_cpack_config)
   endforeach()
 
   # Add a target for uploading the package to Amazon S3
-  set(_s3_channel "ci-builds")
   set(_version "${OTC_VERSION}-${BUILD_NUMBER}")
-  set(_s3_bucket "sumologic-osc-${_s3_channel}")
   set(_s3_path "${_version}/")
-  create_s3_cp_target(${_s3_bucket} ${_s3_path} ${_package_output})
+  create_s3_cp_target_new("sumologic-osc-ci-builds" ${_s3_path} ${_package_output} "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY")
+  create_s3_cp_target_new("sumo-otel-builds-dev-c64ec98a" ${_s3_path} ${_package_output} "AWS_ACCESS_KEY_ID_NEW" "AWS_SECRET_ACCESS_KEY_NEW")
 
   # Add a publish-package target to publish the package built above
   get_property(_all_publish_targets GLOBAL PROPERTY _all_publish_targets)
@@ -132,6 +131,27 @@ function(create_s3_cp_target _s3_bucket _s3_path _pkg_path)
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         VERBATIM)
     append_to_publish_targets(${_s3_output})
+endfunction()
+
+function (create_s3_cp_target_new _s3_bucket _s3_path _pkg_path aws_key_id_env_var_name aws_secret_key_env_var_name)
+
+  set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
+
+  set(_uploader_script "../ci/cmd/packagecloudpruner/s3-uploader.sh")
+  if (NOT EXISTS "${_uploader_script}")
+    message(FATAL_ERROR "s3 uploader script not found at ${_uploader_script}")
+  endif()
+
+  # Script usage: s3-uploader.sh ACCESS_KEY_ENV_VAR SECRET_KEY_ENV_VAR S3_BUCKET S3_PATH FILE_PATH
+  set(_cmd "${_uploader_script} ${aws_key_id_env_var_name} ${aws_secret_key_env_var_name} ${_s3_bucket} ${_s3_path} ${_pkg_path}")
+  separate_arguments(_s3_cp_cmd UNIX_COMMAND "${_cmd}")
+
+  add_custom_command(OUTPUT ${_s3_output}
+    COMMAND ${_s3_cp_cmd}
+    DEPENDS ${_pkg_path}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    VERBATIM)
+  append_to_publish_targets(${_s3_output})
 endfunction()
 
 # Sets a GitHub output parameter by appending a statement to the file defined by

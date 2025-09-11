@@ -55,6 +55,10 @@ on:
         required: true
       aws_secret_access_key:
         required: true
+      AWS_ACCESS_KEY_ID_NEW:
+        required: true
+      AWS_SECRET_ACCESS_KEY_NEW:
+        required: true
     outputs:
       otc_version:
         description: "The version of the package"
@@ -232,6 +236,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         run: make publish-package
 
