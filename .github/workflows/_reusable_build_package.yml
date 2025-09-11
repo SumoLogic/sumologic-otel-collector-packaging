@@ -229,8 +229,8 @@ jobs:
           packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCESS_KEY_ID_NEW: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
-          AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
+          aws-access-key-id-new: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
+          aws-secret-access-key-new: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
 
       - name: Publish packages
         if: runner.os != 'Linux'
