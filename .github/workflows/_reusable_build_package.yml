@@ -236,8 +236,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ACCESS_KEY_ID_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID_NEW: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
+          AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         run: make publish-package
 
