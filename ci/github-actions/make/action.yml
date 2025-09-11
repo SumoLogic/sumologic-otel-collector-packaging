@@ -1,4 +1,6 @@
-name: 'Run make'
+name: "Run make"
+
+description: Runs make for a given input target.
 
 inputs:
   target:
@@ -24,8 +26,8 @@ inputs:
     type: string
 
 runs:
-  using: 'docker'
-  image: '../../../Dockerfile'
+  using: "docker"
+  image: "../../../Dockerfile"
   env:
     AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
     AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}

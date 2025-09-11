@@ -1,0 +1,4 @@
+paths:
+  .github/workflows/_reusable_build_package.yml:
+    ignore:
+      - 'property "package_name" is not defined in object type {}'

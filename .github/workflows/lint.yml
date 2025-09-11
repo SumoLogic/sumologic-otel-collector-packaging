@@ -1,13 +1,20 @@
-name: 'Lint'
+name: "Lint"
 
 permissions: {}
 
 on:
-  pull_request:
-    branches:
-      - '**'
+  pull_request: {}
+  push: {}
 
 jobs:
+  actionlint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: actionlint
+        uses: raven-actions/actionlint@v2.0.1
+
   shellcheck:
     runs-on: ubuntu-24.04
     steps:
@@ -16,10 +23,10 @@ jobs:
       - name: Run ShellCheck on *.sh
         uses: ludeeus/action-shellcheck@master
         with:
-          severity: info  # TODO: check if we can resolve the style issues as well
+          severity: info # TODO: check if we can resolve the style issues as well
 
       - name: Run ShellCheck on hook templates
         uses: ludeeus/action-shellcheck@master
         with:
-          scandir: 'templates/hooks'
-          additional_files: '*.in'
+          scandir: "templates/hooks"
+          additional_files: "*.in"
