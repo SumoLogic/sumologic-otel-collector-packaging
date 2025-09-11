@@ -137,7 +137,7 @@ function (create_s3_cp_target_new _s3_bucket _s3_path _pkg_path aws_key_id_env_v
 
   set(_s3_output "${_pkg_path}-s3-${_s3_bucket}")
 
-  set(_uploader_script "../ci/cmd/packagecloudpruner/s3-uploader.sh")
+  set(_uploader_script "../ci/s3-uploader.sh")
   if (NOT EXISTS "${_uploader_script}")
     message(FATAL_ERROR "s3 uploader script not found at ${_uploader_script}")
   endif()
