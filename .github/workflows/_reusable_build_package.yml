@@ -55,6 +55,10 @@ on:
         required: true
       aws_secret_access_key:
         required: true
+      AWS_ACCESS_KEY_ID_NEW:
+        required: true
+      AWS_SECRET_ACCESS_KEY_NEW:
+        required: true
     outputs:
       otc_version:
         description: "The version of the package"
@@ -225,6 +229,8 @@ jobs:
           packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id-new: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
+          aws-secret-access-key-new: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
 
       - name: Publish packages
         if: runner.os != 'Linux'
@@ -232,6 +238,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID_NEW: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
+          AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
           PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         run: make publish-package
 
@@ -366,6 +374,19 @@ jobs:
         run: |
           aws.exe s3 cp $PKG_PATH \
           s3://${S3_BUCKET}/${VERSION}/${PKG_NAME}
+
+      - name: Publish packages to new S3 target
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
+          AWS_REGION: us-east-1
+          VERSION: ${{ steps.get-version.outputs.version }}
+          PKG_PATH: ${{ steps.build.outputs.package_path }}
+          PKG_NAME: ${{ steps.build.outputs.package_filename }}
+          S3_BUCKET: sumo-otel-builds-dev-c64ec98a
+        run: |
+          aws.exe s3 cp $PKG_PATH \
+          s3://${S3_BUCKET}/${VERSION}/${PKG_NAME}    
 
   test_wixext:
     name: Test (SumoLogic.wixext)

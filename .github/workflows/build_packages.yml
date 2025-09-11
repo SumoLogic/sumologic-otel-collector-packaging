@@ -91,6 +91,8 @@ jobs:
       packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
       aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
       aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
     strategy:
       matrix:
         include:
