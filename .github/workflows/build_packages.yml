@@ -300,6 +300,7 @@ jobs:
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
         run: |
           fp="$(readlink -f artifacts/otelcol-sumo*.deb/otelcol-sumo*.deb)"
+          echo "using ${fp}"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
       - name: Set S3_BUCKET (macOS)
