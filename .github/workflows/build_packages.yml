@@ -271,8 +271,15 @@ jobs:
           path: artifacts/
           pattern: otelcol-sumo_*-intel.pkg
 
+      - name: Download Debian package and use it for install.sh
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          pattern: otelcol-sumo_*amd64.deb
+
       - name: Show packages
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' }}
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
         run: |
           ls -l artifacts/
           ls -l artifacts/**/*
