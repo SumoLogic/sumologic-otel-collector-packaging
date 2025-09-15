@@ -109,7 +109,7 @@ jobs:
           file="latest_version"
           uri="s3://${bucket}/${file}"
 
-          echo "${previous}" >> "${file}"
+          echo "${previous}" > "${file}"
           aws s3 cp "${file}" "${uri}" --content-type plain
 
       - name: Promote packages
@@ -155,5 +155,5 @@ jobs:
           file="latest_version"
           uri="s3://${bucket}/${file}"
 
-          echo "${version}" >> "${file}"
+          echo "${version}" > "${file}"
           aws s3 cp "${file}" "${uri}" --content-type plain
