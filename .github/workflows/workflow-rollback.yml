@@ -1,0 +1,155 @@
+#################################################################################
+# A reusable workflow to rollback images & indexes from one channel to another
+# for a given workflow run.
+#################################################################################
+
+name: Workflow - Rollback
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      destination-channel:
+        description: |
+          The destination channel to rollback packages to. Valid values are:
+          - release-candidates
+        type: string
+      source-channel:
+        description: |
+          The source channel to rollback packages from. Valid values are:
+          - stable
+        type: string
+      version:
+        description: The package version to rollback.
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  rollback:
+    name: Rollback
+    runs-on: ubuntu-24.04
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify channels
+        run: |
+          src="${{ inputs.source-channel }}"
+          dst="${{ inputs.destination-channel }}"
+
+          if [ "$src" = "stable" ]; then
+            if [ "$dst" = "release-candidates" ]; then
+              exit 0
+            fi
+          fi
+
+          echo "Unsupported channels combination: ${src} -> ${dst}"
+          exit 1
+
+      - name: Install packagecloud-go
+        run: go install github.com/amdprophet/packagecloud-go/cmd/packagecloud@v0.5.0
+
+      - name: Add GOPATH bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Get latest package version (source channel)
+        id: latest-source
+        run: |
+          repo="sumologic/${{ inputs.source-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions latest "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      - name: Compare version to latest (source channel)
+        id: compare-source
+        run: |
+          version="${{ inputs.version }}"
+          latest="${{ steps.latest-source.outputs.version }}"
+          packagecloud versions compare "${version}" "${latest}" | tee result
+
+          echo "result=$(cat result)" >> "$GITHUB_OUTPUT"
+
+      # NOTE: If the version we're trying to rollback is equal to the latest
+      # version available in the source repository then we need to update the
+      # latest_version file in the source repository.
+      - name: Get previous package version (source channel)
+        if: steps.compare-source.outputs.result == 'equal'
+        id: previous-source
+        run: |
+          repo="sumologic/${{ inputs.source-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions previous "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      - name: Set latest version to previous (source channel)
+        if: steps.compare-source.outputs.result == 'equal'
+        run: |
+          previous="${{ steps.previous-source.outputs.version }}"
+          channel="${{ inputs.source-channel }}"
+          bucket="sumologic-osc-${channel}"
+          file="latest_version"
+          uri="s3://${bucket}/${file}"
+
+          echo "${previous}" > "${file}"
+          aws s3 cp "${file}" "${uri}" --content-type plain
+
+      - name: Rollback packages
+        run: |
+          src="sumologic/${{ inputs.source-channel }}"
+          dst="sumologic/${{ inputs.destination-channel }}"
+          version="${{ inputs.version }}"
+
+          packagecloud promote by-search "${src}" "${dst}" -q "${version}"
+
+      - name: Remove artifacts (source channel)
+        run: |
+          src="sumologic-osc-${{ inputs.source-channel }}"
+          version="${{ inputs.version }}"
+          src_uri="s3://${src}/${version}"
+
+          # Ensure that version isn't empty -- We don't want to accidentally
+          # remove every artifact.
+          if [ "$version" = "" ]; then
+            exit 1
+          fi
+
+          aws s3 rm --recursive "${src_uri}"
+
+      - name: Get latest package version (destination channel)
+        id: latest-destination
+        run: |
+          repo="sumologic/${{ inputs.destination-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions latest "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      # NOTE: Always set the latest_version file in the destination bucket to
+      # to the latest version found in the destination Packagecloud repository.
+      # The latest version won't always match what is being rolled back. This
+      # ensures that re-running the promotion workflow will fix cases where
+      # latest_version in the destination bucket does not match the latest
+      # package version in the destination Packagecloud repository. This can
+      # only happen if the workflow fails before updating latest_version in the
+      # destination bucket but after one or more packages have been rolled back.
+      - name: Set latest version to latest (destination channel)
+        run: |
+          version="${{ steps.latest-destination.outputs.version }}"
+          channel="${{ inputs.destination-channel }}"
+          bucket="sumologic-osc-${channel}"
+          file="latest_version"
+          uri="s3://${bucket}/${file}"
+
+          echo "${version}" > "${file}"
+          aws s3 cp "${file}" "${uri}" --content-type plain

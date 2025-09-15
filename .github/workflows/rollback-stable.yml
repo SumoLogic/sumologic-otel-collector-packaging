@@ -1,0 +1,29 @@
+name: Rollback stable
+
+permissions:
+  contents: read
+
+run-name: >
+  ${{ format('Rollback Stable: {0}', inputs.version) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The package version to rollback.
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  rollback:
+    name: Packages & artifacts
+    uses: ./.github/workflows/workflow-rollback.yml
+    with:
+      destination-channel: stable
+      source-channel: release-candidates
+      version: ${{ inputs.version }}
+    secrets: inherit
