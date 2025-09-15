@@ -23,7 +23,7 @@ jobs:
     name: Packages & artifacts
     uses: ./.github/workflows/workflow-rollback.yml
     with:
-      destination-channel: stable
-      source-channel: release-candidates
+      destination-channel: release-candidates
+      source-channel: stable
       version: ${{ inputs.version }}
     secrets: inherit
