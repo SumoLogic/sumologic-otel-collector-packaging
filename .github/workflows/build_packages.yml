@@ -37,7 +37,7 @@ jobs:
       workflow_id: ${{ steps.workflow.outputs.id }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Determine the latest successful run of the "Dev builds" workflow for
       # the "main" branch. This is skipped if inputs.workflow_id is set.
@@ -191,7 +191,7 @@ jobs:
       OTC_VERSION: ${{ needs.build_packages.outputs.otc_version }}
       OTC_BUILD_NUMBER: ${{ needs.build_packages.outputs.otc_build_number }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Store Linux install script as action artifact
         uses: actions/upload-artifact@v4
@@ -248,7 +248,7 @@ jobs:
       PACKAGECLOUD_MASTER_TOKEN: ${{ secrets.PACKAGECLOUD_MASTER_TOKEN }}
       PACKAGECLOUD_REPO: ci-builds
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check if test related files changed
         id: changed-files

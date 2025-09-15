@@ -13,7 +13,7 @@ jobs:
   packagecloud:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup go
         uses: WillAbides/setup-go-faster@v1
