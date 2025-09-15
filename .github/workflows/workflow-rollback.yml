@@ -112,20 +112,6 @@ jobs:
 
           packagecloud promote by-search "${src}" "${dst}" -q "${version}"
 
-      - name: Remove artifacts (source channel)
-        run: |
-          src="sumologic-osc-${{ inputs.source-channel }}"
-          version="${{ inputs.version }}"
-          src_uri="s3://${src}/${version}"
-
-          # Ensure that version isn't empty -- We don't want to accidentally
-          # remove every artifact.
-          if [ "$version" = "" ]; then
-            exit 1
-          fi
-
-          aws s3 rm --recursive "${src_uri}"
-
       - name: Get latest package version (destination channel)
         id: latest-destination
         run: |
