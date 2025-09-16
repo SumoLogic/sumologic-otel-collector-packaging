@@ -122,7 +122,7 @@ jobs:
           uri="s3://${bucket}/${file}"
           uri_new="s3://${bucket_new}/${file}"
 
-          echo "${previous}" >> "${file}"
+          echo "${previous}" > "${file}"
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
 
           echo "Uploading to new S3 target"
@@ -178,7 +178,7 @@ jobs:
           file="latest_version"
           uri="s3://${bucket}/${file}"
 
-          echo "${version}" >> "${file}"
+          echo "${version}" > "${file}"
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
 
           bucket_new="${{ steps['s3-buckets-new'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
