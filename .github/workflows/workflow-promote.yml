@@ -95,9 +95,11 @@ jobs:
       - name: Output new S3 targets
         id: s3-buckets-new
         run: |
-          echo "otel_builds_bucket_ci-builds=dd" >> "$GITHUB_OUTPUT"
-          echo "otel_builds_bucket_release-candidates=dd" >> "$GITHUB_OUTPUT"
-          echo "otel_builds_bucket_stable=dd" >> "$GITHUB_OUTPUT"
+          cat >> "$GITHUB_OUTPUT" <<'EOF'
+          otel_builds_bucket_ci-builds=sumo-otel-builds-dev-c64ec98a
+          otel_builds_bucket_release-candidates=sumo-otel-builds-rc-6d7808fb
+          otel_builds_bucket_stable=sumo-otel-builds-c8665146
+          EOF
 
       # NOTE: If the version we're trying to promote is equal to the latest
       # version available in the source repository then we need to update the
