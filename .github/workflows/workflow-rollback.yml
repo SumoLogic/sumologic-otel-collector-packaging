@@ -46,6 +46,12 @@ jobs:
           src="${{ inputs.source-channel }}"
           dst="${{ inputs.destination-channel }}"
 
+          if [ "$src" = "release-candidates" ]; then
+            if [ "$dst" = "ci-builds" ]; then
+              exit 0
+            fi
+          fi
+
           if [ "$src" = "stable" ]; then
             if [ "$dst" = "release-candidates" ]; then
               exit 0
