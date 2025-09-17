@@ -495,9 +495,9 @@ function setup_config() {
             write_tags "${FIELDS[@]}"
         fi
 
-       if [[ -n "${TIMEZONE}" ]]; then
+        if [[ -n "${TIMEZONE}" ]]; then
             write_timezone "${TIMEZONE}"
-       fi
+        fi
 
         # Return/stop function execution early as remaining logic only applies
         # to locally-managed installations
