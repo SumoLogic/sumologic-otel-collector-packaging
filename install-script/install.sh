@@ -530,7 +530,7 @@ function setup_config() {
         fi
 
         if [[ -n "${TIMEZONE}" ]]; then
-           write_timezone "${TIMEZONE}"
+            write_timezone "${TIMEZONE}"
         fi
     fi
 }
