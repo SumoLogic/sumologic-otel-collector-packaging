@@ -39,8 +39,8 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_ACCESS_KEY_ID_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY_NEW: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
       PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +90,7 @@ jobs:
           echo "result=$(cat result)" >> "$GITHUB_OUTPUT"
 
       - name: Output new S3 targets
-        id: s3-buckets-new
+        id: s3-buckets-osc
         run: |
           cat >> "$GITHUB_OUTPUT" <<'EOF'
           otel_builds_bucket_ci-builds=sumo-otel-builds-dev-c64ec98a
@@ -117,16 +117,16 @@ jobs:
           previous="${{ steps.previous-source.outputs.version }}"
           channel="${{ inputs.source-channel }}"
           bucket="sumologic-osc-${channel}"
-          bucket_new="${{ steps['s3-buckets-new'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}"
+          osc_bucket="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}"
           file="latest_version"
           uri="s3://${bucket}/${file}"
-          uri_new="s3://${bucket_new}/${file}"
+          osc_uri="s3://${osc_bucket}/${file}"
 
           echo "${previous}" > "${file}"
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
 
           echo "Uploading to new S3 target"
-          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_NEW }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_NEW }} aws s3 cp "${file}" "${uri_new}" --content-type plain
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp "${file}" "${osc_uri}" --content-type plain
 
       - name: Promote packages
         run: |
@@ -146,12 +146,12 @@ jobs:
 
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp --recursive "${src_uri}" "${dst_uri}"
 
-          src_new="${{ steps['s3-buckets-new'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}"
-          dst_new="${{ steps['s3-buckets-new'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
-          src_uri_new="s3://${src_new}/${version}"
-          dst_uri_new="s3://${dst_new}/${version}"
+          osc_src="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}"
+          osc_dst="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
+          osc_src_uri="s3://${osc_src}/${version}"
+          osc_dst_uri="s3://${osc_dst}/${version}"
 
-          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_NEW }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_NEW }} aws s3 cp --recursive "${src_uri_new}" "${dst_uri_new}"
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp --recursive "${osc_src_uri}" "${osc_dst_uri}"
 
       - name: Get latest package version (destination channel)
         id: latest-destination
@@ -181,7 +181,7 @@ jobs:
           echo "${version}" > "${file}"
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
 
-          bucket_new="${{ steps['s3-buckets-new'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
-          uri_new="s3://${bucket_new}/${file}"
+          osc_bucket="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
+          osc_uri="s3://${osc_bucket}/${file}"
 
-          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_NEW }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_NEW }} aws s3 cp "${file}" "${uri_new}" --content-type plain
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp "${file}" "${osc_uri}" --content-type plain
