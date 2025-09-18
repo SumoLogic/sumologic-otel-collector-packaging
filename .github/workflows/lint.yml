@@ -10,7 +10,7 @@ jobs:
   actionlint:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: actionlint
         uses: raven-actions/actionlint@v2.0.1
@@ -18,7 +18,7 @@ jobs:
   shellcheck:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run ShellCheck on *.sh
         uses: ludeeus/action-shellcheck@master
