@@ -39,6 +39,8 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
       PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
     steps:
       - uses: actions/checkout@v4
@@ -87,6 +89,15 @@ jobs:
 
           echo "result=$(cat result)" >> "$GITHUB_OUTPUT"
 
+      - name: Output new S3 targets
+        id: s3-buckets-osc
+        run: |
+          cat >> "$GITHUB_OUTPUT" <<'EOF'
+          otel_builds_bucket_ci-builds=sumo-otel-builds-dev-c64ec98a
+          otel_builds_bucket_release-candidates=sumo-otel-builds-rc-6d7808fb
+          otel_builds_bucket_stable=sumo-otel-builds-c8665146
+          EOF
+
       # NOTE: If the version we're trying to promote is equal to the latest
       # version available in the source repository then we need to update the
       # latest_version file in the source repository.
@@ -106,11 +117,16 @@ jobs:
           previous="${{ steps.previous-source.outputs.version }}"
           channel="${{ inputs.source-channel }}"
           bucket="sumologic-osc-${channel}"
+          osc_bucket="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}"
           file="latest_version"
           uri="s3://${bucket}/${file}"
+          osc_uri="s3://${osc_bucket}/${file}"
 
           echo "${previous}" > "${file}"
-          aws s3 cp "${file}" "${uri}" --content-type plain
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
+
+          echo "Uploading to new S3 target"
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp "${file}" "${osc_uri}" --content-type plain
 
       - name: Promote packages
         run: |
@@ -128,7 +144,14 @@ jobs:
           src_uri="s3://${src}/${version}"
           dst_uri="s3://${dst}/${version}"
 
-          aws s3 cp --recursive "${src_uri}" "${dst_uri}"
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp --recursive "${src_uri}" "${dst_uri}"
+
+          osc_src="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}"
+          osc_dst="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
+          osc_src_uri="s3://${osc_src}/${version}"
+          osc_dst_uri="s3://${osc_dst}/${version}"
+
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp --recursive "${osc_src_uri}" "${osc_dst_uri}"
 
       - name: Get latest package version (destination channel)
         id: latest-destination
@@ -156,4 +179,9 @@ jobs:
           uri="s3://${bucket}/${file}"
 
           echo "${version}" > "${file}"
-          aws s3 cp "${file}" "${uri}" --content-type plain
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
+
+          osc_bucket="${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}"
+          osc_uri="s3://${osc_bucket}/${file}"
+
+          AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp "${file}" "${osc_uri}" --content-type plain
