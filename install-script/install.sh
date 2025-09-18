@@ -472,9 +472,6 @@ function setup_config() {
     echo 'We are going to get and set up a default configuration for you'
 
     echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
-    if [[ -n "${TIMEZONE}" ]]; then
-                write_timezone "${TIMEZONE}"
-    fi
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         write_opamp_extension
 
@@ -498,6 +495,10 @@ function setup_config() {
             write_tags "${FIELDS[@]}"
         fi
 
+        if [[ -n "${TIMEZONE}" ]]; then
+            write_timezone "${TIMEZONE}"
+        fi
+
         # Return/stop function execution early as remaining logic only applies
         # to locally-managed installations
         return
@@ -509,7 +510,7 @@ function setup_config() {
     fi
 
     ## Check if there is anything to update in configuration
-    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" ]]; then
+    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" || -n "${TIMEZONE}" ]]; then
         USER_TOKEN="$(get_user_token)"
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
@@ -526,6 +527,10 @@ function setup_config() {
 
         if [[ ${#FIELDS[@]} -gt 0 ]]; then
             write_tags "${FIELDS[@]}"
+        fi
+
+        if [[ -n "${TIMEZONE}" ]]; then
+            write_timezone "${TIMEZONE}"
         fi
     fi
 }
