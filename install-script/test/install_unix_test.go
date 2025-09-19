@@ -182,6 +182,24 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 			},
 		},
+
+		{
+			name: "locally-managed and timezone",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: false,
+				timezone:        "Europe/Prague",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkTimezoneInConfig,
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
