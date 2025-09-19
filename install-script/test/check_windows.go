@@ -96,7 +96,7 @@ func checkTimezoneInConfig(p string) func(c check) bool {
 			return false
 		}
 
-		assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.timezone, "timezone is different than expected")
+		assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.Timezone, "timezone is different than expected")
 		return true
 	}
 }
