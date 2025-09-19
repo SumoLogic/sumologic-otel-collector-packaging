@@ -244,7 +244,7 @@ func checkTimezoneInConfig(c check) bool {
 		return false
 	}
 
-	return assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.timezone, "timezone is different than expected")
+	return assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.Timezone, "timezone is different than expected")
 }
 
 func PathHasPermissions(t *testing.T, path string, perms uint32) bool {

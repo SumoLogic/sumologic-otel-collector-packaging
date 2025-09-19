@@ -169,6 +169,7 @@ func TestInstallScript(t *testing.T) {
 			options: installOptions{
 				installToken:    installToken,
 				remotelyManaged: false,
+				timezone:        "Asia/Kolkata",
 			},
 			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
 			postChecks: []checkFunc{

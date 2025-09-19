@@ -435,7 +435,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 			options: installOptions{
 				installToken:    installToken,
 				remotelyManaged: false,
-				timezone:        "UTC",
+				timezone:        "Asia/Kolkata",
 			},
 			preChecks: notInstalledChecks,
 			postChecks: []checkFunc{
@@ -443,7 +443,7 @@ func TestInstallScriptDarwin(t *testing.T) {
 				checkBinaryIsRunning,
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
-				checkUserConfigNotCreated,
+				checkUserConfigCreated,
 				checkTimezoneInConfig,
 				checkLaunchdConfigCreated,
 				checkTokenInLaunchdConfig,
