@@ -89,7 +89,7 @@ func checkEphemeralInConfig(p string) func(c check) bool {
 	}
 }
 
-func checkTimezoneInConfig(p string) func(c check) bool {
+func checkTimezoneInConfigWindows(p string) func(c check) bool {
 	return func(c check) bool {
 		conf, err := getConfig(p)
 		if !assert.NoError(c.test, err, "error while reading configuration") {

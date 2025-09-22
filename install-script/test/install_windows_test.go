@@ -176,7 +176,7 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryCreated,
 				checkBinaryIsRunning,
 				checkConfigCreated,
-				checkTimezoneInConfig(configPath),
+				checkTimezoneInConfigWindows(configPath),
 				checkTokenInSumoConfig,
 				checkEphemeralNotInConfig(configPath),
 			},
