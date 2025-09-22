@@ -19,6 +19,7 @@ type installOptions struct {
 	remotelyManaged    bool
 	ephemeral          bool
 	version            string
+	timezone           string
 }
 
 func (io *installOptions) string() []string {
