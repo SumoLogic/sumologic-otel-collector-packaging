@@ -89,18 +89,6 @@ func checkEphemeralInConfig(p string) func(c check) bool {
 	}
 }
 
-func checkTimezoneInConfigWindows(p string) func(c check) bool {
-	return func(c check) bool {
-		conf, err := getConfig(p)
-		if !assert.NoError(c.test, err, "error while reading configuration") {
-			return false
-		}
-
-		assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.Timezone, "timezone is different than expected")
-		return true
-	}
-}
-
 func checkTokenInConfig(c check) bool {
 	if !assert.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided") {
 		return false

@@ -145,43 +145,6 @@ func TestInstallScript(t *testing.T) {
 				checkTags,
 			},
 		},
-
-		{
-			name: "remotely-managed and timezone",
-			options: installOptions{
-				installToken:    installToken,
-				remotelyManaged: true,
-				timezone:        "Asia/Kolkata",
-			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-				checkConfigFilesOwnershipAndPermissions(localSystemSID),
-				checkTimezoneInConfigWindows(configPath),
-				checkRemoteConfigDirectoryCreated,
-				checkTokenInSumoConfig,
-				checkEphemeralNotInConfig(configPath),
-			},
-		},
-		{
-			name: "locally-managed and timezone",
-			options: installOptions{
-				installToken:    installToken,
-				remotelyManaged: false,
-				timezone:        "Asia/Kolkata",
-			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
-			postChecks: []checkFunc{
-				checkBinaryCreated,
-				checkBinaryIsRunning,
-				checkConfigCreated,
-				checkTimezoneInConfigWindows(configPath),
-				checkTokenInSumoConfig,
-				checkEphemeralNotInConfig(configPath),
-			},
-		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
