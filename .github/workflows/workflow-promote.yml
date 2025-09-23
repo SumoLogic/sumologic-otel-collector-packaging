@@ -93,9 +93,9 @@ jobs:
         id: s3-buckets-osc
         run: |
           cat >> "$GITHUB_OUTPUT" <<'EOF'
-          otel_builds_bucket_ci-builds=sumo-otel-builds-dev-c64ec98a
-          otel_builds_bucket_release-candidates=sumo-otel-builds-rc-6d7808fb
-          otel_builds_bucket_stable=sumo-otel-builds-c8665146
+          otel_builds_bucket_ci-builds=${{secrets.otel_builds_bucket_ci_builds}}
+          otel_builds_bucket_release-candidates=${{secrets.otel_builds_bucket_release-candidates}}
+          otel_builds_bucket_stable=${{secrets.otel_builds_bucket_stable}}
           EOF
 
       # NOTE: If the version we're trying to promote is equal to the latest
@@ -125,7 +125,7 @@ jobs:
           echo "${previous}" > "${file}"
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} aws s3 cp "${file}" "${uri}" --content-type plain
 
-          echo "Uploading to new S3 target"
+          echo "Uploading to new S3 target: ${osc_uri}"
           AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID_OSC }} AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY_OSC }} aws s3 cp "${file}" "${osc_uri}" --content-type plain
 
       - name: Promote packages
