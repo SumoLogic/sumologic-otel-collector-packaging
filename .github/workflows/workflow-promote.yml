@@ -126,22 +126,15 @@ jobs:
 
       - name: Upload latest version to S3 (source channel)
         if: steps.compare-source.outputs.result == 'equal'
-        uses: ./.github/actions/aws-s3-push
+        uses: ./.github/actions/multi-aws-s3-push
         with:
           file_path: "latest_version"
-          s3_uri: "s3://sumologic-osc-${{ inputs.source-channel }}/latest_version"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          content_type: "plain"
-
-      - name: Upload latest version to new S3 target (source channel)
-        if: steps.compare-source.outputs.result == 'equal'
-        uses: ./.github/actions/aws-s3-push
-        with:
-          file_path: "latest_version"
-          s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/latest_version"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
+          s3_uri_legacy: "s3://sumologic-osc-${{ inputs.source-channel }}/latest_version"
+          aws_access_key_id_legacy: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key_legacy: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          s3_uri_osc: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/latest_version"
+          aws_access_key_id_osc: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key_osc: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
           content_type: "plain"
 
       - name: Promote packages
@@ -160,22 +153,16 @@ jobs:
           src_uri="s3://${src}/${version}"
           dst_uri="s3://${dst}/${version}"
 
-      - name: Copy artifacts to destination (legacy S3)
-        uses: ./.github/actions/aws-s3-push
+      - name: Copy artifacts to destination
+        uses: ./.github/actions/multi-aws-s3-push
         with:
           file_path: "s3://sumologic-osc-${{ inputs.source-channel }}/${{ inputs.version }}"
-          s3_uri: "s3://sumologic-osc-${{ inputs.destination-channel }}/${{ inputs.version }}"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          recursive: "true"
-
-      - name: Copy artifacts to destination (new S3)
-        uses: ./.github/actions/aws-s3-push
-        with:
-          file_path: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/${{ inputs.version }}"
-          s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/${{ inputs.version }}"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
+          s3_uri_legacy: "s3://sumologic-osc-${{ inputs.destination-channel }}/${{ inputs.version }}"
+          aws_access_key_id_legacy: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key_legacy: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          s3_uri_osc: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/${{ inputs.version }}"
+          aws_access_key_id_osc: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key_osc: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
           recursive: "true"
 
       - name: Get latest package version (destination channel)
@@ -206,19 +193,13 @@ jobs:
           echo "${version}" > "${file}"
 
       - name: Upload latest version to S3 (destination channel)
-        uses: ./.github/actions/aws-s3-push
+        uses: ./.github/actions/multi-aws-s3-push
         with:
           file_path: "latest_version"
-          s3_uri: "s3://sumologic-osc-${{ inputs.destination-channel }}/latest_version"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          content_type: "plain"
-
-      - name: Upload latest version to new S3 target (destination channel)
-        uses: ./.github/actions/aws-s3-push
-        with:
-          file_path: "latest_version"
-          s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/latest_version"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
+          s3_uri_legacy: "s3://sumologic-osc-${{ inputs.destination-channel }}/latest_version"
+          aws_access_key_id_legacy: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key_legacy: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          s3_uri_osc: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/latest_version"
+          aws_access_key_id_osc: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key_osc: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
           content_type: "plain"
