@@ -1,0 +1,90 @@
+name: 'AWS S3 Push'
+description: 'Push files to AWS S3'
+
+inputs:
+  file_path:
+    description: 'Path to the file to upload to S3'
+    required: true
+  s3_uri_legacy:
+    description: 'S3 URI destination (e.g., s3://bucket-name/path/to/file) for legacy bucket'
+    required: true
+  aws_access_key_id_legacy:
+    description: 'AWS Access Key ID for legacy bcuekt'
+    required: true
+  aws_secret_access_key_legacy:
+    description: 'AWS Secret Access Key for legacy bucket'
+    required: true
+  s3_uri_osc:
+    description: 'S3 URI destination (e.g., s3://bucket-name/path/to/file) for new bucket'
+    required: true  
+  aws_access_key_id_osc:
+    description: 'AWS Access Key ID for new bucket'
+    required: true
+  aws_secret_access_key_osc:
+    description: 'AWS Secret Access Key for new bucket'
+    required: true  
+  recursive:
+    description: 'Whether to use recursive copy'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ "${{ inputs.recursive }}" != "true" && ! -f "${{ inputs.file_path }}" ]]; then
+          echo "Error: File '${{ inputs.file_path }}' does not exist"
+          exit 1
+        fi
+        
+        echo "Uploading: ${{ inputs.file_path }} to: ${{ inputs.s3_uri_legacy }} and ${{ inputs.s3_uri_osc }}"    
+
+    - name: Push to S3 - legacy
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id_legacy }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key_legacy }}
+      run: |
+        # Build the AWS CLI command
+        cmd="aws s3 cp"
+        
+        if [[ "${{ inputs.recursive }}" == "true" ]]; then
+          cmd="$cmd --recursive"
+        fi
+        
+        cmd="$cmd '${{ inputs.file_path }}' '${{ inputs.s3_uri_legacy }}'"
+        
+        eval "$cmd"
+        
+        if [[ $? -eq 0 ]]; then
+          echo "✅ Successfully uploaded '${{ inputs.file_path }}' to '${{ inputs.s3_uri_legacy }}'"
+        else
+          echo "❌ Failed to upload to S3"
+          exit 1
+        fi
+
+    - name: Push to S3 - osc
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id_osc }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key_osc }}
+      run: |
+        # Build the AWS CLI command
+        cmd="aws s3 cp"
+        
+        if [[ "${{ inputs.recursive }}" == "true" ]]; then
+          cmd="$cmd --recursive"
+        fi
+        
+        cmd="$cmd '${{ inputs.file_path }}' '${{ inputs.s3_uri_osc }}'"
+        
+        eval "$cmd"
+        
+        if [[ $? -eq 0 ]]; then
+          echo "✅ Successfully uploaded '${{ inputs.file_path }}' to '${{ inputs.s3_uri_osc }}'"
+        else
+          echo "❌ Failed to upload to S3"
+          exit 1
+        fi
