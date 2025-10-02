@@ -1,4 +1,6 @@
-name: 'Run make'
+name: "Run make"
+
+description: Runs make for a given input target.
 
 inputs:
   target:
@@ -16,13 +18,21 @@ inputs:
   aws-secret-access-key:
     required: false
     type: string
+  aws-access-key-id-new:
+    required: false
+    type: string
+  aws-secret-access-key-new:
+    required: false
+    type: string
 
 runs:
-  using: 'docker'
-  image: '../../../Dockerfile'
+  using: "docker"
+  image: "../../../Dockerfile"
   env:
     AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
     AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+    AWS_ACCESS_KEY_ID_NEW: ${{ inputs.aws-access-key-id-new }}
+    AWS_SECRET_ACCESS_KEY_NEW: ${{ inputs.aws-secret-access-key-new }}
     GH_TOKEN: ${{ inputs.gh_token }}
     PACKAGECLOUD_TOKEN: ${{ inputs.packagecloud_token }}
   args:

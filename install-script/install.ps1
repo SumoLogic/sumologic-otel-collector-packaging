@@ -28,7 +28,7 @@ param (
     [bool] $Ephemeral,
 
     # The Timezone option is used to specify the timezone of the collector.
-    [bool] $Timezone,
+    [string] $Timezone,
 
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
@@ -72,6 +72,16 @@ if ($S3Region -eq "") {
 }
 
 $S3URI = "https://" + $S3Bucket + ".s3." + $S3Region + ".amazonaws.com"
+$CDN_URI = "https://download-otel.sumologic.com"
+
+if ($S3Bucket -eq "sumologic-osc-stable") {
+    $DOWNLOAD_URI = $CDN_URI
+} else {
+    $DOWNLOAD_URI = $S3URI
+}
+
+Write-Host "DOWNLOAD_URI = $DOWNLOAD_URI"
+
 
 ##
 # Security tweaks
@@ -270,7 +280,7 @@ function Get-LatestVersion {
         [HttpClient] $HttpClient
     )
 
-    $URI = $S3URI + "/latest_version"
+    $URI = $DOWNLOAD_URI + "/latest_version"
     $request = [HttpRequestMessage]::new()
     $request.Method = "GET"
     $request.RequestURI = $URI
@@ -417,7 +427,7 @@ try {
     # Download MSI
     $msiLanguage = "en-US"
     $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${archName}${fipsSuffix}.msi"
-    $msiURI = $S3URI + "/" + $Version + "/" + $msiFileName
+    $msiURI = $DOWNLOAD_URI + "/" + $Version + "/" + $msiFileName
     $msiPath = "${env:TEMP}\${msiFileName}"
     Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
 

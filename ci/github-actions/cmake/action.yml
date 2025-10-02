@@ -1,15 +1,17 @@
-name: 'Run CMake'
+name: "Run CMake"
+
+description: Run cmake for given inputs.
 
 inputs:
   args:
     required: false
     type: string
-    default: '../'
+    default: "../"
   otc_build_number:
     required: false
     type: string
   target:
-    required: true
+    required: false
     type: string
   work_dir:
     required: false
@@ -22,8 +24,8 @@ inputs:
     type: string
 
 runs:
-  using: 'docker'
-  image: '../../../Dockerfile'
+  using: "docker"
+  image: "../../../Dockerfile"
   env:
     GH_TOKEN: ${{ inputs.gh_token }}
     GH_WORKFLOW_ID: ${{ inputs.workflow_id }}

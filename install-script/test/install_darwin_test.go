@@ -429,6 +429,30 @@ func TestInstallScriptDarwin(t *testing.T) {
 			},
 			installCode: 0,
 		},
+
+		{
+			name: "installation token, locally-managed, and timezone",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: false,
+				timezone:        "Asia/Kolkata",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
+				checkUserConfigCreated,
+				checkTimezoneInConfig,
+				checkLaunchdConfigCreated,
+				checkTokenInLaunchdConfig,
+				checkUserExists,
+				checkGroupExists,
+				checkHomeDirectoryCreated,
+			},
+			installCode: 0,
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
