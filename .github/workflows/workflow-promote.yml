@@ -147,15 +147,7 @@ jobs:
 
           packagecloud promote by-search "${src}" "${dst}" -q "${version}"
 
-      - name: Promote artifacts
-        run: |
-          src="sumologic-osc-${{ inputs.source-channel }}"
-          dst="sumologic-osc-${{ inputs.destination-channel }}"
-          version="${{ inputs.version }}"
-          src_uri="s3://${src}/${version}"
-          dst_uri="s3://${dst}/${version}"
-
-      - name: Copy artifacts to destination (legacy S3)
+      - name: "Promote artifacts: Copy artifacts to destination (legacy S3)"
         uses: ./.github/actions/aws-s3-push
         with:
           file_path: "s3://sumologic-osc-${{ inputs.source-channel }}/${{ inputs.version }}"
@@ -164,7 +156,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           recursive: "true"
 
-      - name: Copy artifacts to destination (new S3)
+      - name: "Promote artifacts: Copy artifacts to destination (new S3)"
         uses: ./.github/actions/aws-s3-push
         with:
           file_path: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/${{ inputs.version }}"
@@ -196,7 +188,6 @@ jobs:
           channel="${{ inputs.destination-channel }}"
           bucket="sumologic-osc-${channel}"
           file="latest_version"
-          uri="s3://${bucket}/${file}"
 
           echo "${version}" > "${file}"
 
