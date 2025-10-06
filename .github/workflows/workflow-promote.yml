@@ -186,7 +186,6 @@ jobs:
         run: |
           version="${{ steps.latest-destination.outputs.version }}"
           channel="${{ inputs.destination-channel }}"
-          bucket="sumologic-osc-${channel}"
           file="latest_version"
 
           echo "${version}" > "${file}"
