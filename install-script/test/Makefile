@@ -15,6 +15,8 @@ ifneq ($(OS),windows)
 	OTELCOL_SUMO_PACKAGE_PATH="${OTELCOL_SUMO_PACKAGE_PATH}"
 endif
 
+GOTESTPREFIX ?=
+
 LINT=golangci-lint
 GOTEST=go test
 GOTESTBINARY=sumologic_scripts_tests.test
