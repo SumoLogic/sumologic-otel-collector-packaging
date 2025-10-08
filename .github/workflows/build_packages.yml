@@ -339,4 +339,5 @@ jobs:
           S3_BUCKET: sumologic-osc-ci-builds
           OVERRIDE_ARCH: x64
           SKIP_ARCH_DETECTION: 1
-        run: make test
+        run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
+          runas /user:Administrator "cmd.exe /C cd %CD% && make test"
