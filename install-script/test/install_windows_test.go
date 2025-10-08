@@ -10,6 +10,11 @@ import (
 // TODO: Set up file permissions to be able to modify config files on Windows
 
 func TestInstallScript(t *testing.T) {
+	notInstalledChecks := []checkFunc{
+		checkBinaryNotCreated,
+		checkConfigNotCreated,
+		checkUserConfigNotCreated,
+	}
 	for _, spec := range []testSpec{
 		{
 			name:        "no arguments",
