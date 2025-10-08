@@ -145,6 +145,19 @@ func TestInstallScript(t *testing.T) {
 				checkTags,
 			},
 		},
+		{
+			name: "installed from package path",
+			options: installOptions{
+				installToken: installToken,
+				packagePath:  getPackagePath(t),
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
