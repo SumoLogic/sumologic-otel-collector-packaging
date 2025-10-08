@@ -317,9 +317,11 @@ jobs:
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows)
+        shell: bash
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
         run: |
-          echo OTELCOL_SUMO_PACKAGE_PATH=artifacts/otelcol-sumo*.msi/otelcol-sumo*.msi
+          fp="$(readlink -f artifacts/otelcol-sumo*.msi/otelcol-sumo*.msi)"
+          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
       - name: Set S3_BUCKET (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
