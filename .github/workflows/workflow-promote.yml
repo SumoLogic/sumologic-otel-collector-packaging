@@ -135,8 +135,8 @@ jobs:
         with:
           file_path: "latest_version"
           s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/latest_version"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY_OSC }}
           content_type: "plain"
 
       - name: Promote packages
@@ -161,8 +161,8 @@ jobs:
         with:
           file_path: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/${{ inputs.version }}"
           s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/${{ inputs.version }}"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY_OSC }}
           recursive: "true"
 
       - name: Get latest package version (destination channel)
@@ -203,6 +203,6 @@ jobs:
         with:
           file_path: "latest_version"
           s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/latest_version"
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_OSC }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_OSC }}
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY_OSC }}
           content_type: "plain"
