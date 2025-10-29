@@ -338,7 +338,7 @@ function parse_options() {
       "${ARG_SHORT_REMOTELY_MANAGED}") REMOTELY_MANAGED=true ;;
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
       "${ARG_SHORT_TIMEZONE}") TIMEZONE="${OPTARG}" ;;
-      "${ARG_SHORT_CLOBBER}") CLOBBER="${OPTARG}" ;;
+      "${ARG_SHORT_CLOBBER}") CLOBBER=true ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
       "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
@@ -509,8 +509,8 @@ function setup_config() {
             write_timezone "${TIMEZONE}"
         fi
 
-        if [[ -n "${CLOBBER}" ]]; then
-            write_clobber "${CLOBBER}"
+        if [[ "${CLOBBER}" == "true" ]]; then
+            write_clobber_true
         fi
 
         # Return/stop function execution early as remaining logic only applies
@@ -547,8 +547,8 @@ function setup_config() {
             write_timezone "${TIMEZONE}"
         fi
 
-        if [[ -n "${CLOBBER}" ]]; then
-            write_clobber "${CLOBBER}"
+        if [[ "${CLOBBER}" == "true" ]]; then
+            write_clobber_true
         fi
 
     fi
@@ -574,8 +574,8 @@ function setup_config_darwin() {
         write_timezone "${TIMEZONE}"
     fi
 
-    if [[ -n "${CLOBBER}" ]]; then
-        write_clobber "${CLOBBER}"
+    if [[ "${CLOBBER}" == "true" ]]; then
+        write_clobber_true
     fi
 
     if [[ -n "${API_BASE_URL}"  ]]; then
@@ -804,7 +804,7 @@ function write_timezone() {
     "${SUMO_CONFIG_BINARY_PATH}" --set-timezone "$timezone"
 }
 
-function write_clobber(){
+function write_clobber_true(){
     "${SUMO_CONFIG_BINARY_PATH}" --enable-clobber
 }
 
