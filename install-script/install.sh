@@ -807,7 +807,7 @@ function write_timezone() {
 function write_clobber(){
     local clobber
     readonly clobber="${1}"
-    "${SUMO_CONFIG_BINARY_PATH}" --clobber "$clobber"
+    "${SUMO_CONFIG_BINARY_PATH}" --enable-clobber
 }
 
 # write api_url to user configuration file
