@@ -247,6 +247,15 @@ func checkTimezoneInConfig(c check) bool {
 	return assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.Timezone, "timezone is different than expected")
 }
 
+func checkClobberInConfig(c check) bool {
+	conf, err := getConfig(userConfigPath)
+	if !assert.NoError(c.test, err, "error while reading configuration") {
+		return false
+	}
+
+	return assert.Equal(c.test, c.installOptions.clobber, conf.Extensions.Sumologic.Clobber, "clobber is different than expected")
+}
+
 func PathHasPermissions(t *testing.T, path string, perms uint32) bool {
 	info, err := os.Stat(path)
 	if !assert.NoError(t, err) {

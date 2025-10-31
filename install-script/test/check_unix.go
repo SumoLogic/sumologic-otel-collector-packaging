@@ -25,6 +25,7 @@ type configExtensions struct {
 type sumologicExt struct {
 	Ephemeral bool   `yaml:"ephemeral,omitempty"`
 	Timezone  string `yaml:"timezone,omitempty"`
+	Clobber   bool   `yaml:"clobber,omitempty"`
 }
 
 func checkAbortedDueToNoToken(c check) bool {
@@ -63,6 +64,22 @@ func checkTimezoneConfigInRemote(p string) func(c check) bool {
 	}
 }
 
+func checkClobberEnabledInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
+			return false
+		}
+
+		var config configRoot
+
+		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+
+		return config.Extensions.Sumologic.Clobber
+	}
+}
 func checkEphemeralEnabledInRemote(p string) func(c check) bool {
 	return func(c check) bool {
 		yamlFile, err := os.ReadFile(p)
