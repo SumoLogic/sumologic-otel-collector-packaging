@@ -112,7 +112,7 @@
     <!-- Before updating the config files set the properties indicating whether or not the remotely managed and ephemeral features are selected -->
     <SetProperty Id="REMOTELYMANAGEDSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData"  Condition="&amp;REMOTELYMANAGED=3" />
     <SetProperty Id="EPHEMERALSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData" Condition="&amp;EPHEMERAL=3" />
-    <SetProperty Id="CLOBBERSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData" Condition="&amp;Clobber=3" />
+    <SetProperty Id="CLOBBERSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData" Condition="&amp;CLOBBER=3" />
 
     <!-- Execute Sequence -->
     <InstallExecuteSequence>
