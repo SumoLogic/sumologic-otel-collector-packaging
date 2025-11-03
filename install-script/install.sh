@@ -804,7 +804,7 @@ function write_timezone() {
     "${SUMO_CONFIG_BINARY_PATH}" --set-timezone "$timezone"
 }
 
-function write_clobber_true(){
+function write_clobber_true() {
     "${SUMO_CONFIG_BINARY_PATH}" --enable-clobber
 }
 
