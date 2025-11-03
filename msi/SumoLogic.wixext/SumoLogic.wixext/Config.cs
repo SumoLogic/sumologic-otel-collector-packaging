@@ -14,6 +14,7 @@ namespace SumoLogic.wixext
         public string Api { get; set; }
         public string OpAmpApi { get; set; }
         public string Timezone { get; set; }
+        public string Clobber { get; set; }
 
         public Config() {
             this.CollectorFields = new Dictionary<string, string>();

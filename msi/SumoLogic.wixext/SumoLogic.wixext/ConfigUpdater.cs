@@ -101,6 +101,12 @@ namespace SumoLogic.wixext
                 sumologic.Children["time_zone"] = config.Timezone;
             }
 
+            if (config.Ephemeral)
+            {
+                EnsureScalarKey(sumologic, "clobber");
+                sumologic.Children["clobber"] = "true";
+            }
+
 
             // Make sure the sumologic processor node is a map node, otherwise an empty string
             // is generated as the value instead of an empty node.
