@@ -30,7 +30,7 @@ param (
     # The Timezone option is used to specify the timezone of the collector.
     [string] $Timezone,
 
-    [string] $Clobber,
+    [bool] $Clobber,
 
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,

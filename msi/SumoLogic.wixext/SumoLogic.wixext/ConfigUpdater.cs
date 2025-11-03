@@ -101,7 +101,7 @@ namespace SumoLogic.wixext
                 sumologic.Children["time_zone"] = config.Timezone;
             }
 
-            if (config.Ephemeral)
+            if (config.Clobber)
             {
                 EnsureScalarKey(sumologic, "clobber");
                 sumologic.Children["clobber"] = "true";
