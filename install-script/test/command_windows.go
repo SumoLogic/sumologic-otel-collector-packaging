@@ -20,6 +20,7 @@ type installOptions struct {
 	ephemeral          bool
 	version            string
 	timezone           string
+	clobber            bool
 }
 
 func (io *installOptions) string() []string {
