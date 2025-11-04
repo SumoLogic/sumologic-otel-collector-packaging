@@ -497,6 +497,7 @@ namespace SumoLogicTests
         }
 
 
+
         [TestMethod]
         public void TestUpdate_Timezone()
         {
