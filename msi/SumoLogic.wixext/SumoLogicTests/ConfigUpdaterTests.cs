@@ -200,11 +200,18 @@ namespace SumoLogicTests
             Assert.IsTrue(extensions.Children.ContainsKey("sumologic"));
             Assert.AreEqual(YamlNodeType.Mapping, extensions.Children["sumologic"].NodeType);
             var sumologic = (YamlMappingNode)extensions.Children["sumologic"];
-
-            Assert.IsTrue(sumologic.Children.ContainsKey("clobber"));
-            Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["clobber"].NodeType);
             var endpoint = (YamlScalarNode)sumologic.Children["clobber"];
-            Assert.AreEqual(config.Clobber, endpoint.ToString());
+            if(config.Clobber){
+                Assert.IsTrue(sumologic.Children.ContainsKey("clobber"));
+                Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["clobber"].NodeType);
+                Assert.AreEqual("true", endpoint.ToString());
+            }
+            else{
+                if(sumologic.Children.ContainsKey("clobber")){
+                    Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["clobber"].NodeType);
+                    Assert.AreEqual("false", endpoint.ToString());
+                }
+            }
         }
 
 
