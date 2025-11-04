@@ -73,7 +73,7 @@ namespace SumoLogic.wixext
             var opAmpFolder = session.CustomActionData[pOpAmpFolder];
             var opAmpApi = session.CustomActionData[pOpAmpApi];
             var timezone = session.CustomActionData[pTimezone];
-            var clobber = session.CustomActionData[pClobber];
+            var clobber = (session.CustomActionData.ContainsKey(pClobber) && session.CustomActionData[pClobber] == "true");
             var api = session.CustomActionData[pApi];
 
             if (remotelyManaged && string.IsNullOrEmpty(opAmpFolder))
