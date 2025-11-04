@@ -161,7 +161,7 @@ func TestInstallScript(t *testing.T) {
 				checkTokenInConfig,
 				checkEphemeralNotInConfig(userConfigPath),
 				checkHostmetricsConfigNotCreated,
-				checkClobberInConfig(userConfigPath),
+				checkClobberInSumoConfig(userConfigPath),
 			},
 		},
 		{
@@ -180,7 +180,7 @@ func TestInstallScript(t *testing.T) {
 				checkRemoteConfigDirectoryCreated,
 				checkTokenInSumoConfig,
 				checkEphemeralNotInConfig(configPath),
-				checkClobberInConfig(configPath),
+				checkClobberInSumoConfig(configPath),
 			},
 		},
 	} {

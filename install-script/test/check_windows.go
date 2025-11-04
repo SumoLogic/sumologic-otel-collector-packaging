@@ -89,7 +89,7 @@ func checkEphemeralInConfig(p string) func(c check) bool {
 	}
 }
 
-func checkClobberInConfig(p string) func(c check) bool {
+func checkClobberInSumoConfig(p string) func(c check) bool {
 	return func(c check) bool {
 		assert.True(c.test, c.installOptions.clobber, "clobber was not specified")
 
