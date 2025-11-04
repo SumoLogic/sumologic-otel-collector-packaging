@@ -45,6 +45,10 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "-Ephemeral", "1")
 	}
 
+	if io.clobber {
+		opts = append(opts, "-Clobber", "1")
+	}
+
 	if len(io.tags) > 0 {
 		opts = append(opts, "-Tags", getTagOptValue(io.tags))
 	}
