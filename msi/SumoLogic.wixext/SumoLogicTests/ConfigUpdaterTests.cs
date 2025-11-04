@@ -529,7 +529,7 @@ namespace SumoLogicTests
         public void TestUpdate_Clobber()
         {
             var filePath = Path.Combine(testDataPath, "with-extensions-block.yaml");
-            var config = new Config { InstallationToken = "foobar", Clobber = "true" };
+            var config = new Config { InstallationToken = "foobar", Clobber = true };
             config.SetCollectorFieldsFromTags(@"foo=bar,baz=kaz,xaz=yaz");
 
             using (MemoryStream ms = new MemoryStream())
