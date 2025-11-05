@@ -145,6 +145,44 @@ func TestInstallScript(t *testing.T) {
 				checkTags,
 			},
 		},
+		{
+			name: "installation token and clobber",
+			options: installOptions{
+				installToken: installToken,
+				clobber:      true,
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInConfig,
+				checkEphemeralNotInConfig(userConfigPath),
+				checkHostmetricsConfigNotCreated,
+				checkClobberInSumoConfig(userConfigPath),
+			},
+		},
+		{
+			name: "installation token, remotely-managed, and clobber",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				clobber:         true,
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkRemoteConfigDirectoryCreated,
+				checkTokenInSumoConfig,
+				checkEphemeralNotInConfig(configPath),
+				checkClobberInSumoConfig(configPath),
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {

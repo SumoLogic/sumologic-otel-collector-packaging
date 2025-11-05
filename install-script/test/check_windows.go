@@ -89,6 +89,20 @@ func checkEphemeralInConfig(p string) func(c check) bool {
 	}
 }
 
+func checkClobberInSumoConfig(p string) func(c check) bool {
+	return func(c check) bool {
+		assert.True(c.test, c.installOptions.clobber, "clobber was not specified")
+
+		conf, err := getConfig(p)
+		if !assert.NoError(c.test, err, "error while reading configuration") {
+			return false
+		}
+
+		assert.True(c.test, conf.Extensions.Sumologic.Clobber, "clobber is not true")
+		return true
+	}
+}
+
 func checkTokenInConfig(c check) bool {
 	if !assert.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided") {
 		return false
