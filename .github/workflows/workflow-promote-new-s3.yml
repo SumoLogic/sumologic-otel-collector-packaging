@@ -1,0 +1,97 @@
+#################################################################################
+# New S3 bucket promotion workflow
+# Promotes artifacts and updates latest_version in new S3 bucket format
+#################################################################################
+
+name: Workflow - Promote New S3
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      source-channel:
+        description: Source channel (ci-builds, release-candidates)
+        type: string
+        required: true
+      destination-channel:
+        description: Destination channel (release-candidates, stable)
+        type: string
+        required: true
+      version:
+        description: Package version to promote
+        type: string
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  promote:
+    name: New S3 Promotion
+    runs-on: ubuntu-24.04
+    env:
+      AWS_ACCESS_KEY_ID_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
+      PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install packagecloud-go
+        run: go install github.com/amdprophet/packagecloud-go/cmd/packagecloud@v0.5.0
+
+      - name: Add GOPATH bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Output S3 bucket mappings
+        id: s3-buckets-osc
+        run: |
+          cat >> "$GITHUB_OUTPUT" <<'EOF'
+          otel_builds_bucket_ci-builds=sumo-otel-builds-dev-c64ec98a
+          otel_builds_bucket_release-candidates=sumo-otel-builds-rc-6d7808fb
+          otel_builds_bucket_stable=sumo-otel-builds-c8665146
+          EOF
+
+      - name: "Promote artifacts: Copy artifacts to destination (new S3)"
+        uses: ./.github/actions/aws-s3-push
+        with:
+          file_path: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['source-channel']) ] }}/${{ inputs.version }}"
+          s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/${{ inputs.version }}"
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY_OSC }}
+          recursive: "true"
+
+      - name: Get latest package version (destination channel)
+        id: latest-destination
+        run: |
+          repo="sumologic/${{ inputs.destination-channel }}"
+          name="otelcol-sumo"
+          packagecloud versions latest "${repo}" "${name}" | tee version
+
+          echo "version=$(cat version)" >> "$GITHUB_OUTPUT"
+
+      # NOTE: Always set the latest_version file in the destination bucket to
+      # to the latest version found in the destination Packagecloud repository.
+      # The latest version won't always match what is being promoted. This
+      # ensures that re-running the promotion workflow will fix cases where
+      # latest_version in the destination bucket does not match the latest
+      # package version in the destination Packagecloud repository. This can
+      # only happen if the workflow fails before updating latest_version in the
+      # destination bucket but after one or more packages have been promoted.
+      - name: Set latest version to latest (destination channel)
+        run: |
+          version="${{ steps.latest-destination.outputs.version }}"
+          file="latest_version"
+
+          echo "${version}" > "${file}"
+
+      - name: Upload latest version to S3 target (new destination channel)
+        uses: ./.github/actions/aws-s3-push
+        with:
+          file_path: "latest_version"
+          s3_uri: "s3://${{ steps['s3-buckets-osc'].outputs[ format('otel_builds_bucket_{0}', inputs['destination-channel']) ] }}/latest_version"
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID_OSC }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY_OSC }}
+          content_type: "plain"
