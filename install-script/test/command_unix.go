@@ -30,6 +30,7 @@ type installOptions struct {
 	version            string
 	timezone           string
 	packagePath        string
+	clobber            bool
 }
 
 func (io *installOptions) string() []string {
@@ -72,6 +73,10 @@ func (io *installOptions) string() []string {
 
 	if io.timezone != "" {
 		opts = append(opts, "--timezone", io.timezone)
+	}
+
+	if io.clobber {
+		opts = append(opts, "--clobber")
 	}
 
 	if len(io.tags) > 0 {
