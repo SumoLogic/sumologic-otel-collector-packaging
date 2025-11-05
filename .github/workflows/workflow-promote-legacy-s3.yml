@@ -1,5 +1,5 @@
 #################################################################################
-# Legacy S3 bucket promotion workflow  
+# Legacy S3 bucket promotion workflow
 # Promotes artifacts and updates latest_version in old S3 bucket format
 #################################################################################
 
@@ -35,7 +35,6 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 

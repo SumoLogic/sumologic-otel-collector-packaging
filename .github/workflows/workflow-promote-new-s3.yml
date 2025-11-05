@@ -35,7 +35,6 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY_OSC: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
-      PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
