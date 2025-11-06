@@ -10,8 +10,9 @@ const (
 	GithubAppRepository = "sumologic-otel-collector"
 	GithubApiBaseUrl    = "https://api.github.com"
 
-	mockAPIBaseURL  = "http://127.0.0.1:3333"
-	emptyAPIBaseURL = "empty"
+	StagingInstallationLogfileEndpoint = "https://stag-open-events.sumologic.net/api/v1/collector/installation/logs"
+	mockAPIBaseURL                     = "http://127.0.0.1:3333"
+	emptyAPIBaseURL                    = "empty"
 )
 
 func authenticateGithub() string {

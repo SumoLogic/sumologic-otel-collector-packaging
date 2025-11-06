@@ -35,6 +35,14 @@ param (
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
 
+    # DidsableIntallationTelemetry is used to disable reporting the installation
+    # to Sumologic.
+    [bool] $DisableInstallationTelemetry,
+
+    # InstallationLogfileEndpoint is used to configure the endpoint where
+    # installation logs will be sent.
+    [string] $InstallationLogfileEndpoint,
+    
     # The OpAmp Endpoint used to communicate with the OpAmp backend
     [string] $OpAmpApi,
 
@@ -346,11 +354,59 @@ function Get-BinaryFromURI {
     Write-Host "Downloaded ${Path}"
 }
 
-##
+function Send-Installation-Logs {
+    param (
+        [Parameter(Mandatory, Position=0)]
+        [HttpClient] $HttpClient,
+
+        [Parameter(Mandatory, Position=1)]
+        [string] $Endpoint,
+
+        [Parameter(Mandatory, Position=2)]
+        [string] $Path
+    )
+
+    $Content = Get-Content -Path $Path
+    $StringContent = [System.Net.Http.StringContent]::new($Content)
+
+    $response = $HttpClient.PostAsync($Endpoint, $StringContent).GetAwaiter().GetResult()
+    if (!($response.IsSuccessStatusCode)) {
+        $statusCode = [int]$response.StatusCode
+        $reasonPhrase = $response.StatusCode.ToString()
+        $errMsg = "${statusCode} ${reasonPhrase}"
+
+        if ($response.Content -ne $null) {
+            $content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+            $errMsg += ": ${content}"
+        }
+
+        Write-Error -Message $errMsg
+    }
+}#
+#
 # Main code
 ##
 
 try {
+    $InstallationLogFile = New-TemporaryFile
+
+    if ($InstallationLogFileEndpoint -eq "") {
+        ## https://sumologic.atlassian.net/wiki/spaces/MAIN/pages/1601341782/Production+Deployments+and+More#ProductionDeploymentsandMore-StagingDeployments
+        $InstallationLogFileEndpoint = "https://open-collectors.sumologic.com/api/v1/collector/installation/logs"
+    }
+
+    Start-Transcript $InstallationLogFile | Out-Null
+
+    $handler = New-Object HttpClientHandler
+    $handler.AllowAutoRedirect = $true
+
+    $httpClient = New-Object System.Net.Http.HttpClient($handler)
+    $userAgentHeader = New-Object System.Net.Http.Headers.ProductInfoHeaderValue("otelcol-sumo-installer", "0.1")
+    $httpClient.DefaultRequestHeaders.UserAgent.Add($userAgentHeader)
+
+    # set http client timeout to 30 seconds
+    $httpClient.Timeout = New-Object System.TimeSpan(0, 0, 30)
+
     if ($InstallationToken -eq $null -or $InstallationToken -eq "") {
         Write-Error "Installation token has not been provided. Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable." -ErrorAction Stop
     }
@@ -372,16 +428,6 @@ try {
         $archName = $OverrideArch
         Write-Host "Architecture overridden: `t${archName}"
     }
-
-    $handler = New-Object HttpClientHandler
-    $handler.AllowAutoRedirect = $true
-
-    $httpClient = New-Object System.Net.Http.HttpClient($handler)
-    $userAgentHeader = New-Object System.Net.Http.Headers.ProductInfoHeaderValue("otelcol-sumo-installer", "0.1")
-    $httpClient.DefaultRequestHeaders.UserAgent.Add($userAgentHeader)
-
-    # set http client timeout to 30 seconds
-    $httpClient.Timeout = New-Object System.TimeSpan(0, 0, 30)
 
     if ($Fips -eq $true) {
         if ($osName -ne "Win32NT" -or $archName -ne "x64") {
@@ -473,6 +519,15 @@ try {
     msiexec.exe /i "$msiPath" /passive $msiProperties
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
+} finally {
+    Stop-Transcript | Out-Null
+
+    if ($DisableInstallationTelemetry -eq $false) {
+        Send-Installation-Logs -Endpoint $InstallationLogFileEndpoint -Path $InstallationLogFile -HttpClient $httpClient
+    }
+
+    Remove-Item $InstallationLogFile
+
 }
 
 Write-Host "Installation successful"

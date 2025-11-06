@@ -1,23 +1,32 @@
 package sumologic_scripts_tests
 
 import (
+	"context"
 	"io/fs"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
+type mockInstallationLogsEndpoint struct {
+	server       *http.Server
+	receivedData bool
+}
 type check struct {
-	test                *testing.T
-	installOptions      installOptions
-	code                int
-	err                 error
-	expectedInstallCode int
-	output              []string
-	errorOutput         []string
+	test                     *testing.T
+	installationLogsEndpoint *mockInstallationLogsEndpoint
+	installOptions           installOptions
+	code                     int
+	err                      error
+	expectedInstallCode      int
+	output                   []string
+	errorOutput              []string
 }
 
 type condCheckFunc func(check) bool
@@ -274,4 +283,47 @@ func PathHasUserACL(t *testing.T, path string, ownerName string, perms string) b
 		return false
 	}
 	return assert.Contains(t, string(output), "user:"+ownerName+":"+perms)
+}
+
+func preActionStartInstallationLogsMockReceiver(c check) bool {
+	c.test.Log("Starting mock installation logs endpoint")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && r.ContentLength >= 1 {
+			c.installationLogsEndpoint.receivedData = true
+		}
+	})
+
+	listener, err := net.Listen("tcp", ":4444")
+	require.NoError(c.test, err)
+
+	c.installationLogsEndpoint.server = &http.Server{
+		Handler: mux,
+	}
+
+	go func() {
+		err := c.installationLogsEndpoint.server.Serve(listener)
+		if err != nil && err != http.ErrServerClosed {
+			require.NoError(c.test, err)
+		}
+	}()
+
+	return true
+}
+
+func checkInstallationLogsReceived(c check) bool {
+	require.Equal(c.test, true, c.installationLogsEndpoint.receivedData, "mock installation logs endpoint should have received data but didn't")
+
+	c.test.Log("Stopping mock installation logs endpoint")
+	require.NoError(c.test, c.installationLogsEndpoint.server.Shutdown(context.Background()))
+	return true
+}
+
+func checkInstallationLogsNotReceived(c check) bool {
+	require.Equal(c.test, false, c.installationLogsEndpoint.receivedData, "mock installation logs endpoint received data but shouldn't have")
+
+	c.test.Log("Stopping mock installation logs endpoint")
+	require.NoError(c.test, c.installationLogsEndpoint.server.Shutdown(context.Background()))
+	return true
 }

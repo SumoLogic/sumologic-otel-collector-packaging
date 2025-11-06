@@ -14,9 +14,10 @@ var commonPostChecks = []checkFunc{checkNoBakFilesPresent}
 
 func runTest(t *testing.T, spec *testSpec) (fErr error) {
 	ch := check{
-		test:                t,
-		installOptions:      spec.options,
-		expectedInstallCode: spec.installCode,
+		test:                     t,
+		installationLogsEndpoint: new(mockInstallationLogsEndpoint),
+		installOptions:           spec.options,
+		expectedInstallCode:      spec.installCode,
 	}
 
 	t.Log("Running conditional checks")

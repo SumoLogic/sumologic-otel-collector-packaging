@@ -56,6 +56,10 @@ ARG_SHORT_CLOBBER='C'
 ARG_LONG_CLOBBER='clobber'
 ARG_SHORT_PACKAGE_PATH='P'
 ARG_LONG_PACKAGE_PATH='package-path'
+ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY='S'
+ARG_LONG_DISABLE_INSTALLATION_TELEMETRY='disable-installation-telemetry'
+ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT='l'
+ARG_LONG_INSTALLATION_LOGFILE_ENDPOINT='installation-logfile-endpoint'
 
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
@@ -73,6 +77,8 @@ readonly ARG_SHORT_TIMEZONE ARG_LONG_TIMEZONE
 readonly ARG_SHORT_CLOBBER ARG_LONG_CLOBBER
 readonly ARG_SHORT_PACKAGE_PATH ARG_LONG_PACKAGE_PATH
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
+readonly ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY ARG_LONG_DISABLE_INSTALLATION_TELEMETRY
+readonly ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT ARG_LONG_INSTALLATION_LOGFILE_ENDPOINT
 
 ############################ Variables (see set_defaults function for default values)
 
@@ -138,6 +144,11 @@ PACKAGECLOUD_MASTER_TOKEN="${PACKAGECLOUD_MASTER_TOKEN:-}"
 # built and not the latest package uploaded to S3.
 DARWIN_PKG_URL="${DARWIN_PKG_URL:-}"
 
+
+DISABLE_INSTALLATION_TELEMETRY=false
+INSTALLATION_LOGFILE="${TMPDIR:=/tmp}/sumologic-otel-collector_installation.log"
+INSTALLATION_LOGFILE_ENDPOINT='https://open-collectors.sumologic.com/api/v1/collector/installation/logs'
+
 ############################ Functions
 
 function usage() {
@@ -173,6 +184,7 @@ Supported arguments:
   -${ARG_SHORT_CLOBBER}, --${ARG_LONG_CLOBBER}                           Overwrite existing installation without asking for confirmation.
   -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
+  -${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}, --${ARG_LONG_DISABLE_INSTALLATION_TELEMETRY}  Do not report installation logs to Sumologic.
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
 
@@ -180,6 +192,18 @@ Supported env variables:
   ${ENV_TOKEN}=<token>       Installation token.'
 EOF
 }
+
+# shellcheck disable=SC2317  # Don't warn about unreachable commands in this function
+# ShellCheck may incorrectly believe that code is unreachable if it's invoked in
+# a trap, like the reporter function.
+function reporter {
+    if ! $DISABLE_INSTALLATION_TELEMETRY; then
+        echo "SUMOLOGIC_INSTALLATION_TOKEN=${SUMOLOGIC_INSTALLATION_TOKEN}" >> "$INSTALLATION_LOGFILE"
+        curl --silent --location -X POST --data-binary @"${INSTALLATION_LOGFILE}" "${INSTALLATION_LOGFILE_ENDPOINT}"
+        rm -f "${INSTALLATION_LOGFILE}"
+    fi
+}
+trap reporter EXIT
 
 function set_defaults() {
     DOWNLOAD_CACHE_DIR="/var/cache/otelcol-sumo"  # this is in case we want to keep downloaded binaries
@@ -269,7 +293,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}"|"-${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}"|"-${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -290,6 +314,12 @@ function parse_options() {
       "--${ARG_LONG_PACKAGE_PATH}")
         set -- "$@" "-${ARG_SHORT_PACKAGE_PATH}"
         ;;
+      "--${ARG_LONG_DISABLE_INSTALLATION_TELEMETRY}")
+        set -- "$@" "-${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}"
+        ;;
+      "--${ARG_LONG_INSTALLATION_LOGFILE_ENDPOINT}")
+        set -- "$@" "-${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}"
+        ;;
       -*)
         echo "Unknown option ${arg}"; usage; exit 2 ;;
       *)
@@ -302,7 +332,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -314,7 +344,7 @@ function parse_options() {
 
     # Validate opt and set arguments
     case "$opt" in
-      "${ARG_SHORT_HELP}")          usage; exit 0 ;;
+      "${ARG_SHORT_HELP}")          usage; DISABLE_INSTALLATION_TELEMETRY=true exit 0 ;;
       "${ARG_SHORT_TOKEN}")         SUMOLOGIC_INSTALLATION_TOKEN="${OPTARG}" ;;
       "${ARG_SHORT_API}")           API_BASE_URL="${OPTARG}" ;;
       "${ARG_SHORT_OPAMP_API}")     OPAMP_API_URL="${OPTARG}" ;;
@@ -339,6 +369,8 @@ function parse_options() {
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
       "${ARG_SHORT_TIMEZONE}") TIMEZONE="${OPTARG}" ;;
       "${ARG_SHORT_CLOBBER}") CLOBBER=true ;;
+      "${ARG_SHORT_DISABLE_INSTALLATION_TELEMETRY}") DISABLE_INSTALLATION_TELEMETRY=true ;;
+      "${ARG_SHORT_INSTALLATION_LOGFILE_ENDPOINT}")  INSTALLATION_LOGFILE_ENDPOINT="${OPTARG}" ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
       "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
@@ -1133,6 +1165,10 @@ function get_user_token() {
 
 
 ############################ Main code
+
+# Redirect a copy of stdout and stderr into $INSTALLATION_LOGFILE
+exec > >(tee "${INSTALLATION_LOGFILE}") 2>&1
+
 
 if [ "${S3_BUCKET}" = "sumologic-osc-stable" ]; then
     DOWNLOAD_URI="$CDN_URI"
