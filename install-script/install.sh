@@ -193,9 +193,10 @@ Supported env variables:
 EOF
 }
 
-# shellcheck disable=SC2317  # Don't warn about unreachable commands in this function
+# Don't warn about unreachable commands in this function
 # ShellCheck may incorrectly believe that code is unreachable if it's invoked in
 # a trap, like the reporter function.
+# shellcheck disable=SC2317,SC2119,SC2120,SC2317,SC2329,SC1072,SC1073,SC1125
 function reporter {
     if ! $DISABLE_INSTALLATION_TELEMETRY; then
         echo "SUMOLOGIC_INSTALLATION_TOKEN=${SUMOLOGIC_INSTALLATION_TOKEN}" >> "$INSTALLATION_LOGFILE"
