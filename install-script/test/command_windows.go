@@ -16,6 +16,7 @@ type installOptions struct {
 	envs               map[string]string
 	apiBaseURL         string
 	installHostmetrics bool
+	packagePath        string
 	remotelyManaged    bool
 	ephemeral          bool
 	version            string
@@ -57,6 +58,10 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "-Api", io.apiBaseURL)
 	} else {
 		opts = append(opts, "-Api", mockAPIBaseURL)
+	}
+
+	if io.packagePath != "" {
+		opts = append(opts, "-PackagePath", io.packagePath)
 	}
 
 	otc_version := os.Getenv("OTC_VERSION")
