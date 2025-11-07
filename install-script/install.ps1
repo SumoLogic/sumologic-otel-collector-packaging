@@ -35,7 +35,7 @@ param (
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
 
-    # DidsableIntallationTelemetry is used to disable reporting the installation
+    # DisableIntallationTelemetry is used to disable reporting the installation
     # to Sumologic.
     [bool] $DisableInstallationTelemetry,
 
@@ -380,7 +380,6 @@ function Send-Installation-Logs {
             $errMsg += ": ${content}"
         }
 
-        Write-Error -Message $errMsg
     }
 }#
 #
@@ -391,7 +390,6 @@ try {
     $InstallationLogFile = New-TemporaryFile
 
     if ($InstallationLogFileEndpoint -eq "") {
-        ## https://sumologic.atlassian.net/wiki/spaces/MAIN/pages/1601341782/Production+Deployments+and+More#ProductionDeploymentsandMore-StagingDeployments
         $InstallationLogFileEndpoint = "https://open-collectors.sumologic.com/api/v1/collector/installation/logs"
     }
 
@@ -409,7 +407,7 @@ try {
 
     if ($InstallationToken -eq $null -or $InstallationToken -eq "") {
         Write-Error "Installation token has not been provided. Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable." -ErrorAction Stop
-    }
+    } 
 
     $osName = Get-OSName
     Write-Host "Detected OS type:`t${osName}"
@@ -521,7 +519,9 @@ try {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 } finally {
     Stop-Transcript | Out-Null
-
+     if ($InstallationToken -eq $true) {
+        Add-Content -Path $InstallationLogFile.FullName -Value $InstallationToken
+    }
     if ($DisableInstallationTelemetry -eq $false) {
         Send-Installation-Logs -Endpoint $InstallationLogFileEndpoint -Path $InstallationLogFile -HttpClient $httpClient
     }
