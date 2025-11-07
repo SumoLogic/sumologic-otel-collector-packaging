@@ -35,7 +35,7 @@ param (
     # The API URL used to communicate with the SumoLogic backend
     [string] $Api,
 
-    # DisableIntallationTelemetry is used to disable reporting the installation
+    # DisableInstallationTelemetry is used to disable reporting the installation
     # to Sumologic.
     [bool] $DisableInstallationTelemetry,
 
