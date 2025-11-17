@@ -182,7 +182,6 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 			},
 		},
-
 		{
 			name: "locally-managed and timezone",
 			options: installOptions{
@@ -196,6 +195,42 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryIsRunning,
 				checkConfigCreated,
 				checkTimezoneInConfig,
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
+		{
+			name: "installation token, locally-managed, and clobber",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: false,
+				clobber:         true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+				checkClobberInConfig,
+			},
+		},
+		{
+			name: "installation token, remotely-managed and clobber",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				clobber:         true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkClobberEnabledInRemote(sumoRemotePath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkHostmetricsConfigNotCreated,
 				checkTokenEnvFileCreated,
 			},
