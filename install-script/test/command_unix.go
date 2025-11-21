@@ -12,25 +12,31 @@ import (
 )
 
 type installOptions struct {
-	installToken       string
-	autoconfirm        bool
-	tags               map[string]string
-	skipInstallToken   bool
-	fips               bool
-	envs               map[string]string
-	uninstall          bool
-	apiBaseURL         string
-	installHostmetrics bool
-	remotelyManaged    bool
-	ephemeral          bool
-	timeout            float64
-	opampEndpoint      string
-	downloadOnly       bool
-	dontKeepDownloads  bool
-	version            string
-	timezone           string
-	packagePath        string
-	clobber            bool
+	skipSystemd                  bool
+	skipConfig                   bool
+	purge                        bool
+	configBranch                 string
+	disableInstallationTelemetry bool
+	installationLogfileEndpoint  string
+	installToken                 string
+	autoconfirm                  bool
+	tags                         map[string]string
+	skipInstallToken             bool
+	fips                         bool
+	envs                         map[string]string
+	uninstall                    bool
+	apiBaseURL                   string
+	installHostmetrics           bool
+	remotelyManaged              bool
+	ephemeral                    bool
+	timeout                      float64
+	opampEndpoint                string
+	downloadOnly                 bool
+	dontKeepDownloads            bool
+	version                      string
+	timezone                     string
+	packagePath                  string
+	clobber                      bool
 }
 
 func (io *installOptions) string() []string {
@@ -106,6 +112,16 @@ func (io *installOptions) string() []string {
 
 	if io.timeout != 0 {
 		opts = append(opts, "--download-timeout", fmt.Sprintf("%f", io.timeout))
+	}
+
+	if io.disableInstallationTelemetry {
+		opts = append(opts, "--disable-installation-telemetry")
+	}
+
+	if io.installationLogfileEndpoint == "" {
+		opts = append(opts, "--installation-logfile-endpoint", StagingInstallationLogfileEndpoint)
+	} else {
+		opts = append(opts, "--installation-logfile-endpoint", io.installationLogfileEndpoint)
 	}
 
 	if io.opampEndpoint != "" {

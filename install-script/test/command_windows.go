@@ -10,17 +10,19 @@ import (
 )
 
 type installOptions struct {
-	installToken       string
-	tags               map[string]string
-	fips               bool
-	envs               map[string]string
-	apiBaseURL         string
-	installHostmetrics bool
-	remotelyManaged    bool
-	ephemeral          bool
-	version            string
-	timezone           string
-	clobber            bool
+	installToken                 string
+	tags                         map[string]string
+	fips                         bool
+	envs                         map[string]string
+	apiBaseURL                   string
+	installHostmetrics           bool
+	remotelyManaged              bool
+	ephemeral                    bool
+	version                      string
+	timezone                     string
+	clobber                      bool
+	disableInstallationTelemetry bool
+	installationLogfileEndpoint  string
 }
 
 func (io *installOptions) string() []string {
@@ -57,6 +59,16 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "-Api", io.apiBaseURL)
 	} else {
 		opts = append(opts, "-Api", mockAPIBaseURL)
+	}
+
+	if io.disableInstallationTelemetry {
+		opts = append(opts, "-DisableInstallationTelemetry")
+	}
+
+	if io.installationLogfileEndpoint == "" {
+		opts = append(opts, "-InstallationLogfileEndpoint", StagingInstallationLogfileEndpoint)
+	} else {
+		opts = append(opts, "-InstallationLogfileEndpoint", io.installationLogfileEndpoint)
 	}
 
 	otc_version := os.Getenv("OTC_VERSION")
