@@ -22,3 +22,8 @@ install-script/test/sumologic_scripts_tests.test
 
 # 1Password
 .op/
+
+#Make cache files
+CMakeFiles/*
+*/CMakeFiles/*
+CMakeCache.txt

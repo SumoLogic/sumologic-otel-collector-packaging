@@ -78,8 +78,8 @@ jobs:
       build_tool: ${{ matrix.build_tool }}
       fips: ${{ matrix.fips || false }}
     secrets:
-      apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
-      apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+      apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64_NOV_25 }}
+      apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD_NOV_25 }}
       productbuild_identity_name: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
       microsoft_certificate: ${{ secrets.MICROSOFT_CERTIFICATE }}
