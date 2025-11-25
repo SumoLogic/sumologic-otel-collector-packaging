@@ -2,5 +2,5 @@ paths:
   .github/workflows/_reusable_build_package.yml:
     ignore:
       - 'property "package_name" is not defined in object type {}'
-      - 'could not parse action metadata in "**/ci/github-actions/cmake": line 6: unexpected key "type" for definition of input "gh_token"'
-      - 'could not parse action metadata in "**/ci/github-actions/make": line 6: unexpected key "type" for definition of input "aws-secret-access-key-new"'
+      - 'could not parse action metadata in "*/ci/github-actions/cmake": line 6: unexpected key "type" for definition of input "gh_token"'
+      - 'could not parse action metadata in "*/ci/github-actions/make": line 6: unexpected key "type" for definition of input "aws-secret-access-key-new"'
