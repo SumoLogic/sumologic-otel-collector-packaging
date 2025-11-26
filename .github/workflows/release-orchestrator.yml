@@ -343,7 +343,7 @@ jobs:
           ## 📝 Next Steps
 
           1. **Publish [Collector Release](https://github.com/SumoLogic/sumologic-otel-collector/releases) FIRST** ⚠️
-             - Add upstream OT versions & changelog → Publish (triggers `post-release.yml` for package tags)
+             - Add upstream OT versions & changelog → Publish (triggers post-release.yml for package tags)
           2. **Verify** [post-release workflow](https://github.com/SumoLogic/sumologic-otel-collector/actions/workflows/post-release.yml) created package tags
           3. **Publish** [Packaging Release](https://github.com/SumoLogic/sumologic-otel-collector-packaging/releases)
           4. **Publish** [Containers Release](https://github.com/SumoLogic/sumologic-otel-collector-containers/releases)
