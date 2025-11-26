@@ -20,6 +20,7 @@ type installOptions struct {
 	ephemeral          bool
 	version            string
 	timezone           string
+	clobber            bool
 }
 
 func (io *installOptions) string() []string {
@@ -42,6 +43,10 @@ func (io *installOptions) string() []string {
 
 	if io.ephemeral {
 		opts = append(opts, "-Ephemeral", "1")
+	}
+
+	if io.clobber {
+		opts = append(opts, "-Clobber", "1")
 	}
 
 	if len(io.tags) > 0 {
