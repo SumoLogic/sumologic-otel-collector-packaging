@@ -319,7 +319,7 @@ jobs:
     steps:
       - name: Generate summary
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" << 'EOF'
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
 
           **Build Number**: ${{ inputs.package_build_number }}
           **Package Version**: ${{ needs.validate-and-discover.outputs.package-version }}
