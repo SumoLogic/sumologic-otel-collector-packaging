@@ -2,7 +2,7 @@
 
 - [How to release](#how-to-release)
   - [Check end-to-end tests](#check-end-to-end-tests)
-  - [Find the package build number](#find-the-package-build-number)
+  - [Find the package version](#find-the-package-version)
   - [Trigger the release orchestrator](#trigger-the-release-orchestrator)
   - [Publish GitHub releases](#publish-github-releases)
 
@@ -15,39 +15,48 @@ Check if the Sumo internal e2e tests are passing.
 We can begin the process of creating a release once QE has given a thumbs up for
 a given package version.
 
-### Find the package build number
+### Find the package version
 
-Each package has a build number and it's included in the package version & filename.
-For example, if the package version that QE validates is 0.108.0-1790 then the
-build number is **1790**.
-
-This build number is all you need to trigger the release process!
+Each package has a version that includes the build number in the format X.Y.Z-BUILD.
+For example, if the package version that QE validates is **0.108.0-1790**, this is
+the complete version you need to trigger the release process.
 
 ### Trigger the release orchestrator
 
 The [Release Orchestrator][release_orchestrator_workflow] workflow automates the
-entire release process. It will automatically:
+entire release process. It will:
 
-1. Find and validate all related workflow runs (collector, packaging, containers)
-2. Create draft releases for all three repositories
-3. Promote packaging release candidates to stable
+1. Validate the package version format and find all related workflow runs
+2. Promote packaging release candidate to stable (waits for completion)
+3. Trigger and wait for draft release workflows for all three repositories (collector, packaging, containers)
 4. Provide a summary with links to all releases
+
+**Execution Order** (sequential with completion waits):
+
+1. Packaging RC→Stable promotion (10 min timeout, 30 sec polling)
+2. Collector draft release (10 min timeout, 30 sec polling)
+3. Packaging draft release (10 min timeout, 30 sec polling)
+4. Containers draft release (10 min timeout, 30 sec polling)
+
+**Note**: The orchestrator triggers workflows and waits for their completion before proceeding to the next step.
+Each workflow has a 10-minute timeout with 30-second polling intervals. The orchestrator will fail if any workflow
+doesn't complete within its timeout period.
 
 There are two methods to trigger the orchestrator:
 
 #### Option 1 - Use the `gh` cli tool to trigger the release
 
-Run the following command (replace `BUILD_NUMBER` with the build number from QE):
+Run the following command (replace `VERSION` with the package version from QE):
 
 ```shell
-PAGER=""; BUILD_NUMBER="1790"; \
+PAGER=""; VERSION="0.108.0-1790"; \
 gh workflow run release-orchestrator.yml \
--R sumologic/sumologic-otel-collector-packaging -f "package_build_number=${BUILD_NUMBER}"
+-R sumologic/sumologic-otel-collector-packaging -f "package_version=${VERSION}"
 ```
 
 The status of running workflows can be viewed with the `gh run watch` command.
 You will have to manually select the correct workflow run. The name of the run
-should have a title similar to `Release Orchestrator for Build: 1790`. Once you
+should have a title similar to `Release Orchestrator for Version: 0.108.0-1790`. Once you
 have selected the correct run the screen will periodically update to show the
 status of the run's jobs.
 
@@ -55,11 +64,11 @@ status of the run's jobs.
 
 Navigate to the [Release Orchestrator][release_orchestrator_workflow] workflow in
 GitHub Actions. Find and click the `Run workflow` button on the right-hand side
-of the page. Enter the package build number (e.g., 1790) and click the green
+of the page. Enter the package version (e.g., 0.108.0-1790) and click the green
 `Run workflow` button.
 
-The workflow will automatically discover the related workflow IDs and orchestrate
-the entire release process across all three repositories.
+The workflow will discover the related workflow IDs, trigger releases across
+all three repositories, and wait for each to complete before proceeding to the next step.
 
 ### Publish GitHub releases
 
@@ -102,14 +111,18 @@ their current status.
 If the orchestrator workflow fails at any step, check the workflow logs for details.
 Common issues include:
 
-- **Packaging workflow not found**: Verify the build number is correct and the
+- **Invalid version format**: Verify the package version follows the X.Y.Z-BUILD format
+  (e.g., 0.108.0-1790)
+- **Packaging workflow not found**: Verify the version is correct and the
   packaging workflow completed successfully
 - **Collector workflow ID not found**: Check the packaging workflow's display title
   contains `Build for Remote Workflow: <ID>`
 - **Containers workflow not found**: Verify the containers workflow ran and references
   the collector workflow ID
-- **Workflow timeout**: The orchestrator retries for 60 seconds. If it still fails,
-  check the target repository's Actions page manually
+- **Promotion failure**: If packaging promotion fails, check the promote-release-candidate
+  workflow logs for details
+- **Workflow timeout**: If any workflow exceeds the 10-minute timeout, check that workflow's
+  logs in its respective repository. You may need to complete remaining steps manually.
 
 If any step fails, you can complete the remaining steps manually using the
 [manual release documentation](./release.md).
