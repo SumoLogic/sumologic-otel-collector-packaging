@@ -37,7 +37,7 @@ PKG_TITLE=$(echo "$PKG_RUN" | jq -r '.title')
 echo "packaging-workflow-id=${PKG_ID}" >> "$GITHUB_OUTPUT"
 
 # Extract collector workflow ID from packaging title
-COLLECTOR_ID=$(echo "$PKG_TITLE" | grep -oP 'Build for Remote Workflow: \K\d+')
+COLLECTOR_ID=$(echo "$PKG_TITLE" | sed -E 's/.*Build for Remote Workflow: ([0-9]+).*/\1/')
 
 if [[ -z "$COLLECTOR_ID" ]]; then
   echo "::error::Could not extract collector workflow ID from: ${PKG_TITLE}"
@@ -72,12 +72,14 @@ fi
 echo "containers-workflow-id=${CONTAINERS_ID}" >> "$GITHUB_OUTPUT"
 
 # Get collector version from artifacts
+TEMP_DIR=$(mktemp -d)
 if gh run download "${PKG_ID}" -R SumoLogic/sumologic-otel-collector-packaging \
-   -n "otc-version.txt" -n "otc-sumo-version.txt" -D /tmp/versions 2>/dev/null; then
-  OTC_VERSION=$(cat /tmp/versions/otc-version.txt)
-  OTC_SUMO=$(cat /tmp/versions/otc-sumo-version.txt)
+   -n "otc-version.txt" -n "otc-sumo-version.txt" -D "$TEMP_DIR" 2>/dev/null; then
+  OTC_VERSION=$(cat "$TEMP_DIR/otc-version.txt/otc-version.txt")
+  OTC_SUMO=$(cat "$TEMP_DIR/otc-sumo-version.txt/otc-sumo-version.txt")
   COLLECTOR_VERSION="${OTC_VERSION}-sumo-${OTC_SUMO}"
   echo "collector-version=${COLLECTOR_VERSION}" >> "$GITHUB_OUTPUT"
+  rm -rf "$TEMP_DIR"
 fi
 
 echo "::notice::✓ Discovered workflows - Collector: ${COLLECTOR_ID}, Packaging: ${PKG_ID}, Containers: ${CONTAINERS_ID}"

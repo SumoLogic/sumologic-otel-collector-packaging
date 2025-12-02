@@ -91,7 +91,7 @@ jobs:
       - name: Generate summary
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" << 'EOF'
-          # 🚀 Release Orchestration Complete
+          # Release Orchestration Complete
 
           **Package Version**: ${{ inputs.package_version }}  
           **Collector Version**: ${{ needs.validate-and-discover.outputs.collector-version }}
@@ -99,16 +99,16 @@ jobs:
           ## Workflows Completed
 
           1. ✅ **Packaging Promotion** (${{ needs.promote-packaging-to-stable.result }})
-          2. ✅ **Collector Draft Release** (${{ needs.release-collector.result }}) - [Workflow ${{ needs.validate-and-discover.outputs.collector-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ needs.validate-and-discover.outputs.collector-workflow-id }})
-          3. ✅ **Packaging Draft Release** (${{ needs.release-packaging.result }}) - [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
-          4. ✅ **Containers Draft Release** (${{ needs.release-containers.result }}) - [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+          2. ✅ **Collector Draft Release** (${{ needs.release-collector.result }})
+          3. ✅ **Packaging Draft Release** (${{ needs.release-packaging.result }})
+          4. ✅ **Containers Draft Release** (${{ needs.release-containers.result }})
 
-          ## Next Steps - Publish Releases
+          ## Build Workflow References
 
-          1. **[Publish Collector Release](https://github.com/SumoLogic/sumologic-otel-collector/releases)** - Add changelog & publish (triggers post-release.yml)
-          2. **[Verify Package Tags](https://github.com/SumoLogic/sumologic-otel-collector/actions/workflows/post-release.yml)** - Confirm post-release workflow created tags
-          3. **[Publish Packaging Release](https://github.com/SumoLogic/sumologic-otel-collector-packaging/releases)**
-          4. **[Publish Containers Release](https://github.com/SumoLogic/sumologic-otel-collector-containers/releases)**
+          - **Collector Build**: [Workflow ${{ needs.validate-and-discover.outputs.collector-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ needs.validate-and-discover.outputs.collector-workflow-id }})
+          - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
+          - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+
           EOF
 
       - name: Check for failures
