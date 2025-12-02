@@ -27,20 +27,21 @@ The [Release Orchestrator][release_orchestrator_workflow] workflow automates the
 entire release process. It will:
 
 1. Validate the package version format and find all related workflow runs
-2. Promote packaging release candidate to stable (waits for completion)
-3. Trigger and wait for draft release workflows for all three repositories (collector, packaging, containers)
+2. Call packaging promotion workflow as a reusable workflow
+3. Call draft release workflows for all three repositories as reusable workflows (collector, packaging, containers)
 4. Provide a summary with links to all releases
 
-**Execution Order** (sequential with completion waits):
+**Execution Order** (sequential with automatic waiting):
 
-1. Packaging RC→Stable promotion (10 min timeout, 30 sec polling)
-2. Collector draft release (10 min timeout, 30 sec polling)
-3. Packaging draft release (10 min timeout, 30 sec polling)
-4. Containers draft release (10 min timeout, 30 sec polling)
+1. Packaging RC→Stable promotion
+2. Collector draft release
+3. Packaging draft release
+4. Containers draft release
 
-**Note**: The orchestrator triggers workflows and waits for their completion before proceeding to the next step.
-Each workflow has a 10-minute timeout with 30-second polling intervals. The orchestrator will fail if any workflow
-doesn't complete within its timeout period.
+**How it Works**: The orchestrator uses GitHub's `workflow_call` feature to invoke workflows
+across repositories as reusable workflows. This provides automatic waiting for completion -
+no polling needed. Each workflow runs to completion before the next one starts. If any workflow
+fails, the orchestrator stops and reports the failure.
 
 There are two methods to trigger the orchestrator:
 
@@ -67,8 +68,9 @@ GitHub Actions. Find and click the `Run workflow` button on the right-hand side
 of the page. Enter the package version (e.g., 0.108.0-1790) and click the green
 `Run workflow` button.
 
-The workflow will discover the related workflow IDs, trigger releases across
-all three repositories, and wait for each to complete before proceeding to the next step.
+The workflow will discover the related workflow IDs and call release workflows across
+all three repositories as reusable workflows. Each workflow automatically waits for completion
+before proceeding to the next step.
 
 ### Publish GitHub releases
 
@@ -121,8 +123,9 @@ Common issues include:
   the collector workflow ID
 - **Promotion failure**: If packaging promotion fails, check the promote-release-candidate
   workflow logs for details
-- **Workflow timeout**: If any workflow exceeds the 10-minute timeout, check that workflow's
-  logs in its respective repository. You may need to complete remaining steps manually.
+- **Workflow failure**: If any workflow fails, check that workflow's logs in its respective
+  repository. The orchestrator will stop at the failed step. You may need to complete
+  remaining steps manually using the [manual release documentation](./release.md).
 
 If any step fails, you can complete the remaining steps manually using the
 [manual release documentation](./release.md).

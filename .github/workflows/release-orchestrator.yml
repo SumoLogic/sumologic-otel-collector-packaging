@@ -32,318 +32,48 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Validate version and discover workflow IDs
         id: find-workflows
-        run: |
-          set -euo pipefail
-
-          VERSION="${{ inputs.package_version }}"
-
-          # Validate version format: X.Y.Z-BUILD
-          if [[ ! "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)$ ]]; then
-            echo "::error::Invalid version format. Expected: X.Y.Z-BUILD (e.g., 0.108.0-1790)"
-            exit 1
-          fi
-
-          BUILD_NUMBER="${BASH_REMATCH[2]}"
-          echo "::notice::Validating version ${VERSION} (Build: ${BUILD_NUMBER})"
-
-          # Find packaging workflow by build number
-          PKG_RUN=$(gh run list -R SumoLogic/sumologic-otel-collector-packaging \
-            -w build_packages.yml -s success -b main -L 200 \
-            --json databaseId,displayTitle,number \
-            -q ".[] | select(.number == ${BUILD_NUMBER}) | {id: .databaseId, title: .displayTitle}")
-
-          if [[ -z "$PKG_RUN" ]]; then
-            echo "::error::Packaging workflow not found for build: ${BUILD_NUMBER}"
-            exit 1
-          fi
-
-          PKG_ID=$(echo "$PKG_RUN" | jq -r '.id')
-          PKG_TITLE=$(echo "$PKG_RUN" | jq -r '.title')
-          echo "packaging-workflow-id=${PKG_ID}" >> "$GITHUB_OUTPUT"
-
-          # Extract collector workflow ID from packaging title
-          COLLECTOR_ID=$(echo "$PKG_TITLE" | grep -oP 'Build for Remote Workflow: \K\d+')
-
-          if [[ -z "$COLLECTOR_ID" ]]; then
-            echo "::error::Could not extract collector workflow ID from: ${PKG_TITLE}"
-            exit 1
-          fi
-
-          echo "collector-workflow-id=${COLLECTOR_ID}" >> "$GITHUB_OUTPUT"
-
-          # Verify collector workflow is successful
-          COLLECTOR_STATUS=$(gh run view "${COLLECTOR_ID}" -R SumoLogic/sumologic-otel-collector \
-            --json status,conclusion -q '{status: .status, conclusion: .conclusion}')
-
-          STATUS=$(echo "$COLLECTOR_STATUS" | jq -r '.status')
-          CONCLUSION=$(echo "$COLLECTOR_STATUS" | jq -r '.conclusion')
-
-          if [[ "$STATUS" != "completed" ]] || [[ "$CONCLUSION" != "success" ]]; then
-            echo "::error::Collector workflow ${COLLECTOR_ID} not successful (status: ${STATUS}, conclusion: ${CONCLUSION})"
-            exit 1
-          fi
-
-          # Find containers workflow by collector ID
-          CONTAINERS_ID=$(gh run list -R SumoLogic/sumologic-otel-collector-containers \
-            -w build-and-push.yml -s success -b main -L 200 \
-            --json databaseId,displayTitle \
-            -q ".[] | select(.displayTitle | contains(\"${COLLECTOR_ID}\")) | .databaseId" | head -n1)
-
-          if [[ -z "$CONTAINERS_ID" ]]; then
-            echo "::error::Containers workflow not found for collector: ${COLLECTOR_ID}"
-            exit 1
-          fi
-
-          echo "containers-workflow-id=${CONTAINERS_ID}" >> "$GITHUB_OUTPUT"
-
-          # Get collector version from artifacts
-          if gh run download "${PKG_ID}" -R SumoLogic/sumologic-otel-collector-packaging \
-             -n "otc-version.txt" -n "otc-sumo-version.txt" -D /tmp/versions 2>/dev/null; then
-            OTC_VERSION=$(cat /tmp/versions/otc-version.txt)
-            OTC_SUMO=$(cat /tmp/versions/otc-sumo-version.txt)
-            COLLECTOR_VERSION="${OTC_VERSION}-sumo-${OTC_SUMO}"
-            echo "collector-version=${COLLECTOR_VERSION}" >> "$GITHUB_OUTPUT"
-          fi
-
-          echo "::notice::✓ Discovered workflows - Collector: ${COLLECTOR_ID}, Packaging: ${PKG_ID}, Containers: ${CONTAINERS_ID}"
+        run: .github/ci/release-helper.sh "${{ inputs.package_version }}"
 
   promote-packaging-to-stable:
     name: Promote Packaging RC→Stable
-    runs-on: ubuntu-24.04
     needs: validate-and-discover
-    steps:
-      - name: Promote release-candidates to stable and wait
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const version = '${{ inputs.package_version }}';
-
-            // Helper function to wait for workflow completion
-            async function waitForWorkflow(owner, repo, workflowId, name, triggeredAfter) {
-              await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10s for workflow to start
-              const maxAttempts = 20; // 20 attempts × 30s = 10 minutes max
-
-              for (let i = 1; i <= maxAttempts; i++) {
-                const { data } = await github.rest.actions.listWorkflowRuns({
-                  owner, repo, workflow_id: workflowId, branch: 'main', per_page: 10
-                });
-
-                // Find the run that was created after we triggered it
-                const run = data.workflow_runs.find(r => new Date(r.created_at) >= triggeredAfter);
-                if (!run) {
-                  core.info(`Waiting for ${name} to start... (${i}/${maxAttempts})`);
-                } else if (run.status === 'completed') {
-                  if (run.conclusion === 'success') {
-                    core.info(`✓ ${name} completed successfully (run ID: ${run.id})`);
-                    return;
-                  }
-                  throw new Error(`${name} failed with conclusion: ${run.conclusion} (run ID: ${run.id})`);
-                } else {
-                  core.info(`${name} in progress... (${i}/${maxAttempts}, status: ${run.status})`);
-                }
-
-                if (i < maxAttempts) await new Promise(resolve => setTimeout(resolve, 30000));
-              }
-
-              throw new Error(`${name} did not complete within timeout (10 minutes)`);
-            }
-
-            // Capture timestamp before triggering
-            const triggeredAt = new Date();
-
-            // Trigger promotion workflow
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'SumoLogic',
-              repo: 'sumologic-otel-collector-packaging',
-              workflow_id: 'promote-release-candidate.yml',
-              ref: 'main',
-              inputs: {
-                version: version
-              }
-            });
-
-            core.info(`Triggered packaging promotion for version: ${version}`);
-            await waitForWorkflow('SumoLogic', 'sumologic-otel-collector-packaging', 'promote-release-candidate.yml', 'Promotion', triggeredAt);
+    uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/promote-release-candidate.yml@main
+    with:
+      version: ${{ inputs.package_version }}
+    secrets: inherit
 
   release-collector:
     name: Release Collector (Draft)
-    runs-on: ubuntu-24.04
     needs:
       - validate-and-discover
       - promote-packaging-to-stable
-    steps:
-      - name: Trigger collector release workflow and wait
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const workflowId = '${{ needs.validate-and-discover.outputs.collector-workflow-id }}';
-
-            // Helper function to wait for workflow completion
-            async function waitForWorkflow(owner, repo, workflowId, name, triggeredAfter) {
-              await new Promise(resolve => setTimeout(resolve, 10000));
-              const maxAttempts = 20; // 20 attempts × 30s = 10 minutes max
-
-              for (let i = 1; i <= maxAttempts; i++) {
-                const { data } = await github.rest.actions.listWorkflowRuns({
-                  owner, repo, workflow_id: workflowId, branch: 'main', per_page: 10
-                });
-
-                // Find the run that was created after we triggered it
-                const run = data.workflow_runs.find(r => new Date(r.created_at) >= triggeredAfter);
-                if (!run) {
-                  core.info(`Waiting for ${name} to start... (${i}/${maxAttempts})`);
-                } else if (run.status === 'completed') {
-                  if (run.conclusion === 'success') {
-                    core.info(`✓ ${name} completed successfully (run ID: ${run.id})`);
-                    return;
-                  }
-                  throw new Error(`${name} failed with conclusion: ${run.conclusion} (run ID: ${run.id})`);
-                } else {
-                  core.info(`${name} in progress... (${i}/${maxAttempts}, status: ${run.status})`);
-                }
-
-                if (i < maxAttempts) await new Promise(resolve => setTimeout(resolve, 30000));
-              }
-
-              throw new Error(`${name} did not complete within timeout (10 minutes)`);
-            }
-
-            // Capture timestamp before triggering
-            const triggeredAt = new Date();
-
-            // Trigger collector release workflow
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'SumoLogic',
-              repo: 'sumologic-otel-collector',
-              workflow_id: 'releases.yml',
-              ref: 'main',
-              inputs: { workflow_id: workflowId }
-            });
-
-            core.info(`Triggered collector release for workflow ID: ${workflowId}`);
-            await waitForWorkflow('SumoLogic', 'sumologic-otel-collector', 'releases.yml', 'Collector release', triggeredAt);
+    uses: SumoLogic/sumologic-otel-collector/.github/workflows/releases.yml@main
+    with:
+      workflow_id: ${{ needs.validate-and-discover.outputs.collector-workflow-id }}
+    secrets: inherit
 
   release-packaging:
     name: Create Packaging Draft Release
-    runs-on: ubuntu-24.04
     needs:
-      - validate-and-discover
       - release-collector
-    steps:
-      - name: Trigger packaging release workflow and wait
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const workflowId = '${{ needs.validate-and-discover.outputs.packaging-workflow-id }}';
-
-            // Helper function to wait for workflow completion
-            async function waitForWorkflow(owner, repo, workflowId, name, triggeredAfter) {
-              await new Promise(resolve => setTimeout(resolve, 10000));
-              const maxAttempts = 20; // 20 attempts × 30s = 10 minutes max
-
-              for (let i = 1; i <= maxAttempts; i++) {
-                const { data } = await github.rest.actions.listWorkflowRuns({
-                  owner, repo, workflow_id: workflowId, branch: 'main', per_page: 10
-                });
-
-                // Find the run that was created after we triggered it
-                const run = data.workflow_runs.find(r => new Date(r.created_at) >= triggeredAfter);
-                if (!run) {
-                  core.info(`Waiting for ${name} to start... (${i}/${maxAttempts})`);
-                } else if (run.status === 'completed') {
-                  if (run.conclusion === 'success') {
-                    core.info(`✓ ${name} completed successfully (run ID: ${run.id})`);
-                    return;
-                  }
-                  throw new Error(`${name} failed with conclusion: ${run.conclusion} (run ID: ${run.id})`);
-                } else {
-                  core.info(`${name} in progress... (${i}/${maxAttempts}, status: ${run.status})`);
-                }
-
-                if (i < maxAttempts) await new Promise(resolve => setTimeout(resolve, 30000));
-              }
-
-              throw new Error(`${name} did not complete within timeout (10 minutes)`);
-            }
-
-            // Capture timestamp before triggering
-            const triggeredAt = new Date();
-
-            // Trigger packaging release workflow
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'SumoLogic',
-              repo: 'sumologic-otel-collector-packaging',
-              workflow_id: 'releases.yml',
-              ref: 'main',
-              inputs: { workflow_id: workflowId }
-            });
-
-            core.info(`Triggered packaging release for workflow ID: ${workflowId}`);
-            await waitForWorkflow('SumoLogic', 'sumologic-otel-collector-packaging', 'releases.yml', 'Packaging release', triggeredAt);
+    uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/releases.yml@main
+    with:
+      workflow_id: ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}
+    secrets: inherit
 
   release-containers:
     name: Release Containers RC→Stable + Draft
-    runs-on: ubuntu-24.04
     needs:
-      - validate-and-discover
       - release-packaging
-    steps:
-      - name: Trigger containers release workflow and wait
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const workflowId = '${{ needs.validate-and-discover.outputs.containers-workflow-id }}';
-
-            // Helper function to wait for workflow completion
-            async function waitForWorkflow(owner, repo, workflowId, name, triggeredAfter) {
-              await new Promise(resolve => setTimeout(resolve, 10000));
-              const maxAttempts = 20; // 20 attempts × 30s = 10 minutes max
-
-              for (let i = 1; i <= maxAttempts; i++) {
-                const { data } = await github.rest.actions.listWorkflowRuns({
-                  owner, repo, workflow_id: workflowId, branch: 'main', per_page: 10
-                });
-
-                // Find the run that was created after we triggered it
-                const run = data.workflow_runs.find(r => new Date(r.created_at) >= triggeredAfter);
-                if (!run) {
-                  core.info(`Waiting for ${name} to start... (${i}/${maxAttempts})`);
-                } else if (run.status === 'completed') {
-                  if (run.conclusion === 'success') {
-                    core.info(`✓ ${name} completed successfully (run ID: ${run.id})`);
-                    return;
-                  }
-                  throw new Error(`${name} failed with conclusion: ${run.conclusion} (run ID: ${run.id})`);
-                } else {
-                  core.info(`${name} in progress... (${i}/${maxAttempts}, status: ${run.status})`);
-                }
-
-                if (i < maxAttempts) await new Promise(resolve => setTimeout(resolve, 30000));
-              }
-
-              throw new Error(`${name} did not complete within timeout (10 minutes)`);
-            }
-
-            // Capture timestamp before triggering
-            const triggeredAt = new Date();
-
-            // Trigger containers release workflow
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'SumoLogic',
-              repo: 'sumologic-otel-collector-containers',
-              workflow_id: 'releases.yml',
-              ref: 'main',
-              inputs: { 'workflow-id': workflowId }
-            });
-
-            core.info(`Triggered containers release for workflow ID: ${workflowId}`);
-            await waitForWorkflow('SumoLogic', 'sumologic-otel-collector-containers', 'releases.yml', 'Containers release', triggeredAt);
+    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/releases.yml@main
+    with:
+      workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
+    secrets: inherit
 
   release-summary:
     name: Release Summary
