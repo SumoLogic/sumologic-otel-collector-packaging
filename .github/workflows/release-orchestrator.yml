@@ -60,6 +60,7 @@ jobs:
   release-packaging:
     name: Create Packaging Draft Release
     needs:
+      - validate-and-discover
       - release-collector
     uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/releases.yml@main
     with:
@@ -69,6 +70,7 @@ jobs:
   release-containers:
     name: Release Containers RC→Stable + Draft
     needs:
+      - validate-and-discover
       - release-packaging
     uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/releases.yml@main
     with:
