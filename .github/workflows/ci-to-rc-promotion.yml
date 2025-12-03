@@ -1,7 +1,7 @@
 name: Promote CI to RC
 
 run-name: >
-  ${{ format('Promote CI to RC: {0}', inputs.version) }}
+  ${{ format('CI-to-RC Promotion for Version: {0}', inputs.version) }}
 
 on:
   workflow_dispatch:
@@ -38,7 +38,7 @@ jobs:
         run: .github/ci/ci-to-rc-helper.sh "${{ inputs.version }}"
 
   promote-packaging:
-    name: Promote Packaging (ci-builds → release-candidates)
+    name: Promote Packaging (ci → rc)
     needs: validate-and-discover
     uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/promote-ci-build.yml@main
     with:

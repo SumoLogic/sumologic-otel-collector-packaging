@@ -1,6 +1,6 @@
 # CI Build to Release Candidate Promotion
 
-- [How to promote CI builds to release candidates](#how-to-promote-ci-builds-to-release-candidates)
+- [How to promote CI builds to release candidates](#how-to-promote-ci-to-release-candidates)
   - [Find the collector version](#find-the-collector-version)
   - [Trigger the CI-to-RC promotion workflow](#trigger-the-ci-to-rc-promotion-workflow)
   - [Verify promotion completion](#verify-promotion-completion)
@@ -15,7 +15,7 @@ The collector version corresponds to specific CI build workflows that need to be
 to release candidate status. You can find collector versions from:
 
 1. The [Build packages workflow][build_packages_workflow] runs in the packaging repository
-2. CI build artifacts in the ci-builds repositories
+2. CI build artifacts in the ci repositories
 
 ### Trigger the CI-to-RC promotion workflow
 
@@ -23,14 +23,14 @@ The [CI-to-RC Promotion][ci_to_rc_workflow] workflow automates the promotion of
 CI builds to release candidate status. It will:
 
 1. Validate the collector version format and find all related workflow runs
-2. Call packaging promotion workflow as a reusable workflow (ci-builds → release-candidates)
-3. Call containers promotion workflow as a reusable workflow (ci-builds → release-candidates)
+2. Call packaging promotion workflow as a reusable workflow (ci → rc)
+3. Call containers promotion workflow as a reusable workflow (ci → rc)
 4. Provide a summary with the status of all promotion operations
 
 **Execution Order** (sequential with automatic waiting):
 
-1. Packaging promotion (ci-builds → release-candidates)
-2. Containers promotion (ci-builds → release-candidates)
+1. Packaging promotion (ci → rc)
+2. Containers promotion (ci → rc)
 
 **How it Works**: The promotion workflow uses GitHub's `workflow_call` feature to invoke
 promotion workflows across repositories as reusable workflows. This provides automatic
@@ -72,14 +72,14 @@ Once the promotion workflow completes successfully, it will provide a summary
 with the status of all promotion operations. The summary will include:
 
 - The collector version that was promoted
-- The status of the packaging promotion (ci-builds → release-candidates)
-- The status of the containers promotion (ci-builds → release-candidates)
+- The status of the packaging promotion (ci → rc)
+- The status of the containers promotion (ci → rc)
 - Links to the workflow runs for verification
 
 The promoted artifacts will be available in:
 
-1. **Packaging release-candidates**: Repository packages promoted from ci-builds
-2. **Containers release-candidates**: Container images promoted from ci-builds
+1. **Packaging release-candidates**: Repository packages promoted from ci
+2. **Containers release-candidates**: Container images promoted from ci
 
 ## Troubleshooting
 
