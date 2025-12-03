@@ -1,0 +1,93 @@
+name: Promote CI to RC
+
+run-name: >
+  ${{ format('Promote CI to RC: {0}', inputs.version) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: |
+          Package version to promote (e.g., 0.124.0-2054)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate-and-discover:
+    name: Validate & Discover Workflows
+    runs-on: ubuntu-24.04
+    outputs:
+      packaging-workflow-id: ${{ steps.find-workflows.outputs.packaging-workflow-id }}
+      containers-workflow-id: ${{ steps.find-workflows.outputs.containers-workflow-id }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate version and discover workflow IDs
+        id: find-workflows
+        run: .github/ci/ci-to-rc-helper.sh "${{ inputs.version }}"
+
+  promote-packaging:
+    name: Promote Packaging (ci-builds → release-candidates)
+    needs: validate-and-discover
+    uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/promote-ci-build.yml@main
+    with:
+      version: ${{ inputs.version }}
+    secrets: inherit
+
+  promote-containers:
+    name: Promote Containers (ci → rc)
+    needs:
+      - validate-and-discover
+      - promote-packaging
+    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/release-candidates.yml@main
+    with:
+      workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
+    secrets: inherit
+
+  promotion-summary:
+    name: Promotion Summary
+    runs-on: ubuntu-24.04
+    needs:
+      - validate-and-discover
+      - promote-packaging
+      - promote-containers
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << 'EOF'
+          # CI to RC Promotion Complete
+
+          **Package Version**: ${{ inputs.version }}
+
+          ## Workflows Completed
+
+          1. **Packaging Promotion** (${{ needs.promote-packaging.result }})
+          2. **Containers Promotion** (${{ needs.promote-containers.result }})
+
+          ## Build Workflow References
+
+          - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
+          - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+
+          EOF
+
+      - name: Check for failures
+        if: |
+          needs.validate-and-discover.result == 'failure' ||
+          needs.promote-packaging.result == 'failure' ||
+          needs.promote-containers.result == 'failure'
+        run: |
+          echo "::error::One or more promotion steps failed. Check the summary above."
+          exit 1
