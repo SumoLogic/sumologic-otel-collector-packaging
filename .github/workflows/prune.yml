@@ -16,9 +16,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup go
-        uses: WillAbides/setup-go-faster@v1
+        uses: actions/setup-go@v5
         with:
           go-version: stable
+          cache: true
 
       - name: Run packagecloudpruner
         working-directory: ci/cmd/packagecloudpruner
