@@ -260,9 +260,10 @@ jobs:
 
       - name: Setup go
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: WillAbides/setup-go-faster@v1
+        uses: actions/setup-go@v5
         with:
           go-version: stable
+          cache: true
 
       - name: Download macOS package and use it for install.sh
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
