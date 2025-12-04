@@ -18,7 +18,7 @@ jobs:
       - name: Setup go
         uses: WillAbides/setup-go-faster@v1.14.0
         with:
-          go-version: stable
+          go-version: '1.23'
 
       - name: Run packagecloudpruner
         working-directory: ci/cmd/packagecloudpruner
