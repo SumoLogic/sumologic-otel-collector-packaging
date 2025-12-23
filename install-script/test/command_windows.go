@@ -114,6 +114,8 @@ func runScript(ch check) (int, []string, []string, error) {
 		return 0, nil, nil, err
 	}
 
+    ch.test.Logf("Running command: %s", strings.Join(ch.installOptions.string(), " "))
+
 	defer in.Close()
 
 	out, err := cmd.StdoutPipe()
