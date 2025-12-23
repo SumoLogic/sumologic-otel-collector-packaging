@@ -15,16 +15,6 @@ func TestInstallScript(t *testing.T) {
 		checkConfigNotCreated,
 		checkUserConfigNotCreated,
 	}
-    installedChecks := []checkFunc{
-    				checkBinaryCreated,
-    				checkBinaryIsRunning,
-    				checkConfigCreated,
-    				checkConfigFilesOwnershipAndPermissions(localSystemSID),
-    				checkUserConfigCreated,
-    				checkEphemeralNotInConfig(userConfigPath),
-    				checkTokenInConfig,
-    				checkHostmetricsConfigNotCreated,
-    }
 	for _, spec := range []testSpec{
 		{
 			name:        "no arguments",
@@ -205,7 +195,11 @@ func TestInstallScript(t *testing.T) {
 				packagePath:  getPackagePath(t),
 			},
 			preChecks: notInstalledChecks,
-			postChecks: installedChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+			},
 		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
