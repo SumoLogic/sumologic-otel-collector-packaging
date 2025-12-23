@@ -242,12 +242,3 @@ func TestInstallScript(t *testing.T) {
 		})
 	}
 }
-
-func getPackagePath(t testing.TB) string {
-	t.Helper()
-	path := os.Getenv("OTELCOL_SUMO_PACKAGE_PATH")
-	if path == "" {
-		t.Fatal("missing environment variable: OTELCOL_SUMO_PACKAGE_PATH")
-	}
-	return path
-}
