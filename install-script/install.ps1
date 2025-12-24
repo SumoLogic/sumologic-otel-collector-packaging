@@ -478,7 +478,8 @@ try {
         $addLocalStr = $msiAddLocal -Join ","
         $msiProperties += "ADDLOCAL=${addLocalStr}"
     }
-    msiexec.exe /i "$msiPath" /passive $msiProperties
+    $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
+    Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 }
