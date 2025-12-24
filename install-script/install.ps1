@@ -435,7 +435,13 @@ try {
     $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${archName}${fipsSuffix}.msi"
     $msiURI = $DOWNLOAD_URI + "/" + $Version + "/" + $msiFileName
     if ($PackagePath.Length -gt 0) {
-        $msiPath = $PackagePath
+        # Convert Unix-style path (e.g., /d/a/path) to Windows format (D:\a\path)
+        if ($PackagePath -match '^/([a-zA-Z])/(.*)$') {
+            $msiPath = "$($matches[1]):\$($matches[2])" -replace '/', '\'
+        } else {
+            $msiPath = $PackagePath
+        }
+        Write-Host "Using package from: ${msiPath}"
     } else {
         $msiPath = "${env:TEMP}\${msiFileName}"
         Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
