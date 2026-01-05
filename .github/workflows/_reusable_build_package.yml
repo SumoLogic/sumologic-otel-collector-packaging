@@ -105,7 +105,7 @@ jobs:
           echo "otc_build_number=${build_number}" >> "$GITHUB_OUTPUT"
 
       - name: Determine if MacOS package should be signed
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && github.actor != 'dependabot[bot]'
         env:
           PRODUCTBUILD_IDENTITY_NAME: ${{ secrets.productbuild_identity_name }}
           GH_CI_TOKEN: ${{ secrets.GH_CI_TOKEN }}
@@ -119,7 +119,7 @@ jobs:
         run: mkdir build
 
       - uses: apple-actions/import-codesign-certs@v5.0.3
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && github.actor != 'dependabot[bot]'
         with:
           p12-file-base64: ${{ secrets.apple_developer_certificate_p12_base64 }}
           p12-password: ${{ secrets.apple_developer_certificate_password }}
@@ -222,7 +222,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish packages
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && github.actor != 'dependabot[bot]'
         uses: ./ci/github-actions/make
         with:
           target: publish-package
@@ -233,7 +233,7 @@ jobs:
           aws-secret-access-key-new: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
 
       - name: Publish packages
-        if: runner.os != 'Linux'
+        if: runner.os != 'Linux' && github.actor != 'dependabot[bot]'
         working-directory: build
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -244,7 +244,7 @@ jobs:
         run: make publish-package
 
       - name: Wait for Packagecloud packages to be indexed
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && github.actor != 'dependabot[bot]'
         uses: ./ci/github-actions/make
         with:
           target: wait-for-packagecloud-indexing

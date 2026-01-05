@@ -13,6 +13,12 @@ on:
         description: The package version to promote.
         required: true
         type: string
+  workflow_call:
+    inputs:
+      version:
+        description: The package version to promote.
+        required: true
+        type: string
 
 defaults:
   run:

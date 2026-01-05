@@ -1,0 +1,123 @@
+name: Release Orchestrator
+
+run-name: >
+  ${{ format('Release Orchestrator for Version: {0}', inputs.package_version) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_version:
+        description: |
+          Package version validated by QE (e.g., 0.108.0-1790).
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate-and-discover:
+    name: Validate & Discover Workflows
+    runs-on: ubuntu-24.04
+    outputs:
+      collector-workflow-id: ${{ steps.find-workflows.outputs.collector-workflow-id }}
+      packaging-workflow-id: ${{ steps.find-workflows.outputs.packaging-workflow-id }}
+      containers-workflow-id: ${{ steps.find-workflows.outputs.containers-workflow-id }}
+      collector-version: ${{ steps.find-workflows.outputs.collector-version }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate version and discover workflow IDs
+        id: find-workflows
+        run: .github/ci/release-helper.sh "${{ inputs.package_version }}"
+
+  promote-packaging-to-stable:
+    name: Promote Packaging RC→Stable
+    needs: validate-and-discover
+    uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/promote-release-candidate.yml@main
+    with:
+      version: ${{ inputs.package_version }}
+    secrets: inherit
+
+  release-collector:
+    name: Release Collector (Draft)
+    needs:
+      - validate-and-discover
+      - promote-packaging-to-stable
+    uses: SumoLogic/sumologic-otel-collector/.github/workflows/releases.yml@main
+    with:
+      workflow_id: ${{ needs.validate-and-discover.outputs.collector-workflow-id }}
+    secrets: inherit
+
+  release-packaging:
+    name: Create Packaging Draft Release
+    needs:
+      - validate-and-discover
+      - release-collector
+    uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/releases.yml@main
+    with:
+      workflow_id: ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}
+    secrets: inherit
+
+  release-containers:
+    name: Release Containers RC→Stable + Draft
+    needs:
+      - validate-and-discover
+      - release-packaging
+    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/releases.yml@main
+    with:
+      workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
+    secrets: inherit
+
+  release-summary:
+    name: Release Summary
+    runs-on: ubuntu-24.04
+    needs:
+      - validate-and-discover
+      - release-collector
+      - promote-packaging-to-stable
+      - release-packaging
+      - release-containers
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << 'EOF'
+          # Release Orchestration Complete
+
+          **Package Version**: ${{ inputs.package_version }}  
+          **Collector Version**: ${{ needs.validate-and-discover.outputs.collector-version }}
+
+          ## Workflows Completed
+
+          1. ✅ **Packaging Promotion** (${{ needs.promote-packaging-to-stable.result }})
+          2. ✅ **Collector Draft Release** (${{ needs.release-collector.result }})
+          3. ✅ **Packaging Draft Release** (${{ needs.release-packaging.result }})
+          4. ✅ **Containers Draft Release** (${{ needs.release-containers.result }})
+
+          ## Build Workflow References
+
+          - **Collector Build**: [Workflow ${{ needs.validate-and-discover.outputs.collector-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ needs.validate-and-discover.outputs.collector-workflow-id }})
+          - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
+          - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+
+          EOF
+
+      - name: Check for failures
+        if: |
+          needs.validate-and-discover.result == 'failure' ||
+          needs.release-collector.result == 'failure' ||
+          needs.promote-packaging-to-stable.result == 'failure' ||
+          needs.release-packaging.result == 'failure' ||
+          needs.release-containers.result == 'failure'
+        run: |
+          echo "::error::One or more release steps failed. Check the summary above."
+          exit 1
