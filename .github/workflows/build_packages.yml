@@ -279,11 +279,24 @@ jobs:
           path: artifacts/
           pattern: otelcol-sumo_*amd64.deb
 
+      - name: Download Windows package and use it for install.ps1
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          pattern: otelcol-sumo_*x64.msi
+
       - name: Show packages
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
         run: |
           ls -l artifacts/
           ls -l artifacts/**/*
+
+      - name: Show packages (Windows)
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        run: |
+          cd artifacts
+          gci
 
       - name: Set DARWIN_PKG_URL (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
@@ -301,6 +314,14 @@ jobs:
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
         run: |
           fp="$(readlink -f artifacts/otelcol-sumo*.deb/otelcol-sumo*.deb)"
+          echo "using ${fp}"
+          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
+
+      - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows)
+        shell: bash
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        run: |
+          fp="$(readlink -f artifacts/otelcol-sumo*.msi/otelcol-sumo*.msi)"
           echo "using ${fp}"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
@@ -322,4 +343,5 @@ jobs:
           S3_BUCKET: sumologic-osc-ci-builds
           OVERRIDE_ARCH: x64
           SKIP_ARCH_DETECTION: 1
-        run: make test
+        run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
+          make test

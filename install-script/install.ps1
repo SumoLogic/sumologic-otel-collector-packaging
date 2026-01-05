@@ -43,6 +43,10 @@ param (
     # is set to the value of the OVERRIDE_ARCH environment variable.
     [string] $OverrideArch = $env:OVERRIDE_ARCH,
 
+    # PackagePath is the path on disk to the MSI package. It overrides
+    # downloading of the package from the internet.
+    [string] $PackagePath,
+
     # SkipArchDetection will disable the detection of the CPU architecture.
     # CPU architecture detection is slow. Using OverrideArch with this flag
     # improves the overall time it takes to execute this script.
@@ -426,12 +430,22 @@ try {
         $fipsSuffix = "-fips"
     }
 
-    # Download MSI
+    # Download MSI or install from provided path
     $msiLanguage = "en-US"
     $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${archName}${fipsSuffix}.msi"
     $msiURI = $DOWNLOAD_URI + "/" + $Version + "/" + $msiFileName
-    $msiPath = "${env:TEMP}\${msiFileName}"
-    Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
+    if ($PackagePath.Length -gt 0) {
+        # Convert Unix-style path (e.g., /d/a/path) to Windows format (D:\a\path)
+        if ($PackagePath -match '^/([a-zA-Z])/(.*)$') {
+            $msiPath = "$($matches[1]):\$($matches[2])" -replace '/', '\'
+        } else {
+            $msiPath = $PackagePath
+        }
+        Write-Host "Using package from: ${msiPath}"
+    } else {
+        $msiPath = "${env:TEMP}\${msiFileName}"
+        Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
+    }
 
     # Install MSI
     [string[]] $msiProperties = @()
@@ -470,7 +484,8 @@ try {
         $addLocalStr = $msiAddLocal -Join ","
         $msiProperties += "ADDLOCAL=${addLocalStr}"
     }
-    msiexec.exe /i "$msiPath" /passive $msiProperties
+    $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
+    Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 }
