@@ -290,7 +290,7 @@ jobs:
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
         run: |
           ls -l artifacts/
-          ls -l artifacts/**/*
+          find artifacts -mindepth 1 -type f -ls 2>/dev/null || echo "All files shown above"
 
       - name: Show packages (Windows)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
@@ -301,19 +301,19 @@ jobs:
       - name: Set DARWIN_PKG_URL (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> "$GITHUB_ENV"
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg)"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}" 
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (ubuntu)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo*.deb/otelcol-sumo*.deb)"
+          fp="$(readlink -f artifacts/otelcol-sumo*.deb)"
           echo "using ${fp}"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
