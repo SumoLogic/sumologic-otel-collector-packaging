@@ -4,6 +4,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -15,6 +16,15 @@ type testSpec struct {
 	preActions        []checkFunc
 	conditionalChecks []condCheckFunc
 	installCode       int
+}
+
+func getPackagePath(t testing.TB) string {
+	t.Helper()
+	path := os.Getenv("OTELCOL_SUMO_PACKAGE_PATH")
+	if path == "" {
+		t.Fatal("missing environment variable: OTELCOL_SUMO_PACKAGE_PATH")
+	}
+	return path
 }
 
 func startMockAPI(t *testing.T) (*http.Server, error) {

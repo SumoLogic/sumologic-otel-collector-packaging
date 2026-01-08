@@ -77,6 +77,7 @@
     <!-- Whether or not the remotely managed and ephemeral features are selected -->
     <Property Id="REMOTELYMANAGEDSELECTED" Value="false" Hidden="yes" />
     <Property Id="EPHEMERALSELECTED" Value="false" Hidden="yes" />
+    <Property Id="CLOBBERSELECTED" Value="false" Hidden="yes" />
 
     <!-- The API base URL if overriden -->
     <Property Id="API" Hidden="yes" />
@@ -105,12 +106,13 @@
     <CustomAction Id="UpdateConfigActionData1" Property="UpdateConfigAction1"
       Value="CommonConfigPath=[ConfigFragmentsFolder]common.yaml;SumoLogicConfigPath=[ConfigFolder]sumologic.yaml;InstallToken=[INSTALLTOKEN];InstallationToken=[INSTALLATIONTOKEN]" />
     <CustomAction Id="UpdateConfigActionData2" Property="UpdateConfigAction2"
-      Value="Tags=[TAGS];OpAmpFolder=[OpAmpFolder];OpAmpApi=[OPAMPAPI];Timezone=[TIMEZONE];Ephemeral=[EPHEMERALSELECTED];RemotelyManaged=[REMOTELYMANAGEDSELECTED];Api=[API]" />
+      Value="Tags=[TAGS];OpAmpFolder=[OpAmpFolder];OpAmpApi=[OPAMPAPI];Timezone=[TIMEZONE];Ephemeral=[EPHEMERALSELECTED];Clobber=[CLOBBERSELECTED];RemotelyManaged=[REMOTELYMANAGEDSELECTED];Api=[API]" />
     <CustomAction Id="UpdateConfigActionData" Property="UpdateConfigAction" Value="[UpdateConfigAction1];[UpdateConfigAction2]" />
 
     <!-- Before updating the config files set the properties indicating whether or not the remotely managed and ephemeral features are selected -->
     <SetProperty Id="REMOTELYMANAGEDSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData"  Condition="&amp;REMOTELYMANAGED=3" />
     <SetProperty Id="EPHEMERALSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData" Condition="&amp;EPHEMERAL=3" />
+    <SetProperty Id="CLOBBERSELECTED" Value="true" Sequence="execute" Before="UpdateConfigActionData" Condition="&amp;CLOBBER=3" />
 
     <!-- Execute Sequence -->
     <InstallExecuteSequence>
@@ -142,6 +144,10 @@
 
       <Feature Id="EPHEMERAL" Title="Ephemeral" Level="2" AllowAbsent="yes" AllowAdvertise="no" TypicalDefault="install" >
         <Component Id="EphemeralComponent" Location="local" Directory="INSTALLFOLDER" Guid="4095b4ee-d011-49c3-b7a7-755aa36fcc5e" />
+      </Feature>
+
+      <Feature Id="CLOBBER" Title="Clobber" Level="2" AllowAbsent="yes" AllowAdvertise="no" TypicalDefault="install" >
+              <Component Id="ClobberComponent" Location="local" Directory="INSTALLFOLDER" Guid="6448c76f-83a7-4534-bcc9-e008da4c2bb7" />
       </Feature>
     </Feature>
 

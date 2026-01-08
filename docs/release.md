@@ -1,5 +1,14 @@
 # Releasing
 
+## Release Workflows
+
+- For **automated CI to RC promotion**, follow the [CI to Release Candidate Promotion](ci-to-rc-promotion.md) guide
+- For **automated release process**, follow the [Release Orchestrator](release-orchestrator.md) guide
+
+The steps below describe the manual release process.
+
+---
+
 ## Check end-to-end tests
 
 Check if the Sumo internal e2e tests are passing.

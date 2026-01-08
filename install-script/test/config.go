@@ -20,6 +20,8 @@ type sumologicExtension struct {
 	Tags              map[string]string `yaml:"collector_fields"`
 	APIBaseURL        string            `yaml:"api_base_url"`
 	Ephemeral         bool              `yaml:"ephemeral"`
+	Timezone          string            `yaml:"time_zone"`
+	Clobber           bool              `yaml:"clobber"`
 }
 
 type opampExtension struct {

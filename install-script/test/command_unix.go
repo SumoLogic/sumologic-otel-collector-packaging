@@ -29,6 +29,8 @@ type installOptions struct {
 	dontKeepDownloads  bool
 	version            string
 	timezone           string
+	packagePath        string
+	clobber            bool
 }
 
 func (io *installOptions) string() []string {
@@ -73,10 +75,18 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "--timezone", io.timezone)
 	}
 
+	if io.clobber {
+		opts = append(opts, "--clobber")
+	}
+
 	if len(io.tags) > 0 {
 		for k, v := range io.tags {
 			opts = append(opts, "--tag", fmt.Sprintf("%s=%s", k, v))
 		}
+	}
+
+	if io.packagePath != "" {
+		opts = append(opts, "--package-path", io.packagePath)
 	}
 
 	// 1. If the apiBaseURL is empty, replace it with the mock API's URL.

@@ -52,6 +52,10 @@ ARG_SHORT_TIMEOUT='m'
 ARG_LONG_TIMEOUT='download-timeout'
 ARG_SHORT_TIMEZONE='z'
 ARG_LONG_TIMEZONE='timezone'
+ARG_SHORT_CLOBBER='C'
+ARG_LONG_CLOBBER='clobber'
+ARG_SHORT_PACKAGE_PATH='P'
+ARG_LONG_PACKAGE_PATH='package-path'
 
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
@@ -66,6 +70,8 @@ readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
 readonly ARG_SHORT_EPHEMERAL ARG_LONG_EPHEMERAL
 readonly ARG_SHORT_TIMEOUT ARG_LONG_TIMEOUT
 readonly ARG_SHORT_TIMEZONE ARG_LONG_TIMEZONE
+readonly ARG_SHORT_CLOBBER ARG_LONG_CLOBBER
+readonly ARG_SHORT_PACKAGE_PATH ARG_LONG_PACKAGE_PATH
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
 
 ############################ Variables (see set_defaults function for default values)
@@ -99,6 +105,7 @@ INSTALL_HOSTMETRICS=false
 REMOTELY_MANAGED=false
 EPHEMERAL=false
 TIMEZONE=""
+CLOBBER=false
 
 LAUNCHD_CONFIG=""
 LAUNCHD_ENV_KEY=""
@@ -163,6 +170,8 @@ Supported arguments:
   -${ARG_SHORT_EPHEMERAL}, --${ARG_LONG_EPHEMERAL}                       Delete the collector from Sumo Logic after 12 hours of inactivity.
   -${ARG_SHORT_TIMEOUT}, --${ARG_LONG_TIMEOUT} <timeout>      Timeout in seconds after which download will fail. Default is ${CURL_MAX_TIME}.
   -${ARG_SHORT_TIMEZONE}, --${ARG_LONG_TIMEZONE}                       TIMEZONE for the collector.
+  -${ARG_SHORT_CLOBBER}, --${ARG_LONG_CLOBBER}                           Overwrite existing installation without asking for confirmation.
+  -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
@@ -180,6 +189,8 @@ function set_defaults() {
     USER_ENV_DIRECTORY="${CONFIG_DIRECTORY}/env"
     TOKEN_ENV_FILE="${USER_ENV_DIRECTORY}/token.env"
     TIMEZONE="UTC"
+    PACKAGE_PATH=""
+    CLOBBER="false"
 
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
@@ -258,7 +269,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -273,6 +284,12 @@ function parse_options() {
       "--${ARG_LONG_TIMEZONE}")
         set -- "$@" "-${ARG_SHORT_TIMEZONE}"
         ;;
+      "--${ARG_LONG_CLOBBER}")
+        set -- "$@" "-${ARG_SHORT_CLOBBER}"
+        ;;
+      "--${ARG_LONG_PACKAGE_PATH}")
+        set -- "$@" "-${ARG_SHORT_PACKAGE_PATH}"
+        ;;
       -*)
         echo "Unknown option ${arg}"; usage; exit 2 ;;
       *)
@@ -285,7 +302,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -321,9 +338,11 @@ function parse_options() {
       "${ARG_SHORT_REMOTELY_MANAGED}") REMOTELY_MANAGED=true ;;
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
       "${ARG_SHORT_TIMEZONE}") TIMEZONE="${OPTARG}" ;;
+      "${ARG_SHORT_CLOBBER}") CLOBBER=true ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
       "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
+      "${ARG_SHORT_PACKAGE_PATH}") PACKAGE_PATH=("${OPTARG}") ;;
     esac
 
     # Exit loop as we iterated over all arguments
@@ -463,9 +482,6 @@ function setup_config() {
     echo 'We are going to get and set up a default configuration for you'
 
     echo "Generating configuration and saving it in ${CONFIG_DIRECTORY}"
-    if [[ -n "${TIMEZONE}" ]]; then
-                write_timezone "${TIMEZONE}"
-    fi
     if [[ "${REMOTELY_MANAGED}" == "true" ]]; then
         write_opamp_extension
 
@@ -489,6 +505,14 @@ function setup_config() {
             write_tags "${FIELDS[@]}"
         fi
 
+        if [[ -n "${TIMEZONE}" ]]; then
+            write_timezone "${TIMEZONE}"
+        fi
+
+        if [[ "${CLOBBER}" == "true" ]]; then
+            write_clobber_true
+        fi
+
         # Return/stop function execution early as remaining logic only applies
         # to locally-managed installations
         return
@@ -500,7 +524,7 @@ function setup_config() {
     fi
 
     ## Check if there is anything to update in configuration
-    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" ]]; then
+    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" || -n "${TIMEZONE}" ]]; then
         USER_TOKEN="$(get_user_token)"
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
@@ -518,6 +542,15 @@ function setup_config() {
         if [[ ${#FIELDS[@]} -gt 0 ]]; then
             write_tags "${FIELDS[@]}"
         fi
+
+        if [[ -n "${TIMEZONE}" ]]; then
+            write_timezone "${TIMEZONE}"
+        fi
+
+        if [[ "${CLOBBER}" == "true" ]]; then
+            write_clobber_true
+        fi
+
     fi
 }
 
@@ -539,6 +572,10 @@ function setup_config_darwin() {
 
     if [[ -n "${TIMEZONE}" ]]; then
         write_timezone "${TIMEZONE}"
+    fi
+
+    if [[ "${CLOBBER}" == "true" ]]; then
+        write_clobber_true
     fi
 
     if [[ -n "${API_BASE_URL}"  ]]; then
@@ -767,6 +804,10 @@ function write_timezone() {
     "${SUMO_CONFIG_BINARY_PATH}" --set-timezone "$timezone"
 }
 
+function write_clobber_true() {
+    "${SUMO_CONFIG_BINARY_PATH}" --enable-clobber
+}
+
 # write api_url to user configuration file
 function write_api_url() {
     local api_url
@@ -932,6 +973,22 @@ function install_linux_package() {
             fi
             echo "Installing ${package_str}"
             apt-get install --quiet -y "${package_str}"
+            ;;
+    esac
+}
+
+function install_linux_package_from_path() {
+    local package_path
+    readonly package_path="${1}"
+
+    echo "Installing from path: ${package_path}"
+
+    case $(get_package_manager) in
+        yum | dnf)
+            yum install --quiet -y "${package_path}"
+            ;;
+        apt-get)
+            apt install --quiet -y "${package_path}"
             ;;
     esac
 }
@@ -1113,6 +1170,7 @@ readonly INSTALL_HOSTMETRICS
 readonly REMOTELY_MANAGED
 readonly CURL_MAX_TIME
 readonly LAUNCHD_CONFIG LAUNCHD_ENV_KEY LAUNCHD_TOKEN_KEY
+readonly PACKAGE_PATH
 
 if [[ "${UNINSTALL}" == "true" ]]; then
     uninstall
@@ -1184,32 +1242,37 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
 
     pkg_url=""
 
-    if [[ -z "${DARWIN_PKG_URL}" ]]; then
-        # Use user's version if set, otherwise get latest version from API (or website)
-        if [[ -z "${VERSION}" ]]; then
-            echo -e "Getting latest version..."
-            VERSION="$(get_latest_s3_package_version)"
+    if [[ -z "${PACKAGE_PATH}" ]]; then
+        if [[ -z "${DARWIN_PKG_URL}" ]]; then
+            # Use user's version if set, otherwise get latest version from API (or website)
+            if [[ -z "${VERSION}" ]]; then
+                echo -e "Getting latest version..."
+                VERSION="$(get_latest_s3_package_version)"
+            fi
+
+            readonly VERSION
+
+            echo -e "Version to install:\t${VERSION}"
+
+            artifact_name="otelcol-sumo_${VERSION}-${package_arch}.pkg"
+            readonly artifact_name
+
+            pkg_url="${DOWNLOAD_URI}/${VERSION}/${artifact_name}"
+        else
+            pkg_url="${DARWIN_PKG_URL}"
         fi
 
-        readonly VERSION
+        get_package_from_url "${pkg_url}"
 
-        echo -e "Version to install:\t${VERSION}"
+        pkg="${TMPDIR}/otelcol-sumo.pkg"
 
-        artifact_name="otelcol-sumo_${VERSION}-${package_arch}.pkg"
-        readonly artifact_name
-
-        pkg_url="${DOWNLOAD_URI}/${VERSION}/${artifact_name}"
+        if [[ "${DOWNLOAD_ONLY}" == "true" ]]; then
+            echo "Package downloaded to: ${pkg}"
+            exit 0
+        fi
     else
-        pkg_url="${DARWIN_PKG_URL}"
-    fi
-
-    get_package_from_url "${pkg_url}"
-
-    pkg="${TMPDIR}/otelcol-sumo.pkg"
-
-    if [[ "${DOWNLOAD_ONLY}" == "true" ]]; then
-        echo "Package downloaded to: ${pkg}"
-        exit 0
+        echo "Installing package from file: ${PACKAGE_PATH}"
+        pkg="${PACKAGE_PATH}"
     fi
 
     echo "Installing otelcol-sumo package"
@@ -1273,7 +1336,12 @@ if is_package_installed "${package_name}"; then
     exit 1
 fi
 
-install_linux_package "${package_name}"
+if [[ -n "${PACKAGE_PATH}" ]]; then
+    install_linux_package_from_path "${PACKAGE_PATH}"
+else
+    install_linux_package "${package_name}"
+fi
+
 verify_installation
 setup_config
 

@@ -168,6 +168,72 @@ func TestInstallScript(t *testing.T) {
 				checkTags,
 			},
 		},
+		{
+			name: "installed from package path",
+			options: installOptions{
+				installToken: installToken,
+				packagePath:  getPackagePath(t),
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+			},
+		},
+		{
+			name: "locally-managed and timezone",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: false,
+				timezone:        "Europe/Prague",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkTimezoneInConfig,
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
+		{
+			name: "installation token, locally-managed, and clobber",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: false,
+				clobber:         true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+				checkClobberInConfig,
+			},
+		},
+		{
+			name: "installation token, remotely-managed and clobber",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				clobber:         true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkClobberEnabledInRemote(sumoRemotePath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {

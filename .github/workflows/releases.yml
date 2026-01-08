@@ -12,6 +12,14 @@ on:
           release.
         required: true
         type: string
+  workflow_call:
+    inputs:
+      workflow_id:
+        description: |
+          Workflow Run ID from this repository to fetch artifacts from for this
+          release.
+        required: true
+        type: string
 
 defaults:
   run:
@@ -43,7 +51,7 @@ jobs:
           echo ::notice title=Workflow URL::${url}
 
       - name: Download version artifacts from workflow
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: "*.txt"
           path: artifacts/
@@ -129,7 +137,7 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts from workflow
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/
           merge-multiple: true

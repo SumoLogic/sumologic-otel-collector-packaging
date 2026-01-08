@@ -16,9 +16,12 @@ type installOptions struct {
 	envs               map[string]string
 	apiBaseURL         string
 	installHostmetrics bool
+	packagePath        string
 	remotelyManaged    bool
 	ephemeral          bool
 	version            string
+	timezone           string
+	clobber            bool
 }
 
 func (io *installOptions) string() []string {
@@ -43,6 +46,10 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "-Ephemeral", "1")
 	}
 
+	if io.clobber {
+		opts = append(opts, "-Clobber", "1")
+	}
+
 	if len(io.tags) > 0 {
 		opts = append(opts, "-Tags", getTagOptValue(io.tags))
 	}
@@ -51,6 +58,10 @@ func (io *installOptions) string() []string {
 		opts = append(opts, "-Api", io.apiBaseURL)
 	} else {
 		opts = append(opts, "-Api", mockAPIBaseURL)
+	}
+
+	if io.packagePath != "" {
+		opts = append(opts, "-PackagePath", io.packagePath)
 	}
 
 	otc_version := os.Getenv("OTC_VERSION")
@@ -102,6 +113,8 @@ func runScript(ch check) (int, []string, []string, error) {
 	if err != nil {
 		return 0, nil, nil, err
 	}
+
+    ch.test.Logf("Running command: %s", strings.Join(ch.installOptions.string(), " "))
 
 	defer in.Close()
 
