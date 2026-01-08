@@ -358,6 +358,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Sign MSI
+        if: github.actor != 'dependabot[bot]'
         uses: skymatic/code-sign-action@v3
         with:
           certificate: ${{ secrets.microsoft_certificate }}
@@ -374,6 +375,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish packages
+        if: github.actor != 'dependabot[bot]'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -387,6 +389,7 @@ jobs:
           aws.exe s3 cp "$PKG_PATH" "$uri"
 
       - name: Publish packages to new S3 target
+        if: github.actor != 'dependabot[bot]'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
