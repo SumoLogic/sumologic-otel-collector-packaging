@@ -10,6 +10,11 @@ import (
 // TODO: Set up file permissions to be able to modify config files on Windows
 
 func TestInstallScript(t *testing.T) {
+	notInstalledChecks := []checkFunc{
+		checkBinaryNotCreated,
+		checkConfigNotCreated,
+		checkUserConfigNotCreated,
+	}
 	for _, spec := range []testSpec{
 		{
 			name:        "no arguments",
@@ -181,6 +186,19 @@ func TestInstallScript(t *testing.T) {
 				checkTokenInSumoConfig,
 				checkEphemeralNotInConfig(configPath),
 				checkClobberInSumoConfig(configPath),
+			},
+		},
+		{
+			name: "installed from package path",
+			options: installOptions{
+				installToken: installToken,
+				packagePath:  getPackagePath(t),
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
 			},
 		},
 	} {
