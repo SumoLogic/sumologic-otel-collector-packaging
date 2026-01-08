@@ -158,21 +158,21 @@ jobs:
           echo "${OTC_SUMO_VERSION}" > otc-sumo-version.txt
 
       - name: Store otc-version.txt as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: otc-version.txt
           path: ./otc-version.txt
           if-no-files-found: error
 
       - name: Store otc-build-number.txt as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: otc-build-number.txt
           path: ./otc-build-number.txt
           if-no-files-found: error
 
       - name: Store otc-sumo-version.txt as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: otc-sumo-version.txt
           path: ./otc-sumo-version.txt
@@ -194,14 +194,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Store Linux install script as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: install.sh
           path: ./install-script/install.sh
           if-no-files-found: error
 
       - name: Store Windows install script as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: install.ps1
           path: ./install-script/install.ps1

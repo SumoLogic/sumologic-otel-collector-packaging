@@ -215,7 +215,7 @@ jobs:
         run: make package
 
       - name: Store package as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.package.outputs.path }}
           path: ./build/${{ steps.package.outputs.path }}
@@ -367,7 +367,7 @@ jobs:
           folder: ./msi/wix/bin/${{ inputs.package_arch }}/en-US
 
       - name: Store MSI as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.build.outputs.package_filename }}
           path: ${{ steps.build.outputs.package_path }}
