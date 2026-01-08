@@ -267,40 +267,61 @@ jobs:
 
       - name: Download macOS package and use it for install.sh
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/
           pattern: otelcol-sumo_*-intel.pkg
 
       - name: Download Debian package and use it for install.sh
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/
           pattern: otelcol-sumo_*amd64.deb
+
+      - name: Download Windows package and use it for install.ps1
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          pattern: otelcol-sumo_*x64.msi
 
       - name: Show packages
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
         run: |
           ls -l artifacts/
-          ls -l artifacts/**/*
+          find artifacts -mindepth 1 -type f -ls 2>/dev/null || echo "All files shown above"
+
+      - name: Show packages (Windows)
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        run: |
+          cd artifacts
+          gci
 
       - name: Set DARWIN_PKG_URL (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg)"
           echo DARWIN_PKG_URL="file://${fp}" >> "$GITHUB_ENV"
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg/otelcol-sumo_*-intel.pkg)"
+          fp="$(readlink -f artifacts/otelcol-sumo_*-intel.pkg)"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}" 
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (ubuntu)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Linux' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo*.deb/otelcol-sumo*.deb)"
+          fp="$(readlink -f artifacts/otelcol-sumo*.deb)"
+          echo "using ${fp}"
+          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
+
+      - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows)
+        shell: bash
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        run: |
+          fp="$(readlink -f artifacts/otelcol-sumo*.msi/otelcol-sumo*.msi)"
           echo "using ${fp}"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
@@ -322,4 +343,5 @@ jobs:
           S3_BUCKET: sumologic-osc-ci-builds
           OVERRIDE_ARCH: x64
           SKIP_ARCH_DETECTION: 1
-        run: make test
+        run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
+          make test

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os/exec"
 	"testing"
+	"time"
 )
 
 // These checks always have to be true after a script execution
@@ -19,7 +20,7 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 		expectedInstallCode: spec.installCode,
 	}
 
-	t.Log("Running conditional checks")
+	t.Log(time.Now(), "Running conditional checks")
 	for _, a := range spec.conditionalChecks {
 		if !a(ch) {
 			t.SkipNow()
@@ -40,14 +41,14 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 		}
 	}()
 
-	t.Log("Running pre actions")
+	t.Log(time.Now(), "Running pre actions")
 	for _, a := range spec.preActions {
 		if ok := a(ch); !ok {
 			return nil
 		}
 	}
 
-	t.Log("Running pre checks")
+	t.Log(time.Now(), "Running pre checks")
 	for _, c := range spec.preChecks {
 		if ok := c(ch); !ok {
 			return nil
@@ -61,14 +62,14 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 
 	checkRun(ch)
 
-	t.Log("Running common post checks")
+	t.Log(time.Now(), "Running common post checks")
 	for _, c := range commonPostChecks {
 		if ok := c(ch); !ok {
 			return nil
 		}
 	}
 
-	t.Log("Running post checks")
+	t.Log(time.Now(), "Running post checks")
 	for _, c := range spec.postChecks {
 		if ok := c(ch); !ok {
 			return nil
@@ -80,6 +81,6 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 func tearDown(t *testing.T) {
 	cmd := exec.Command("powershell", "Uninstall-Package", "-Name", fmt.Sprintf(`"%s"`, packageName))
 	if out, err := cmd.CombinedOutput(); err != nil {
-		t.Log(string(out))
+		t.Log(time.Now(), string(out))
 	}
 }
