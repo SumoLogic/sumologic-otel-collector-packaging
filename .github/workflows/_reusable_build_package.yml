@@ -215,7 +215,7 @@ jobs:
         run: make package
 
       - name: Store package as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.package.outputs.path }}
           path: ./build/${{ steps.package.outputs.path }}
@@ -358,6 +358,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Sign MSI
+        if: github.actor != 'dependabot[bot]'
         uses: skymatic/code-sign-action@v3
         with:
           certificate: ${{ secrets.microsoft_certificate }}
@@ -367,13 +368,14 @@ jobs:
           folder: ./msi/wix/bin/${{ inputs.package_arch }}/en-US
 
       - name: Store MSI as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.build.outputs.package_filename }}
           path: ${{ steps.build.outputs.package_path }}
           if-no-files-found: error
 
       - name: Publish packages
+        if: github.actor != 'dependabot[bot]'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -387,6 +389,7 @@ jobs:
           aws.exe s3 cp "$PKG_PATH" "$uri"
 
       - name: Publish packages to new S3 target
+        if: github.actor != 'dependabot[bot]'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_NEW }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_NEW }}
