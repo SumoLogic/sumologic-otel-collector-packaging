@@ -252,7 +252,7 @@ jobs:
 
       - name: Check if test related files changed
         id: changed-files
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v47
         with:
           files: |
             install-script/**/*
