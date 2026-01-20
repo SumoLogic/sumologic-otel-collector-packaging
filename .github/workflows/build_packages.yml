@@ -216,6 +216,7 @@ jobs:
           aws s3 cp install-script/install.sh "s3://${AWS_S3_BUCKET}/${s3_path}"
 
       - name: Create latest_version file
+        if: github.actor != 'dependabot[bot]'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
