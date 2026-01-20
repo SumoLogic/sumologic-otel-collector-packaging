@@ -283,7 +283,7 @@ jobs:
 
       - name: Download Windows package and use it for install.ps1
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/
           pattern: otelcol-sumo_*x64.msi
@@ -323,7 +323,7 @@ jobs:
         shell: bash
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo*.msi/otelcol-sumo*.msi)"
+          fp="$(readlink -f artifacts/otelcol-sumo*.msi)"
           echo "using ${fp}"
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
