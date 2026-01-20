@@ -39,7 +39,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Outuput Workflow ID
         run: echo ::notice title=Workflow ID::${{ inputs.workflow_id }}
@@ -110,7 +110,7 @@ jobs:
     needs:
       - get-version
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.get-version.outputs.git-sha }}
 
