@@ -262,7 +262,7 @@ jobs:
 
       - name: Setup go
         if: steps.changed-files.outputs.any_changed == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: stable
           cache: true
