@@ -208,6 +208,7 @@ jobs:
           if-no-files-found: error
 
       - name: Store install scripts on S3
+        if: github.actor != 'dependabot[bot]'
         run: |
           version="${OTC_VERSION}-${OTC_BUILD_NUMBER}"
           s3_path="${version}/"
@@ -331,13 +332,13 @@ jobs:
           echo S3_BUCKET="sumologic-osc-ci-builds" >> "$GITHUB_ENV"
 
       - name: Run install script tests (*nix)
-        if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows'
+        if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.title, 'actions/')
         working-directory: install-script/test
         run: make test
 
       - name: Run install script tests (Windows)
         shell: powershell
-        if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows'
+        if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.title, 'actions/')
         working-directory: install-script/test
         env:
           S3_BUCKET: sumologic-osc-ci-builds
