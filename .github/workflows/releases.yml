@@ -115,14 +115,14 @@ jobs:
           ref: ${{ needs.get-version.outputs.git-sha }}
 
       - name: Store Linux install script as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: install.sh
           path: ./install-script/install.sh
           if-no-files-found: error
 
       - name: Store Windows install script as action artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: install.ps1
           path: ./install-script/install.ps1
