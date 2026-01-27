@@ -53,7 +53,6 @@ jobs:
     uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/release-candidates.yml@main
     with:
       workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
-    secrets: inherit
 
   promotion-summary:
     name: Promotion Summary
