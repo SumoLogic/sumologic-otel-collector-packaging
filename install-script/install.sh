@@ -54,6 +54,8 @@ ARG_SHORT_TIMEZONE='z'
 ARG_LONG_TIMEZONE='timezone'
 ARG_SHORT_CLOBBER='C'
 ARG_LONG_CLOBBER='clobber'
+ARG_SHORT_COLLECTOR_NAME='N'
+ARG_LONG_COLLECTOR_NAME='collector-name'
 ARG_SHORT_PACKAGE_PATH='P'
 ARG_LONG_PACKAGE_PATH='package-path'
 
@@ -105,6 +107,7 @@ INSTALL_HOSTMETRICS=false
 REMOTELY_MANAGED=false
 EPHEMERAL=false
 TIMEZONE=""
+COLLECTOR_NAME=""
 CLOBBER=false
 
 LAUNCHD_CONFIG=""
@@ -170,6 +173,7 @@ Supported arguments:
   -${ARG_SHORT_EPHEMERAL}, --${ARG_LONG_EPHEMERAL}                       Delete the collector from Sumo Logic after 12 hours of inactivity.
   -${ARG_SHORT_TIMEOUT}, --${ARG_LONG_TIMEOUT} <timeout>      Timeout in seconds after which download will fail. Default is ${CURL_MAX_TIME}.
   -${ARG_SHORT_TIMEZONE}, --${ARG_LONG_TIMEZONE}                       TIMEZONE for the collector.
+  -${ARG_SHORT_COLLECTOR_NAME} --${ARG_LONG_COLLECTOR_NAME}                 Set the collector name.
   -${ARG_SHORT_CLOBBER}, --${ARG_LONG_CLOBBER}                           Overwrite existing installation without asking for confirmation.
   -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
@@ -191,7 +195,7 @@ function set_defaults() {
     TIMEZONE="UTC"
     PACKAGE_PATH=""
     CLOBBER="false"
-
+    COLLECTOR_NAME=""
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
     LAUNCHD_TOKEN_KEY="${LAUNCHD_ENV_KEY}.${ENV_TOKEN}"
@@ -284,6 +288,9 @@ function parse_options() {
       "--${ARG_LONG_TIMEZONE}")
         set -- "$@" "-${ARG_SHORT_TIMEZONE}"
         ;;
+      "--${ARG_LONG_COLLECTOR_NAME}")
+        set -- "$@" "-${ARG_SHORT_COLLECTOR_NAME}"
+        ;;
       "--${ARG_LONG_CLOBBER}")
         set -- "$@" "-${ARG_SHORT_CLOBBER}"
         ;;
@@ -302,7 +309,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_COLLECTOR_NAME}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -338,6 +345,7 @@ function parse_options() {
       "${ARG_SHORT_REMOTELY_MANAGED}") REMOTELY_MANAGED=true ;;
       "${ARG_SHORT_EPHEMERAL}") EPHEMERAL=true ;;
       "${ARG_SHORT_TIMEZONE}") TIMEZONE="${OPTARG}" ;;
+      "${ARG_SHORT_COLLECTOR_NAME}") COLLECTOR_NAME="${OPTARG}" ;;
       "${ARG_SHORT_CLOBBER}") CLOBBER=true ;;
       "${ARG_SHORT_KEEP_DOWNLOADS}") KEEP_DOWNLOADS=true ;;
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
@@ -509,6 +517,10 @@ function setup_config() {
             write_timezone "${TIMEZONE}"
         fi
 
+        if [[ -n "${COLLECTOR_NAME}" ]]; then
+            write_collector_name "${COLLECTOR_NAME}"
+        fi
+
         if [[ "${CLOBBER}" == "true" ]]; then
             write_clobber_true
         fi
@@ -547,6 +559,10 @@ function setup_config() {
             write_timezone "${TIMEZONE}"
         fi
 
+        if [[ -n "${COLLECTOR_NAME}" ]]; then
+                    write_collector_name "${COLLECTOR_NAME}"
+        fi
+
         if [[ "${CLOBBER}" == "true" ]]; then
             write_clobber_true
         fi
@@ -572,6 +588,10 @@ function setup_config_darwin() {
 
     if [[ -n "${TIMEZONE}" ]]; then
         write_timezone "${TIMEZONE}"
+    fi
+
+    if [[ -n "${COLLECTOR_NAME}" ]]; then
+        write_collector_name "${COLLECTOR_NAME}"
     fi
 
     if [[ "${CLOBBER}" == "true" ]]; then
@@ -804,6 +824,11 @@ function write_timezone() {
     "${SUMO_CONFIG_BINARY_PATH}" --set-timezone "$timezone"
 }
 
+function write_collector_name(){
+    local collector_name
+    readonly collector_name="${1}"
+    "${SUMO_CONFIG_BINARY_PATH}" --set-collector-name "$collector_name"
+}
 function write_clobber_true() {
     "${SUMO_CONFIG_BINARY_PATH}" --enable-clobber
 }
