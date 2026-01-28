@@ -55,6 +55,7 @@ jobs:
     uses: SumoLogic/sumologic-otel-collector/.github/workflows/releases.yml@main
     with:
       workflow_id: ${{ needs.validate-and-discover.outputs.collector-workflow-id }}
+    secrets: inherit
 
   release-packaging:
     name: Create Packaging Draft Release
@@ -74,6 +75,7 @@ jobs:
     uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/releases.yml@main
     with:
       workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
+    secrets: inherit
 
   release-summary:
     name: Release Summary
