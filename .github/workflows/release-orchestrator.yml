@@ -49,13 +49,41 @@ jobs:
 
   release-collector:
     name: Release Collector (Draft)
+    runs-on: ubuntu-24.04
     needs:
       - validate-and-discover
       - promote-packaging-to-stable
-    uses: SumoLogic/sumologic-otel-collector/.github/workflows/releases.yml@main
-    with:
-      workflow_id: ${{ needs.validate-and-discover.outputs.collector-workflow-id }}
-    secrets: inherit
+    env:
+      GH_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+    steps:
+      - name: Trigger collector workflow
+        id: trigger
+        run: |
+          echo "Triggering collector release workflow..."
+          gh workflow run releases.yml \
+            --repo SumoLogic/sumologic-otel-collector \
+            --ref main \
+            -f workflow_id="${{ needs.validate-and-discover.outputs.collector-workflow-id }}"
+          
+          echo "Waiting for workflow to start..."
+          sleep 10
+          
+          RUN_ID=$(gh run list \
+            --repo SumoLogic/sumologic-otel-collector \
+            --workflow=releases.yml \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          
+          echo "workflow-run-id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Triggered workflow run: $RUN_ID"
+      
+      - name: Wait for workflow completion
+        run: |
+          echo "Waiting for workflow ${{ steps.trigger.outputs.workflow-run-id }} to complete..."
+          gh run watch "${{ steps.trigger.outputs.workflow-run-id }}" \
+            --repo SumoLogic/sumologic-otel-collector \
+            --exit-status
 
   release-packaging:
     name: Create Packaging Draft Release
@@ -69,13 +97,41 @@ jobs:
 
   release-containers:
     name: Release Containers RC→Stable + Draft
+    runs-on: ubuntu-24.04
     needs:
       - validate-and-discover
       - release-packaging
-    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/releases.yml@main
-    with:
-      workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
-    secrets: inherit
+    env:
+      GH_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+    steps:
+      - name: Trigger containers workflow
+        id: trigger
+        run: |
+          echo "Triggering containers release workflow..."
+          gh workflow run releases.yml \
+            --repo SumoLogic/sumologic-otel-collector-containers \
+            --ref main \
+            -f workflow-id="${{ needs.validate-and-discover.outputs.containers-workflow-id }}"
+          
+          echo "Waiting for workflow to start..."
+          sleep 10
+          
+          RUN_ID=$(gh run list \
+            --repo SumoLogic/sumologic-otel-collector-containers \
+            --workflow=releases.yml \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          
+          echo "workflow-run-id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Triggered workflow run: $RUN_ID"
+      
+      - name: Wait for workflow completion
+        run: |
+          echo "Waiting for workflow ${{ steps.trigger.outputs.workflow-run-id }} to complete..."
+          gh run watch "${{ steps.trigger.outputs.workflow-run-id }}" \
+            --repo SumoLogic/sumologic-otel-collector-containers \
+            --exit-status
 
   release-summary:
     name: Release Summary
