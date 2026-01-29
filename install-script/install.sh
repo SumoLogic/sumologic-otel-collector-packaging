@@ -560,7 +560,7 @@ function setup_config() {
         fi
 
         if [[ -n "${COLLECTOR_NAME}" ]]; then
-                    write_collector_name "${COLLECTOR_NAME}"
+            write_collector_name "${COLLECTOR_NAME}"
         fi
 
         if [[ "${CLOBBER}" == "true" ]]; then
