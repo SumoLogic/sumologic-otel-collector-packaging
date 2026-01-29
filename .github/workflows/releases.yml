@@ -141,7 +141,7 @@ jobs:
         with:
           path: artifacts/
           merge-multiple: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           run-id: ${{ inputs.workflow_id }}
 
       - name: List all artifacts
@@ -149,6 +149,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
+          token: ${{ github.token }}
           name: v${{ needs.get-version.outputs.package-version }}
           commit: ${{ needs.get-version.outputs.git-sha }}
           tag: v${{ needs.get-version.outputs.package-version }}
