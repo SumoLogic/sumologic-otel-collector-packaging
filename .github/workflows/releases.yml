@@ -149,7 +149,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.RELEASE_PAT }}
           name: v${{ needs.get-version.outputs.package-version }}
           commit: ${{ needs.get-version.outputs.git-sha }}
           tag: v${{ needs.get-version.outputs.package-version }}
