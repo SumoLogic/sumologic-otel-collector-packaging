@@ -51,6 +51,8 @@ jobs:
     needs:
       - validate-and-discover
       - promote-packaging
+    outputs:
+      workflow-run-id: ${{ steps.trigger.outputs.workflow-run-id }}
     env:
       GH_TOKEN: ${{ secrets.GH_CI_TOKEN }}
     steps:
@@ -108,6 +110,9 @@ jobs:
 
           - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
           - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+
+          # Promotion Workflow References
+          - **Containers Promotion**: [Workflow ${{ needs.promote-containers.outputs.workflow-run-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.promote-containers.outputs.workflow-run-id }})
 
           EOF
 

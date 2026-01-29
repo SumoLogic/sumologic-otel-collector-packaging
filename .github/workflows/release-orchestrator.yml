@@ -53,6 +53,8 @@ jobs:
     needs:
       - validate-and-discover
       - promote-packaging-to-stable
+    outputs:
+      workflow-run-id: ${{ steps.trigger.outputs.workflow-run-id }}
     env:
       GH_TOKEN: ${{ secrets.GH_CI_TOKEN }}
     steps:
@@ -101,6 +103,8 @@ jobs:
     needs:
       - validate-and-discover
       - release-packaging
+    outputs:
+      workflow-run-id: ${{ steps.trigger.outputs.workflow-run-id }}
     env:
       GH_TOKEN: ${{ secrets.GH_CI_TOKEN }}
     steps:
@@ -164,6 +168,11 @@ jobs:
           - **Collector Build**: [Workflow ${{ needs.validate-and-discover.outputs.collector-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ needs.validate-and-discover.outputs.collector-workflow-id }})
           - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
           - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+
+          ## Release Workflow References
+
+          - **Collector Release**: [Workflow ${{ needs.release-collector.outputs.workflow-run-id }}](https://github.com/SumoLogic/sumologic-otel-collector/actions/runs/${{ needs.release-collector.outputs.workflow-run-id }})
+          - **Containers Release**: [Workflow ${{ needs.release-containers.outputs.workflow-run-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.release-containers.outputs.workflow-run-id }})
 
           EOF
 
