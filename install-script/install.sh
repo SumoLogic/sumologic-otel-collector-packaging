@@ -536,7 +536,7 @@ function setup_config() {
     fi
 
     ## Check if there is anything to update in configuration
-    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" || -n "${TIMEZONE}" ]]; then
+    if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" || -n "${API_BASE_URL}" || ${#FIELDS[@]} -ne 0 || "${EPHEMERAL}" == "true" || -n "${TIMEZONE}" || -n "${COLLECTOR_NAME}" ]]; then
         USER_TOKEN="$(get_user_token)"
 
         if [[ -n "${SUMOLOGIC_INSTALLATION_TOKEN}" && -z "${USER_TOKEN}" ]]; then
