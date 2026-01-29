@@ -67,12 +67,12 @@ func checkTimezoneConfigInRemote(p string) func(c check) bool {
 func checkCollectorNameInRemote(p string) func(c check) bool {
 	return func(c check) bool {
 		yamlFile, err := os.ReadFile(p)
-		if assert.NoError(c.test, err, "sumologic remote config file could not be read") {
+		if !assert.NoError(c.test, err, "sumologic remote config file could not be read") {
 			return false
 		}
 
 		var config configRoot
-		if assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+		if !assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
 			return false
 		}
 		return config.Extensions.Sumologic.CollectorName != ""
