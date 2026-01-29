@@ -247,6 +247,15 @@ func checkTimezoneInConfig(c check) bool {
 	return assert.Equal(c.test, c.installOptions.timezone, conf.Extensions.Sumologic.Timezone, "timezone is different than expected")
 }
 
+func checkCollectorNameInConfig(c check) bool {
+	conf, err := getConfig(userConfigPath)
+	if !assert.NoError(c.test, err, "error while reading configuration") {
+		return false
+	}
+
+	return assert.Equal(c.test, c.installOptions.collectorName, conf.Extensions.Sumologic.CollectorName, "collector name is different than expected")
+}
+
 func checkClobberInConfig(c check) bool {
 	conf, err := getConfig(userConfigPath)
 	if !assert.NoError(c.test, err, "error while reading configuration") {

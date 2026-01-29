@@ -21,6 +21,7 @@ type sumologicExtension struct {
 	APIBaseURL        string            `yaml:"api_base_url"`
 	Ephemeral         bool              `yaml:"ephemeral"`
 	Timezone          string            `yaml:"time_zone"`
+	CollectorName     string            `yaml:"collector_name"`
 	Clobber           bool              `yaml:"clobber"`
 }
 

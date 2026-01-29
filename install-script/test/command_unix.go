@@ -31,6 +31,7 @@ type installOptions struct {
 	timezone           string
 	packagePath        string
 	clobber            bool
+	collectorName      string
 }
 
 func (io *installOptions) string() []string {
