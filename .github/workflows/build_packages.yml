@@ -407,10 +407,10 @@ jobs:
           s3_path="${version}/"
           
           aws s3 cp ./examples/chef/chef-cookbook.tar.gz \
-            "s3://${AWS_S3_BUCKET}/${s3_path}/chef-cookbook.tar.gz"
+            "s3://${AWS_S3_BUCKET}/${s3_path}chef-cookbook.tar.gz"
           
           aws s3 cp ./examples/puppet/puppet-module.tar.gz \
-            "s3://${AWS_S3_BUCKET}/${s3_path}/puppet-module.tar.gz"
+            "s3://${AWS_S3_BUCKET}/${s3_path}puppet-module.tar.gz"
           
           aws s3 cp ./examples/ansible-playbook.tar.gz \
-            "s3://${AWS_S3_BUCKET}/${s3_path}/ansible-playbook.tar.gz"
+            "s3://${AWS_S3_BUCKET}/${s3_path}ansible-playbook.tar.gz"
