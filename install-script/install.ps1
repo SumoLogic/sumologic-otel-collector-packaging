@@ -30,6 +30,8 @@ param (
     # The Timezone option is used to specify the timezone of the collector.
     [string] $Timezone,
 
+    [string] $CollectorName,
+
     [bool] $Clobber,
 
     # The API URL used to communicate with the SumoLogic backend
@@ -477,6 +479,11 @@ try {
     if ($Timezone.Length -gt 0) {
         $msiProperties += "TIMEZONE=`"${Timezone}`""
     }
+
+    if ($CollectorName -gt 0) {
+        $msiAddLocal += "COLLECTORNAME=`"${CollectorName}`""
+    }
+
     if ($Clobber -eq $true) {
         $msiAddLocal += "CLOBBER"
     }
