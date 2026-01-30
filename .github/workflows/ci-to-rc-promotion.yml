@@ -66,7 +66,7 @@ jobs:
             -f workflow-id="${{ needs.validate-and-discover.outputs.containers-workflow-id }}"
           
           echo "Waiting for workflow to start..."
-          sleep 10
+          sleep 30
           
           RUN_ID=$(gh run list \
             --repo SumoLogic/sumologic-otel-collector-containers \
@@ -116,7 +116,7 @@ jobs:
           - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
           - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
 
-          # Promotion Workflow References
+          ## Promotion Workflow References
           - **Containers Promotion**: [Workflow ${{ needs.promote-containers.outputs.workflow-run-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.promote-containers.outputs.workflow-run-id }})
 
           EOF
