@@ -227,7 +227,6 @@ namespace SumoLogicTests
             Assert.IsTrue(extensions.Children.ContainsKey("sumologic"));
             Assert.AreEqual(YamlNodeType.Mapping, extensions.Children["sumologic"].NodeType);
             var sumologic = (YamlMappingNode)extensions.Children["sumologic"];
-            var endpoint = (YamlScalarNode)sumologic.Children["collector_name"];
             if(!string.IsNullOrEmpty(config.CollectorName))
             {
                 Assert.IsTrue(sumologic.Children.ContainsKey("collector_name"));
