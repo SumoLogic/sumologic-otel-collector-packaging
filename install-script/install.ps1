@@ -480,7 +480,7 @@ try {
         $msiProperties += "TIMEZONE=`"${Timezone}`""
     }
 
-    if ($CollectorName -gt 0) {
+    if ($CollectorName.Length -gt 0) {
         $msiAddLocal += "COLLECTORNAME=`"${CollectorName}`""
     }
 
