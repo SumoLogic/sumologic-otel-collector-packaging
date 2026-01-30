@@ -80,10 +80,15 @@ jobs:
       
       - name: Wait for workflow completion
         run: |
-          echo "Waiting for workflow ${{ steps.trigger.outputs.workflow-run-id }} to complete..."
-          gh run watch "${{ steps.trigger.outputs.workflow-run-id }}" \
-            --repo SumoLogic/sumologic-otel-collector-containers \
-            --exit-status
+          while true; do
+            STATUS=$(gh run view "${{ steps.trigger.outputs.workflow-run-id }}" \
+              --repo SumoLogic/sumologic-otel-collector-containers \
+              --json status,conclusion --jq '.status + "|" + (.conclusion // "")')
+            echo "Workflow status: $STATUS"
+            [[ "$STATUS" == "completed|success" ]] && exit 0
+            [[ "$STATUS" == completed|* ]] && exit 1
+            sleep 15
+          done
 
   promotion-summary:
     name: Promotion Summary
