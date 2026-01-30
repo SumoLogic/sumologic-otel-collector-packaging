@@ -19,9 +19,14 @@
                 <Control Id="InstallationTokenDesc" Type="Hyperlink" X="20" Y="74" Width="290" Height="20" Text="!(loc.ConfigurationDlgInstallationTokenDescription)" />
                 <Control Id="InstallationTokenVar" Type="Edit" X="20" Y="100" Width="290" Height="18" Property="INSTALLATIONTOKEN" Indirect="no" />
 
-                <Control Id="TagsTitle" Type="Text" X="20" Y="130" Width="290" Height="14" NoPrefix="yes" Text="!(loc.ConfigurationDlgTagsTitle)" />
-                <Control Id="TagsDesc" Type="Text" X="20" Y="144" Width="290" Height="18" NoPrefix="yes" Text="!(loc.ConfigurationDlgTagsDescription)" />
-                <Control Id="TagsVar" Type="Edit" X="20" Y="162" Width="290" Height="18" Property="TAGS" Indirect="no" />
+                <Control Id="CollectorNameTitle" Type="Text" X="20" Y="130" Width="290" Height="14" NoPrefix="yes" Text="!(loc.ConfigurationDlgCollectorNameTitle)" />
+                <Control Id="CollectorNameDesc" Type="Text" X="20" Y="144" Width="290" Height="18" NoPrefix="yes" Text="!(loc.ConfigurationDlgCollectorNameDescription)" />
+                <Control Id="CollectorNameVar" Type="Edit" X="20" Y="162" Width="290" Height="18" Property="COLLECTORNAME" Indirect="no" />
+
+                <Control Id="TagsTitle" Type="Text" X="20" Y="190" Width="290" Height="14" NoPrefix="yes" Text="!(loc.ConfigurationDlgTagsTitle)" />
+                <Control Id="TagsDesc" Type="Text" X="20" Y="204" Width="290" Height="18" NoPrefix="yes" Text="!(loc.ConfigurationDlgTagsDescription)" />
+                <Control Id="TagsVar" Type="Edit" X="20" Y="222" Width="290" Height="18" Property="TAGS" Indirect="no" />
+
             </Dialog>
         </UI>
     </Fragment>
