@@ -483,7 +483,7 @@ try {
     }
 
     if ($CollectorName.Length -gt 0) {
-        $msiAddLocal += "COLLECTORNAME=`"${CollectorName}`""
+        $msiProperties += "COLLECTORNAME=`"${CollectorName}`""
     }
 
     if ($Clobber -eq $true) {
