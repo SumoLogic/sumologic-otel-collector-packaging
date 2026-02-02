@@ -347,3 +347,68 @@ jobs:
           SKIP_ARCH_DETECTION: 1
         run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
           make test
+
+  config-management-assets:
+    name: Store Config Management Assets
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    needs:
+      - build_packages
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Archive Chef cookbook
+        run: tar -cvf ./examples/chef/chef-cookbook.tar.gz -C ./examples/chef sumologic-otel-collector/
+
+      - name: Archive Puppet module
+        run: tar -cvf ./examples/puppet/puppet-module.tar.gz -C ./examples/puppet/modules install_otel_collector/
+
+      - name: Archive Ansible playbook
+        run: tar -cvf ./examples/ansible-playbook.tar.gz -C ./examples ansible/
+
+      - name: Store Chef cookbook archive as action artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: chef-cookbook.tar.gz
+          path: ./examples/chef/chef-cookbook.tar.gz
+          if-no-files-found: error
+
+      - name: Store Puppet module archive as action artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: puppet-module.tar.gz
+          path: ./examples/puppet/puppet-module.tar.gz
+          if-no-files-found: error
+
+      - name: Store Ansible playbook archive as action artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ansible-playbook.tar.gz
+          path: ./examples/ansible-playbook.tar.gz
+          if-no-files-found: error
+
+
+      - name: Store package managers  on S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_S3_BUCKET: sumologic-osc-ci-builds
+          OTC_VERSION: ${{ needs.build_packages.outputs.otc_version }}
+          OTC_BUILD_NUMBER: ${{ needs.build_packages.outputs.otc_build_number }}
+        if: github.actor != 'dependabot[bot]'
+        run: |
+          set -e
+          
+          version="${OTC_VERSION}-${OTC_BUILD_NUMBER}"
+          s3_path="${version}/"
+          
+          aws s3 cp ./examples/chef/chef-cookbook.tar.gz \
+            "s3://${AWS_S3_BUCKET}/${s3_path}chef-cookbook.tar.gz"
+          
+          aws s3 cp ./examples/puppet/puppet-module.tar.gz \
+            "s3://${AWS_S3_BUCKET}/${s3_path}puppet-module.tar.gz"
+          
+          aws s3 cp ./examples/ansible-playbook.tar.gz \
+            "s3://${AWS_S3_BUCKET}/${s3_path}ansible-playbook.tar.gz"
