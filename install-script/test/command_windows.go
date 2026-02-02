@@ -22,6 +22,7 @@ type installOptions struct {
 	version            string
 	timezone           string
 	clobber            bool
+	collectorName      string
 }
 
 func (io *installOptions) string() []string {
@@ -48,6 +49,9 @@ func (io *installOptions) string() []string {
 
 	if io.clobber {
 		opts = append(opts, "-Clobber", "1")
+	}
+	if io.collectorName != "" {
+		opts = append(opts, "-CollectorName", io.collectorName)
 	}
 
 	if len(io.tags) > 0 {
@@ -114,7 +118,7 @@ func runScript(ch check) (int, []string, []string, error) {
 		return 0, nil, nil, err
 	}
 
-    ch.test.Logf("Running command: %s", strings.Join(ch.installOptions.string(), " "))
+	ch.test.Logf("Running command: %s", strings.Join(ch.installOptions.string(), " "))
 
 	defer in.Close()
 
