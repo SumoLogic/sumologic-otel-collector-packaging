@@ -15,7 +15,7 @@ This [Puppet][puppet] [manifest](manifest/../manifests/install_otel_collector.pp
 ## Using the module
 
 - Get an [installation token][installation_token] from Sumo Logic
-- Prepare [configuration](../../docs/configuration.md) file for Sumo Logic Distribution for OpenTelemetry Collector and put the file in a directory of your choice. You can put multiple configuration files in this directory, and all of them will be used.
+- Prepare [configuration](https://github.com/SumoLogic/sumologic-otel-collector/blob/main/docs/configuration.md) file for Sumo Logic Distribution for OpenTelemetry Collector and put the file in a directory of your choice. You can put multiple configuration files in this directory, and all of them will be used.
 
   **NOTE**: The playbook will prepare a [base configuration][base_configuration] for you, and configure the [extension][sumologicextension] as well.
 - Modify properties in [manifests/install_otel_collector.pp](manifests/install_otel_collector.pp):
