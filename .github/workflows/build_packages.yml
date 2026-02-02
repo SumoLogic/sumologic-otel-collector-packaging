@@ -348,8 +348,6 @@ jobs:
         run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
           make test
 
-
-
   config-management-assets:
     name: Store Config Management Assets
     permissions:
@@ -370,21 +368,21 @@ jobs:
         run: tar -cvf ./examples/ansible-playbook.tar.gz -C ./examples ansible/
 
       - name: Store Chef cookbook archive as action artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@v6
         with:
           name: chef-cookbook.tar.gz
           path: ./examples/chef/chef-cookbook.tar.gz
           if-no-files-found: error
 
       - name: Store Puppet module archive as action artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@v6
         with:
           name: puppet-module.tar.gz
           path: ./examples/puppet/puppet-module.tar.gz
           if-no-files-found: error
 
       - name: Store Ansible playbook archive as action artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@v6
         with:
           name: ansible-playbook.tar.gz
           path: ./examples/ansible-playbook.tar.gz
