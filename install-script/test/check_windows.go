@@ -103,19 +103,6 @@ func checkClobberInSumoConfig(p string) func(c check) bool {
 	}
 }
 
-func checkCollectorNameInConfig(c check) bool {
-	if !assert.NotEmpty(c.test, c.installOptions.collectorName, "collector name has not been provided") {
-		return false
-	}
-
-	conf, err := getConfig(userConfigPath)
-	if !assert.NoError(c.test, err, "error while reading configuration") {
-		return false
-	}
-
-	return assert.Equal(c.test, c.installOptions.collectorName, conf.Extensions.Sumologic.CollectorName, "collector name is different than expected")
-}
-
 func checkTokenInConfig(c check) bool {
 	if !assert.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided") {
 		return false
