@@ -50,7 +50,7 @@ jobs:
     needs:
       - validate-and-discover
       - promote-packaging
-    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/release-candidates.yml@main
+    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/release-candidates.yml@test_rc
     with:
       workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
     secrets: inherit
