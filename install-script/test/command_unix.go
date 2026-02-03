@@ -86,6 +86,10 @@ func (io *installOptions) string() []string {
 		}
 	}
 
+	if io.collectorName != "" {
+		opts = append(opts, "--collector-name", io.collectorName)
+	}
+
 	if io.packagePath != "" {
 		opts = append(opts, "--package-path", io.packagePath)
 	}

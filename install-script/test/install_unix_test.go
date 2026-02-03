@@ -263,7 +263,7 @@ func TestInstallScript(t *testing.T) {
 				checkBinaryCreated,
 				checkBinaryIsRunning,
 				checkConfigCreated,
-				checkCollectorNameInConfig,
+				checkCollectorNameInRemote(sumoRemotePath),
 				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
 				checkEphemeralNotEnabledInRemote(sumoRemotePath),
 				checkHostmetricsConfigNotCreated,
