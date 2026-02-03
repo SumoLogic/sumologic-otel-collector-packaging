@@ -73,6 +73,7 @@ readonly ARG_SHORT_EPHEMERAL ARG_LONG_EPHEMERAL
 readonly ARG_SHORT_TIMEOUT ARG_LONG_TIMEOUT
 readonly ARG_SHORT_TIMEZONE ARG_LONG_TIMEZONE
 readonly ARG_SHORT_CLOBBER ARG_LONG_CLOBBER
+readonly ARG_SHORT_COLLECTOR_NAME ARG_LONG_COLLECTOR_NAME
 readonly ARG_SHORT_PACKAGE_PATH ARG_LONG_PACKAGE_PATH
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
 
@@ -173,7 +174,7 @@ Supported arguments:
   -${ARG_SHORT_EPHEMERAL}, --${ARG_LONG_EPHEMERAL}                       Delete the collector from Sumo Logic after 12 hours of inactivity.
   -${ARG_SHORT_TIMEOUT}, --${ARG_LONG_TIMEOUT} <timeout>      Timeout in seconds after which download will fail. Default is ${CURL_MAX_TIME}.
   -${ARG_SHORT_TIMEZONE}, --${ARG_LONG_TIMEZONE}                       TIMEZONE for the collector.
-  -${ARG_SHORT_COLLECTOR_NAME} --${ARG_LONG_COLLECTOR_NAME}                 Set the collector name.
+  -${ARG_SHORT_COLLECTOR_NAME}, --${ARG_LONG_COLLECTOR_NAME}                 Set the collector name.
   -${ARG_SHORT_CLOBBER}, --${ARG_LONG_CLOBBER}                           Overwrite existing installation without asking for confirmation.
   -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
@@ -273,7 +274,7 @@ function parse_options() {
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}"|"-${ARG_SHORT_COLLECTOR_NAME}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
