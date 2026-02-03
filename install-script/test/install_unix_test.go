@@ -234,6 +234,42 @@ func TestInstallScript(t *testing.T) {
 				checkTokenEnvFileCreated,
 			},
 		},
+		{
+			name: "installation token, locally-managed, and collector name",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: false,
+				collectorName:   "my-collector",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+				checkCollectorNameInConfig,
+			},
+		},
+		{
+			name: "installation token, remotely-managed and collector name",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				collectorName:   "my-collector",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkCollectorNameInConfig(sumoRemotePath),
+				checkEphemeralConfigFileNotCreated(ephemeralConfigPath),
+				checkEphemeralNotEnabledInRemote(sumoRemotePath),
+				checkHostmetricsConfigNotCreated,
+				checkTokenEnvFileCreated,
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {

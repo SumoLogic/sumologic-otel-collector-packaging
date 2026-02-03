@@ -319,7 +319,7 @@ jobs:
 
       # Download the artifacts required to build the package target.
       - name: Download otelcol-sumo artifact from workflow
-        uses: dawidd6/action-download-artifact@v12
+        uses: dawidd6/action-download-artifact@v14
         with:
           github_token: ${{ secrets.gh_artifacts_token }}
           repo: SumoLogic/sumologic-otel-collector
