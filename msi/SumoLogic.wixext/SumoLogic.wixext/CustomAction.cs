@@ -85,13 +85,13 @@ namespace SumoLogic.wixext
             }
 
             // Load config from disk and replace values
-            Config config = new Config { InstallationToken = installationToken, RemotelyManaged = remotelyManaged, Ephemeral = ephemeral,
-                OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api, Timezone = timezone, CollectorName = collectorName, Clobber = clobber };
-            config.SetCollectorFieldsFromTags(tags);
-
             var configFile = remotelyManaged ? sumoLogicConfigPath : commonConfigPath;
             try
             {
+                Config config = new Config { InstallationToken = installationToken, RemotelyManaged = remotelyManaged, Ephemeral = ephemeral,
+                    OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api, Timezone = timezone, CollectorName = collectorName, Clobber = clobber };
+                config.SetCollectorFieldsFromTags(tags);
+
                 ConfigUpdater configUpdater = new ConfigUpdater(new StreamReader(configFile));
                 configUpdater.Update(config);
                 configUpdater.Save(new StreamWriter(configFile));
