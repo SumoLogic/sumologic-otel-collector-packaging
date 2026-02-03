@@ -1,0 +1,20 @@
+extensions:
+  sumologic:
+    installation_token: ${SUMOLOGIC_INSTALLATION_TOKEN}
+    collector_name: ${SUMOLOGIC_COLLECTOR_NAME}
+
+receivers:
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      load:
+
+exporters:
+  sumologic:
+
+service:
+  extensions: [sumologic]
+  pipelines:
+    metrics:
+      receivers: [hostmetrics]
+      exporters: [sumologic]
