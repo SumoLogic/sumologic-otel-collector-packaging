@@ -266,6 +266,7 @@ jobs:
         with:
           go-version: stable
           cache: true
+          cache-dependency-path: install-script/test/go.sum
 
       - name: Download macOS package and use it for install.sh
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
