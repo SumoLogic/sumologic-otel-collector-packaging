@@ -86,5 +86,108 @@ namespace SumoLogicTests
             var config = new Config();
             config.SetCollectorFieldsFromTags(tags);
         }
+
+        [TestMethod]
+        public void TestCollectorName_Valid()
+        {
+            var config = new Config();
+            config.CollectorName = "my-collector";
+
+            Assert.AreEqual("my-collector", config.CollectorName);
+        }
+
+        [TestMethod]
+        public void TestCollectorName_ValidWithAllowedSpecialChars()
+        {
+            var config = new Config();
+            config.CollectorName = "test_collector.name/value=123+456-789@test";
+
+            Assert.AreEqual("test_collector.name/value=123+456-789@test", config.CollectorName);
+        }
+
+        [TestMethod]
+        public void TestCollectorName_Empty()
+        {
+            var config = new Config();
+            config.CollectorName = "";
+
+            Assert.AreEqual("", config.CollectorName);
+        }
+
+        [TestMethod]
+        public void TestCollectorName_Null()
+        {
+            var config = new Config();
+            config.CollectorName = null;
+
+            Assert.IsNull(config.CollectorName);
+        }
+
+        [TestMethod]
+        public void TestCollectorName_LeadingTrailingWhitespace()
+        {
+            var config = new Config();
+            config.CollectorName = "  my-collector  ";
+
+            Assert.AreEqual("my-collector", config.CollectorName);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CollectorNameEmptyException), "Empty collector name (whitespace only) did not throw a CollectorNameEmptyException.")]
+        public void TestCollectorName_WhitespaceOnly()
+        {
+            var config = new Config();
+            config.CollectorName = "   ";
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CollectorNameLengthExceededException), "Collector name exceeding 114 characters did not throw a CollectorNameLengthExceededException.")]
+        public void TestCollectorName_LengthExceeded()
+        {
+            var config = new Config();
+            config.CollectorName = RandomString(115);
+        }
+
+        [TestMethod]
+        public void TestCollectorName_ExactlyAtLimit()
+        {
+            var config = new Config();
+            var name = RandomString(114);
+            config.CollectorName = name;
+
+            Assert.AreEqual(name, config.CollectorName);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CollectorNameInvalidCharactersException), "Collector name with invalid character '?' did not throw a CollectorNameInvalidCharactersException.")]
+        public void TestCollectorName_InvalidCharQuestionMark()
+        {
+            var config = new Config();
+            config.CollectorName = "my-collector?";
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CollectorNameInvalidCharactersException), "Collector name with invalid character '#' did not throw a CollectorNameInvalidCharactersException.")]
+        public void TestCollectorName_InvalidCharHash()
+        {
+            var config = new Config();
+            config.CollectorName = "my-collector#test";
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CollectorNameInvalidCharactersException), "Collector name with space did not throw a CollectorNameInvalidCharactersException.")]
+        public void TestCollectorName_InvalidCharSpace()
+        {
+            var config = new Config();
+            config.CollectorName = "my collector";
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CollectorNameInvalidCharactersException), "Collector name with invalid character '$' did not throw a CollectorNameInvalidCharactersException.")]
+        public void TestCollectorName_InvalidCharDollar()
+        {
+            var config = new Config();
+            config.CollectorName = "my-collector$";
+        }
     }
 }

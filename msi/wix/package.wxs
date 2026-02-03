@@ -64,6 +64,8 @@
     <!--   <RegistrySearch Id="DetermineInstallationToken" Type="raw" Root="HKLM" Key="$(RegKeyPath)" Name="InstallationToken" /> -->
     <!-- </Property> -->
 
+    <Property Id="COLLECTORNAME" Hidden="yes" />
+
     <!--
         Determine the TAGS of a previous installation (if one exists)
         If not, TAGS stays empty
@@ -106,7 +108,8 @@
     <CustomAction Id="UpdateConfigActionData1" Property="UpdateConfigAction1"
       Value="CommonConfigPath=[ConfigFragmentsFolder]common.yaml;SumoLogicConfigPath=[ConfigFolder]sumologic.yaml;InstallToken=[INSTALLTOKEN];InstallationToken=[INSTALLATIONTOKEN]" />
     <CustomAction Id="UpdateConfigActionData2" Property="UpdateConfigAction2"
-      Value="Tags=[TAGS];OpAmpFolder=[OpAmpFolder];OpAmpApi=[OPAMPAPI];Timezone=[TIMEZONE];Ephemeral=[EPHEMERALSELECTED];Clobber=[CLOBBERSELECTED];RemotelyManaged=[REMOTELYMANAGEDSELECTED];Api=[API]" />
+      Value="CollectorName=[COLLECTORNAME];Tags=[TAGS];OpAmpFolder=[OpAmpFolder];OpAmpApi=[OPAMPAPI];Timezone=[TIMEZONE];Ephemeral=[EPHEMERALSELECTED];Clobber=[CLOBBERSELECTED];RemotelyManaged=[REMOTELYMANAGEDSELECTED];Api=[API]" />
+
     <CustomAction Id="UpdateConfigActionData" Property="UpdateConfigAction" Value="[UpdateConfigAction1];[UpdateConfigAction2]" />
 
     <!-- Before updating the config files set the properties indicating whether or not the remotely managed and ephemeral features are selected -->
