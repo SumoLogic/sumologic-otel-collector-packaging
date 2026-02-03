@@ -39,4 +39,19 @@ namespace SumoLogic.wixext
     {
         public MissingConfigurationException(string message) { }
     }
+
+    public class CollectorNameEmptyException : Exception
+    {
+        public CollectorNameEmptyException(string message) : base(message) { }
+    }
+
+    public class CollectorNameLengthExceededException : Exception
+    {
+        public CollectorNameLengthExceededException(string message) : base(message) { }
+    }
+
+    public class CollectorNameInvalidCharactersException : Exception
+    {
+        public CollectorNameInvalidCharactersException(string message) : base(message) { }
+    }
 }
