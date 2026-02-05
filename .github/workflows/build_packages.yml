@@ -391,10 +391,10 @@ jobs:
 
       - name: Store package managers  on S3
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
-          AWS_S3_BUCKET: sumologic-osc-ci-builds
+          AWS_S3_BUCKET: sumo-otel-builds-dev-c64ec98a
           OTC_VERSION: ${{ needs.build_packages.outputs.otc_version }}
           OTC_BUILD_NUMBER: ${{ needs.build_packages.outputs.otc_build_number }}
         if: github.actor != 'dependabot[bot]'
