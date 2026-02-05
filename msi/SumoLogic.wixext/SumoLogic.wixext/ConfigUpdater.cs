@@ -101,6 +101,12 @@ namespace SumoLogic.wixext
                 sumologic.Children["time_zone"] = config.Timezone;
             }
 
+            if (!string.IsNullOrEmpty(config.CollectorName))
+            {
+                EnsureScalarKey(sumologic, "collector_name");
+                sumologic.Children["collector_name"] = config.CollectorName;
+            }
+
             if (config.Clobber)
             {
                 EnsureScalarKey(sumologic, "clobber");

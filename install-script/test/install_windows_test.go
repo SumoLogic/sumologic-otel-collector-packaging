@@ -201,6 +201,41 @@ func TestInstallScript(t *testing.T) {
 				checkConfigCreated,
 			},
 		},
+		{
+			name: "installation token and CollectorName",
+			options: installOptions{
+				installToken:  installToken,
+				collectorName: "my-windows-collector",
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInConfig,
+				checkCollectorNameInConfig,
+			},
+		},
+		{
+			name: "installation token, remotely-managed, and  CollectorName",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				collectorName:   "my-windows-collector",
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInSumoConfig,
+				checkCollectorNameInSumoConfig(configPath),
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
