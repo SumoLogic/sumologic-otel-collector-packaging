@@ -89,6 +89,19 @@ func checkEphemeralInConfig(p string) func(c check) bool {
 	}
 }
 
+func checkCollectorNameInSumoConfig(p string) func(c check) bool {
+	return func(c check) bool {
+		assert.NotEmpty(c.test, c.installOptions.collectorName, "collector name was not specified")
+
+		conf, err := getConfig(p)
+		if !assert.NoError(c.test, err, "error while reading configuration") {
+			return false
+
+		}
+		assert.Equal(c.test, c.installOptions.collectorName, conf.Extensions.Sumologic.CollectorName, "collector name is different than expected")
+		return true
+	}
+}
 func checkClobberInSumoConfig(p string) func(c check) bool {
 	return func(c check) bool {
 		assert.True(c.test, c.installOptions.clobber, "clobber was not specified")
@@ -101,19 +114,6 @@ func checkClobberInSumoConfig(p string) func(c check) bool {
 		assert.True(c.test, conf.Extensions.Sumologic.Clobber, "clobber is not true")
 		return true
 	}
-}
-
-func checkCollectorNameInConfig(c check) bool {
-	if !assert.NotEmpty(c.test, c.installOptions.collectorName, "collector name has not been provided") {
-		return false
-	}
-
-	conf, err := getConfig(userConfigPath)
-	if !assert.NoError(c.test, err, "error while reading configuration") {
-		return false
-	}
-
-	return assert.Equal(c.test, c.installOptions.collectorName, conf.Extensions.Sumologic.CollectorName, "collector name is different than expected")
 }
 
 func checkTokenInConfig(c check) bool {

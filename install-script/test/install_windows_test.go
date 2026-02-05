@@ -233,7 +233,7 @@ func TestInstallScript(t *testing.T) {
 				checkConfigFilesOwnershipAndPermissions(localSystemSID),
 				checkUserConfigCreated,
 				checkTokenInSumoConfig,
-				checkCollectorNameInConfig,
+				checkCollectorNameInSumoConfig(configPath),
 			},
 		},
 	} {

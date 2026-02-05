@@ -229,7 +229,7 @@ jobs:
   test-install-script:
     name: Test Install Script
     runs-on: ${{ matrix.runs_on }}
-    timeout-minutes: 60
+    timeout-minutes: 70
     needs:
       - build_packages
     strategy:
@@ -266,6 +266,7 @@ jobs:
         with:
           go-version: stable
           cache: true
+          cache-dependency-path: install-script/test/go.sum
 
       - name: Download macOS package and use it for install.sh
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
@@ -333,13 +334,13 @@ jobs:
           echo S3_BUCKET="sumologic-osc-ci-builds" >> "$GITHUB_ENV"
 
       - name: Run install script tests (*nix)
-        if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.title, 'actions/')
+        if: steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' && github.actor != 'dependabot[bot]' && !contains(github.event.pull_request.title, 'actions/')
         working-directory: install-script/test
         run: make test
 
       - name: Run install script tests (Windows)
         shell: powershell
-        if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.title, 'actions/')
+        if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && github.actor != 'dependabot[bot]' && !contains(github.event.pull_request.title, 'actions/')
         working-directory: install-script/test
         env:
           S3_BUCKET: sumologic-osc-ci-builds

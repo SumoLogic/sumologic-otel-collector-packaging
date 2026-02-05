@@ -20,6 +20,7 @@ jobs:
         with:
           go-version: stable
           cache: true
+          cache-dependency-path: ci/go.sum
 
       - name: Run packagecloudpruner
         working-directory: ci/cmd/packagecloudpruner
