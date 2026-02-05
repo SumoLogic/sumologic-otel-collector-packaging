@@ -47,13 +47,48 @@ jobs:
 
   promote-containers:
     name: Promote Containers (ci → rc)
+    runs-on: ubuntu-24.04
     needs:
       - validate-and-discover
       - promote-packaging
-    uses: SumoLogic/sumologic-otel-collector-containers/.github/workflows/release-candidates.yml@main
-    with:
-      workflow-id: ${{ needs.validate-and-discover.outputs.containers-workflow-id }}
-    secrets: inherit
+    outputs:
+      workflow-run-id: ${{ steps.trigger.outputs.workflow-run-id }}
+    env:
+      GH_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+    steps:
+      - name: Trigger containers workflow
+        id: trigger
+        run: |
+          echo "Triggering containers workflow..."
+          gh workflow run release-candidates.yml \
+            --repo SumoLogic/sumologic-otel-collector-containers \
+            --ref main \
+            -f workflow-id="${{ needs.validate-and-discover.outputs.containers-workflow-id }}"
+          
+          echo "Waiting for workflow to start..."
+          sleep 30
+          
+          RUN_ID=$(gh run list \
+            --repo SumoLogic/sumologic-otel-collector-containers \
+            --workflow=release-candidates.yml \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId')
+          
+          echo "workflow-run-id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Triggered workflow run: $RUN_ID"
+      
+      - name: Wait for workflow completion
+        run: |
+          while true; do
+            STATUS=$(gh run view "${{ steps.trigger.outputs.workflow-run-id }}" \
+              --repo SumoLogic/sumologic-otel-collector-containers \
+              --json status,conclusion --jq '.status + "|" + (.conclusion // "")')
+            echo "Workflow status: $STATUS"
+            [[ "$STATUS" == "completed|success" ]] && exit 0
+            [[ "$STATUS" == completed\|* ]] && exit 1
+            sleep 15
+          done
 
   promotion-summary:
     name: Promotion Summary
@@ -80,6 +115,9 @@ jobs:
 
           - **Packaging Build**: [Workflow ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/runs/${{ needs.validate-and-discover.outputs.packaging-workflow-id }})
           - **Containers Build**: [Workflow ${{ needs.validate-and-discover.outputs.containers-workflow-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.validate-and-discover.outputs.containers-workflow-id }})
+
+          ## Promotion Workflow References
+          - **Containers Promotion**: [Workflow ${{ needs.promote-containers.outputs.workflow-run-id }}](https://github.com/SumoLogic/sumologic-otel-collector-containers/actions/runs/${{ needs.promote-containers.outputs.workflow-run-id }})
 
           EOF
 
