@@ -1,4 +1,4 @@
-FROM alpine:3.18.12
+FROM alpine:3.17
 
 ARG TARGETPLATFORM
 
