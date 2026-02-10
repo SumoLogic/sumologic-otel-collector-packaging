@@ -17,8 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tar \
     gzip \
     awscli \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+    ca-certificates
 
 COPY docker/install-deps.sh /install-deps.sh
 
