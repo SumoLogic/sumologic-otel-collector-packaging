@@ -1,6 +1,7 @@
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
 ARG TARGETPLATFORM
+ARG TARGETARCH
 
 LABEL org.opencontainers.image.authors="Sumo Logic <opensource-collection-team@sumologic.com>"
 
@@ -21,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY docker/install-deps.sh /install-deps.sh
 
-RUN /install-deps.sh "$TARGETARCH"
+RUN /install-deps.sh "${TARGETARCH}"
 
 COPY docker/entrypoint.sh /entrypoint.sh
 
