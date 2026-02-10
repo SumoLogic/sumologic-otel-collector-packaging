@@ -215,6 +215,22 @@ jobs:
           aws s3 cp install-script/install.ps1 "s3://${AWS_S3_BUCKET}/${s3_path}"
           aws s3 cp install-script/install.sh "s3://${AWS_S3_BUCKET}/${s3_path}"
 
+      - name: Store install scripts on New S3
+        if: github.actor != 'dependabot[bot]'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SUMOLOGIC_OTEL_CICD_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SUMOLOGIC_OTEL_CICD_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_S3_BUCKET: sumo-otel-builds-dev-c64ec98a
+          OTC_VERSION: ${{ needs.build_packages.outputs.otc_version }}
+          OTC_BUILD_NUMBER: ${{ needs.build_packages.outputs.otc_build_number }}
+        run: |
+          version="${OTC_VERSION}-${OTC_BUILD_NUMBER}"
+          s3_path="${version}/"
+          aws s3 cp install-script/install.ps1 "s3://${AWS_S3_BUCKET}/${s3_path}"
+          aws s3 cp install-script/install.sh "s3://${AWS_S3_BUCKET}/${s3_path}"
+
+
       - name: Create latest_version file
         if: github.actor != 'dependabot[bot]'
         env:
