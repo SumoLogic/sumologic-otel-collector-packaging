@@ -17,8 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     tar \
     gzip \
-    awscli \
-    ca-certificates
+    ca-certificates \
+    unzip && \
+    curl -L "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install &&
 
 COPY docker/install-deps.sh /install-deps.sh
 
