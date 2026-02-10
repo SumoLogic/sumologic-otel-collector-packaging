@@ -5,8 +5,19 @@ ARG TARGETPLATFORM
 LABEL org.opencontainers.image.authors="Sumo Logic <opensource-collection-team@sumologic.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cmake dpkg dpkg-dev file git make rpm curl bash tar gzip \
-    awscli && \
+    cmake \
+    dpkg \
+    dpkg-dev \
+    file \
+    git \
+    make \
+    rpm \
+    curl \
+    bash \
+    tar \
+    gzip \
+    awscli \
+    ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 COPY docker/install-deps.sh /install-deps.sh
