@@ -18,7 +18,10 @@ RUN apk add --no-cache \
     tar \
     gzip \
     aws-cli \
-    ca-certificates
+    ca-certificates \
+    openssl \
+    libffi-dev \
+    musl-dev
 
 COPY docker/install-deps.sh /install-deps.sh
 
