@@ -1,10 +1,10 @@
-FROM debian:bookworm-slim
+FROM alpine:3.18.12
 
 ARG TARGETPLATFORM
 
 LABEL org.opencontainers.image.authors="Sumo Logic <opensource-collection-team@sumologic.com>"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
     cmake \
     dpkg \
     dpkg-dev \
@@ -12,18 +12,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     make \
     rpm \
-    librpm-dev \
+    rpm-dev \
     curl \
     bash \
     tar \
     gzip \
-    awscli \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+    python3 \
+    py3-pip \
+    ca-certificates \
+    openssl \
+    openssl-dev \
+    libffi \
+    libffi-dev \
+    musl-dev \
+    gcc
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir awscli
 
 COPY docker/install-deps.sh /install-deps.sh
 
-RUN /install-deps.sh "{$TARGETARCH}"
+RUN /install-deps.sh "$TARGETARCH"
 
 COPY docker/entrypoint.sh /entrypoint.sh
 
