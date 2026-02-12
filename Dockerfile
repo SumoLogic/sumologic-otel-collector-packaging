@@ -1,6 +1,7 @@
 FROM alpine:3.18.12
 
 ARG TARGETPLATFORM
+ARG TARGETARCH
 
 LABEL org.opencontainers.image.authors="Sumo Logic <opensource-collection-team@sumologic.com>"
 
@@ -17,11 +18,15 @@ RUN apk add --no-cache \
     bash \
     tar \
     gzip \
-    aws-cli \
+    python3 \
+    py3-pip \
     ca-certificates \
     openssl \
     libffi-dev \
-    musl-dev
+    musl-dev \
+    gcc
+
+RUN pip install --no-cache-dir boto3
 
 COPY docker/install-deps.sh /install-deps.sh
 
