@@ -61,7 +61,7 @@ jobs:
     name: Create Packaging Draft Release
     needs:
       - validate-and-discover
-     # - release-collector
+      - release-collector
     uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/releases.yml@main
     with:
       workflow_id: ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}
