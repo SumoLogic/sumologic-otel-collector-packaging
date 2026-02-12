@@ -39,19 +39,19 @@ jobs:
         id: find-workflows
         run: .github/ci/release-helper.sh "${{ inputs.package_version }}"
 
-  promote-packaging-to-stable:
-    name: Promote Packaging RC→Stable
-    needs: validate-and-discover
-    uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/promote-release-candidate.yml@main
-    with:
-      version: ${{ inputs.package_version }}
-    secrets: inherit
+ # promote-packaging-to-stable:
+ #   name: Promote Packaging RC→Stable
+ #   needs: validate-and-discover
+ #   uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/promote-release-candidate.yml@main
+ #   with:
+ #     version: ${{ inputs.package_version }}
+ #   secrets: inherit
 
   release-collector:
     name: Release Collector (Draft)
     needs:
       - validate-and-discover
-      - promote-packaging-to-stable
+   #   - promote-packaging-to-stable
     uses: SumoLogic/sumologic-otel-collector/.github/workflows/releases.yml@main
     with:
       workflow_id: ${{ needs.validate-and-discover.outputs.collector-workflow-id }}
@@ -61,7 +61,7 @@ jobs:
     name: Create Packaging Draft Release
     needs:
       - validate-and-discover
-      - release-collector
+     # - release-collector
     uses: SumoLogic/sumologic-otel-collector-packaging/.github/workflows/releases.yml@main
     with:
       workflow_id: ${{ needs.validate-and-discover.outputs.packaging-workflow-id }}
@@ -83,7 +83,7 @@ jobs:
     needs:
       - validate-and-discover
       - release-collector
-      - promote-packaging-to-stable
+     # - promote-packaging-to-stable
       - release-packaging
       - release-containers
     if: always()
@@ -97,8 +97,6 @@ jobs:
           **Collector Version**: ${{ needs.validate-and-discover.outputs.collector-version }}
 
           ## Workflows Completed
-
-          1. ✅ **Packaging Promotion** (${{ needs.promote-packaging-to-stable.result }})
           2. ✅ **Collector Draft Release** (${{ needs.release-collector.result }})
           3. ✅ **Packaging Draft Release** (${{ needs.release-packaging.result }})
           4. ✅ **Containers Draft Release** (${{ needs.release-containers.result }})
@@ -115,7 +113,6 @@ jobs:
         if: |
           needs.validate-and-discover.result == 'failure' ||
           needs.release-collector.result == 'failure' ||
-          needs.promote-packaging-to-stable.result == 'failure' ||
           needs.release-packaging.result == 'failure' ||
           needs.release-containers.result == 'failure'
         run: |
