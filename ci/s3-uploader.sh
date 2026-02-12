@@ -29,6 +29,10 @@ bucket = "$S3_BUCKET".rstrip('/')
 path = "$S3_PATH".lstrip('/')
 file_path = "$FILE_PATH"
 
+print(f"DEBUG: Bucket: {bucket}")
+print(f"DEBUG: Key: {key}")
+print(f"DEBUG: File: {file_path}")
+
 try:
     s3.upload_file(file_path, bucket, path)
     print(f"✓ Successfully uploaded to $S3_URI")
