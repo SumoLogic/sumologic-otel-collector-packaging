@@ -30,7 +30,7 @@ path = "$S3_PATH".lstrip('/')
 file_path = "$FILE_PATH"
 
 print(f"DEBUG: Bucket: {bucket}")
-print(f"DEBUG: Key: {key}")
+print(f"DEBUG: path: {path}")
 print(f"DEBUG: File: {file_path}")
 
 try:
