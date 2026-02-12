@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     make \
     rpm \
-    rpm-dev \
+    librpm-dev \
     curl \
     bash \
     tar \
