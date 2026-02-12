@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     make \
     rpm \
+    rpm-dev \
     curl \
     bash \
     tar \
