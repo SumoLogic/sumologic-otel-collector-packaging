@@ -17,7 +17,18 @@ RUN apk add --no-cache \
     bash \
     tar \
     gzip \
-    aws-cli
+    python3 \
+    py3-pip \
+    ca-certificates \
+    openssl \
+    openssl-dev \
+    libffi \
+    libffi-dev \
+    musl-dev \
+    gcc
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir awscli
 
 COPY docker/install-deps.sh /install-deps.sh
 
