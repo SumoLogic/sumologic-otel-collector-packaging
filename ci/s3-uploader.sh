@@ -29,12 +29,14 @@ bucket = "$S3_BUCKET".rstrip('/')
 path = "$S3_PATH".lstrip('/')
 file_path = "$FILE_PATH"
 
+filename = os.path.basename(file_path)
+key = path + filename
 print(f"DEBUG: Bucket: {bucket}")
-print(f"DEBUG: path: {path}")
+print(f"DEBUG: path: {key}")
 print(f"DEBUG: File: {file_path}")
 
 try:
-    s3.upload_file(file_path, bucket, path)
+    s3.upload_file(file_path, bucket, key)
     print(f"✓ Successfully uploaded to $S3_URI")
 except Exception as e:
     print(f"✗ Upload failed: {e}")
