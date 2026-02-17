@@ -87,6 +87,23 @@ func TestInstallScriptDarwin(t *testing.T) {
 			},
 		},
 		{
+			name: "config only mode",
+			options: installOptions{
+				installToken: installToken,
+				configOnly:   true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkConfigNotCreated,
+				checkUserNotExists,
+				checkGroupNotExists,
+				checkLaunchdConfigNotCreated,
+				checkConfigOwnershipAndPermissions(rootUser, rootGroup),
+			},
+			installCode: 0,
+		},
+		{
 			name: "installation token and ephemeral",
 			options: installOptions{
 				installToken: installToken,

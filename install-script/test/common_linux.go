@@ -18,5 +18,4 @@ func tearDown(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	return
 }

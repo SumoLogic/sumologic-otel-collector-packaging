@@ -42,6 +42,8 @@ ARG_SHORT_BRANCH='b'
 ARG_LONG_BRANCH='branch'
 ARG_SHORT_KEEP_DOWNLOADS='n'
 ARG_LONG_KEEP_DOWNLOADS='keep-downloads'
+ARG_SHORT_CONFIG_ONLY='l'
+ARG_LONG_CONFIG_ONLY='config-only'
 ARG_SHORT_INSTALL_HOSTMETRICS='H'
 ARG_LONG_INSTALL_HOSTMETRICS='install-hostmetrics'
 ARG_SHORT_REMOTELY_MANAGED='r'
@@ -70,6 +72,7 @@ readonly ARG_SHORT_SKIP_TOKEN ARG_LONG_SKIP_TOKEN ARG_SHORT_FIPS ARG_LONG_FIPS E
 readonly ARG_SHORT_INSTALL_HOSTMETRICS ARG_LONG_INSTALL_HOSTMETRICS
 readonly ARG_SHORT_REMOTELY_MANAGED ARG_LONG_REMOTELY_MANAGED
 readonly ARG_SHORT_EPHEMERAL ARG_LONG_EPHEMERAL
+readonly ARG_SHORT_CONFIG_ONLY ARG_LONG_CONFIG_ONLY
 readonly ARG_SHORT_TIMEOUT ARG_LONG_TIMEOUT
 readonly ARG_SHORT_TIMEZONE ARG_LONG_TIMEZONE
 readonly ARG_SHORT_CLOBBER ARG_LONG_CLOBBER
@@ -104,6 +107,7 @@ SUMO_CONFIG_BINARY_PATH=""
 COMMON_CONFIG_PATH=""
 PURGE=""
 DOWNLOAD_ONLY=""
+CONFIG_ONLY=""
 INSTALL_HOSTMETRICS=false
 REMOTELY_MANAGED=false
 EPHEMERAL=false
@@ -178,6 +182,7 @@ Supported arguments:
   -${ARG_SHORT_CLOBBER}, --${ARG_LONG_CLOBBER}                           Overwrite existing installation without asking for confirmation.
   -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
+  -${ARG_SHORT_CONFIG_ONLY}, --${ARG_LONG_CONFIG_ONLY}             Skip the install and only create configuration based on arguments.
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
 
@@ -271,10 +276,13 @@ function parse_options() {
       "--${ARG_LONG_KEEP_DOWNLOADS}")
         set -- "$@" "-${ARG_SHORT_KEEP_DOWNLOADS}"
         ;;
+      "--${ARG_LONG_CONFIG_ONLY}")
+        set -- "$@" "-${ARG_SHORT_CONFIG_ONLY}"
+        ;;
       "--${ARG_LONG_TIMEOUT}")
         set -- "$@" "-${ARG_SHORT_TIMEOUT}"
         ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}"|"-${ARG_SHORT_COLLECTOR_NAME}")
+      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_ONLY}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}"|"-${ARG_SHORT_COLLECTOR_NAME}")
         set -- "$@" "${arg}"
         ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
@@ -310,7 +318,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_COLLECTOR_NAME}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_CONFIG_ONLY}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_COLLECTOR_NAME}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -333,6 +341,7 @@ function parse_options() {
       "${ARG_SHORT_UPGRADE}")       UPGRADE=true ;;
       "${ARG_SHORT_PURGE}")         PURGE=true ;;
       "${ARG_SHORT_DOWNLOAD}")      DOWNLOAD_ONLY=true ;;
+      "${ARG_SHORT_CONFIG_ONLY}")   CONFIG_ONLY=true ;;
       "${ARG_SHORT_CONFIG_BRANCH}") CONFIG_BRANCH="${OPTARG}" ;;
       "${ARG_SHORT_BINARY_BRANCH}") BINARY_BRANCH="${OPTARG}" ;;
       "${ARG_SHORT_BRANCH}")
@@ -1231,6 +1240,39 @@ if [ "${FIPS}" == "true" ]; then
         exit 1
         ;;
     esac
+fi
+
+if [[ "${CONFIG_ONLY}" == "true" ]]; then
+    echo "Skipping installation because this is configuration-only."
+    mkdir -p "${CONFIG_DIRECTORY}"
+    chmod 771 "${CONFIG_DIRECTORY}"
+
+    dirs_770=(
+        "/etc/otelcol-sumo/conf.d"
+        "/etc/otelcol-sumo/env"
+        "/etc/otelcol-sumo/opamp.d"
+        "/var/lib/otelcol-sumo"
+        "/var/lib/otelcol-sumo/file_storage"
+    )
+
+    for dir in "${dirs_770[@]}"; do
+        mkdir -p "$dir"
+        chmod 770 "$dir"
+    done
+
+    if ! command -v otelcol-config; then
+        echo "ERROR: ${SUMO_CONFIG_BINARY_PATH} is not in \$PATH"
+        exit 1
+    fi
+
+
+    if [[ "${OS_TYPE}" == "darwin" ]]; then
+        setup_config_darwin
+    else
+        setup_config
+    fi
+    echo "Successfully created the configs"
+    exit 0
 fi
 
 if [[ "${OS_TYPE}" == "darwin" ]]; then
