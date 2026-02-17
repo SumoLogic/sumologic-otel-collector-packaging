@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ############################ Static variables
-
+#### test
 ARG_SHORT_TOKEN='i'
 ARG_LONG_TOKEN='installation-token'
 DEPRECATED_ARG_LONG_TOKEN='installation-token'
