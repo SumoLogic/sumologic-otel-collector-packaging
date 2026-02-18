@@ -60,41 +60,6 @@ func checkConfigFilesOwnershipAndPermissions(ownerName string, ownerGroup string
 	}
 }
 
-func checkConfigDirectoriesAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
-	return func(c check) bool {
-		assertion := true
-		// Base directory checks
-		assertion = assertion && PathHasPermissions(c.test, etcPath, etcPathPermissions)
-		assertion = assertion && PathHasOwner(c.test, etcPath, ownerName, ownerGroup)
-
-		assertion = assertion && PathHasPermissions(c.test, libPath, configPathDirPermissions)
-		assertion = assertion && PathHasOwner(c.test, libPath, ownerName, ownerGroup)
-
-		assertion = assertion && PathHasPermissions(c.test, fileStoragePath, configPathDirPermissions)
-		assertion = assertion && PathHasOwner(c.test, fileStoragePath, ownerName, ownerGroup)
-
-		assertion = assertion && PathHasPermissions(c.test, opampDPath, opampDPermissions)
-		assertion = assertion && PathHasOwner(c.test, opampDPath, ownerName, ownerGroup)
-
-		assertion = assertion && PathHasPermissions(c.test, confDPath, configPathDirPermissions)
-		assertion = assertion && PathHasOwner(c.test, confDPath, ownerName, ownerGroup)
-
-		return assertion
-	}
-
-}
-
-func checkRemoteConfigCreated(ownerName string, ownerGroup string) func(c check) bool {
-	return func(c check) bool {
-		assertion := true
-
-		assertion = assertion && PathHasPermissions(c.test, sumoRemotePath, configPathFilePermissions)
-		assertion = assertion && PathHasOwner(c.test, sumoRemotePath, ownerName, ownerGroup)
-
-		return assertion
-	}
-}
-
 func checkDifferentTokenInLaunchdConfig(c check) bool {
 	if !assert.NotEmpty(c.test, c.installOptions.installToken, "installation token has not been provided") {
 		return false
