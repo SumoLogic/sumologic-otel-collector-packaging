@@ -95,6 +95,44 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "remote config only mode",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				configOnly:      true,
+				opampEndpoint:   "wss://example.com",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkRemoteConfigDirectoryCreated,
+				checkOpAmpEndpointSet,
+			},
+			installCode: 0,
+		},
+		{
+			name: "config only mode",
+			options: installOptions{
+				installToken: installToken,
+				tags: map[string]string{
+					"lorem":     "ipsum",
+					"foo":       "bar",
+					"escape_me": "'\\/",
+					"slash":     "a/b",
+					"numeric":   "1_024",
+				},
+				configOnly: true,
+				ephemeral:  true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkUserConfigCreated,
+				checkTags,
+			},
+			installCode: 0,
+		},
+		{
 			name: "installation token, remotely-managed, and ephemeral",
 			options: installOptions{
 				installToken:    installToken,

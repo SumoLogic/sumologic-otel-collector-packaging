@@ -60,7 +60,7 @@ func checkConfigFilesOwnershipAndPermissions(ownerName string, ownerGroup string
 	}
 }
 
-func checkConfigOwnershipAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
+func checkConfigDirectoriesAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
 	return func(c check) bool {
 		assertion := true
 		// Base directory checks
@@ -82,6 +82,17 @@ func checkConfigOwnershipAndPermissions(ownerName string, ownerGroup string) fun
 		return assertion
 	}
 
+}
+
+func checkRemoteConfigCreated(ownerName string, ownerGroup string) func(c check) bool {
+	return func(c check) bool {
+		assertion := true
+
+		assertion = assertion && PathHasPermissions(c.test, sumoRemotePath, configPathFilePermissions)
+		assertion = assertion && PathHasOwner(c.test, sumoRemotePath, ownerName, ownerGroup)
+
+		return assertion
+	}
 }
 
 func checkDifferentTokenInLaunchdConfig(c check) bool {
