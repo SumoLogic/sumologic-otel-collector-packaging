@@ -58,7 +58,7 @@ func checkBinaryFipsError(c check) bool {
 	if !assert.Equal(c.test, 2, exitErr.ExitCode(), "got error code while checking version") {
 		return false
 	}
-	return assert.Contains(c.test, string(exitErr.Stderr), "not in FIPS mode")
+	return assert.Contains(c.test, string(exitErr.Stderr), "FIPS mode requested (requirefips tag set) but not available")
 }
 
 func checkEphemeralNotInConfig(p string) func(c check) bool {
