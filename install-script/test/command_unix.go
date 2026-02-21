@@ -32,6 +32,7 @@ type installOptions struct {
 	packagePath        string
 	clobber            bool
 	collectorName      string
+	configOnly         bool
 }
 
 func (io *installOptions) string() []string {
@@ -78,6 +79,10 @@ func (io *installOptions) string() []string {
 
 	if io.clobber {
 		opts = append(opts, "--clobber")
+	}
+
+	if io.configOnly {
+		opts = append(opts, "--config-only")
 	}
 
 	if len(io.tags) > 0 {
