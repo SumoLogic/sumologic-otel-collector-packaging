@@ -27,3 +27,7 @@ install-script/test/sumologic_scripts_tests.test
 CMakeFiles/*
 */CMakeFiles/*
 CMakeCache.txt
+
+# AI agents
+AGENTS.md
+CLAUDE.md
