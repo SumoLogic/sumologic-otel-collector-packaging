@@ -59,8 +59,6 @@ jobs:
       otc_version: ${{ needs.validate-and-discover.outputs.otc-version }}
       otc_build_number: ${{ needs.validate-and-discover.outputs.build-number }}
       dry_run: false
-    secrets:
-      WINGET_PKGS_PAT: ${{ secrets.WINGET_PKGS_PAT }}
 
   release-collector:
     name: Release Collector (Draft)

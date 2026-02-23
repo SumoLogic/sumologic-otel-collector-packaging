@@ -20,9 +20,6 @@ on:
         required: false
         type: boolean
         default: false
-    secrets:
-      WINGET_PKGS_PAT:
-        required: true
 
   workflow_dispatch:
     inputs:
@@ -48,6 +45,11 @@ on:
         required: false
         type: boolean
         default: true
+      force:
+        description: 'Use --force flag'
+        required: false
+        type: boolean
+        default: false
 
 defaults:
   run:
@@ -67,7 +69,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - identifier: SumoLogic.OtelColSumo
+          - identifier: Sumologic.OtelcolSumo
             msi_suffix: ""
             package_filter: standard
           # - identifier: SumoLogic.OtelColSumo-FIPS
@@ -119,17 +121,18 @@ jobs:
       - name: Sync fork
         if: ${{ !inputs.dry_run }}
         env:
-          GITHUB_TOKEN: ${{ secrets.WINGET_PKGS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: komac sync-fork
 
       - name: Update package
         env:
-          GITHUB_TOKEN: ${{ secrets.WINGET_PKGS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: |
           ARGS=(
             "${{ matrix.identifier }}"
             --version "${{ steps.vars.outputs.version }}"
             --urls "${{ steps.vars.outputs.url }}"
+            --release-notes-url "https://github.com/SumoLogic/sumologic-otel-collector/releases"
           )
 
           if [ "${{ inputs.dry_run }}" = "true" ]; then
@@ -138,10 +141,14 @@ jobs:
             ARGS+=(--submit)
           fi
 
+          if [ "${{ inputs.force }}" = "true" ]; then
+            ARGS+=(--force)
+          fi
+
           komac update "${ARGS[@]}"
 
       - name: Cleanup merged branches
         if: ${{ !inputs.dry_run }}
         env:
-          GITHUB_TOKEN: ${{ secrets.WINGET_PKGS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: komac cleanup --only-merged || true
