@@ -67,7 +67,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - identifier: SumoLogic.OtelColSumo
+          - identifier: Sumologic.OtelcolSumo
             msi_suffix: ""
             package_filter: standard
           # - identifier: SumoLogic.OtelColSumo-FIPS
