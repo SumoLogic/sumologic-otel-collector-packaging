@@ -119,12 +119,12 @@ jobs:
       - name: Sync fork
         if: ${{ !inputs.dry_run }}
         env:
-          GITHUB_TOKEN: ${{ secrets.WINGET_PKGS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: komac sync-fork
 
       - name: Update package
         env:
-          GITHUB_TOKEN: ${{ secrets.WINGET_PKGS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: |
           ARGS=(
             "${{ matrix.identifier }}"
@@ -143,5 +143,5 @@ jobs:
       - name: Cleanup merged branches
         if: ${{ !inputs.dry_run }}
         env:
-          GITHUB_TOKEN: ${{ secrets.WINGET_PKGS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: komac cleanup --only-merged || true
