@@ -29,6 +29,8 @@ jobs:
       packaging-workflow-id: ${{ steps.find-workflows.outputs.packaging-workflow-id }}
       containers-workflow-id: ${{ steps.find-workflows.outputs.containers-workflow-id }}
       collector-version: ${{ steps.find-workflows.outputs.collector-version }}
+      otc-version: ${{ steps.find-workflows.outputs.otc-version }}
+      build-number: ${{ steps.find-workflows.outputs.build-number }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -46,6 +48,19 @@ jobs:
     with:
       version: ${{ inputs.package_version }}
     secrets: inherit
+
+  update-winget:
+    name: Update Winget Packages
+    needs:
+      - validate-and-discover
+      - promote-packaging-to-stable
+    uses: ./.github/workflows/winget-komac.yml
+    with:
+      otc_version: ${{ needs.validate-and-discover.outputs.otc-version }}
+      otc_build_number: ${{ needs.validate-and-discover.outputs.build-number }}
+      dry_run: false
+    secrets:
+      WINGET_PKGS_PAT: ${{ secrets.WINGET_PKGS_PAT }}
 
   release-collector:
     name: Release Collector (Draft)
@@ -84,6 +99,7 @@ jobs:
       - validate-and-discover
       - release-collector
       - promote-packaging-to-stable
+      - update-winget
       - release-packaging
       - release-containers
     if: always()
@@ -99,9 +115,10 @@ jobs:
           ## Workflows Completed
 
           1. ✅ **Packaging Promotion** (${{ needs.promote-packaging-to-stable.result }})
-          2. ✅ **Collector Draft Release** (${{ needs.release-collector.result }})
-          3. ✅ **Packaging Draft Release** (${{ needs.release-packaging.result }})
-          4. ✅ **Containers Draft Release** (${{ needs.release-containers.result }})
+          2. ✅ **Winget Package Update** (${{ needs.update-winget.result }})
+          3. ✅ **Collector Draft Release** (${{ needs.release-collector.result }})
+          4. ✅ **Packaging Draft Release** (${{ needs.release-packaging.result }})
+          5. ✅ **Containers Draft Release** (${{ needs.release-containers.result }})
 
           ## Build Workflow References
 
@@ -116,6 +133,7 @@ jobs:
           needs.validate-and-discover.result == 'failure' ||
           needs.release-collector.result == 'failure' ||
           needs.promote-packaging-to-stable.result == 'failure' ||
+          needs.update-winget.result == 'failure' ||
           needs.release-packaging.result == 'failure' ||
           needs.release-containers.result == 'failure'
         run: |

@@ -79,7 +79,11 @@ if gh run download "${PKG_ID}" -R SumoLogic/sumologic-otel-collector-packaging \
   OTC_SUMO=$(cat "$TEMP_DIR/otc-sumo-version.txt/otc-sumo-version.txt")
   COLLECTOR_VERSION="${OTC_VERSION}-sumo-${OTC_SUMO}"
   echo "collector-version=${COLLECTOR_VERSION}" >> "$GITHUB_OUTPUT"
+  echo "otc-version=${OTC_VERSION}" >> "$GITHUB_OUTPUT"
   rm -rf "$TEMP_DIR"
 fi
+
+# Output build number (extracted from version input)
+echo "build-number=${BUILD_NUMBER}" >> "$GITHUB_OUTPUT"
 
 echo "::notice::✓ Discovered workflows - Collector: ${COLLECTOR_ID}, Packaging: ${PKG_ID}, Containers: ${CONTAINERS_ID}"
