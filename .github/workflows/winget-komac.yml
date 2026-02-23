@@ -62,7 +62,7 @@ env:
 jobs:
   update:
     name: Update ${{ matrix.identifier }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -84,7 +84,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Komac
         uses: ./.github/actions/komac-setup

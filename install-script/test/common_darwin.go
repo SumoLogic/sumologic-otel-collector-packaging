@@ -130,6 +130,12 @@ func tearDown(t *testing.T) {
 	if err := removeDirectoryIfExists(t, appSupportDirPath); err != nil {
 		t.Log(err)
 	}
+	if err := removeDirectoryIfExists(t, libPath); err != nil {
+		t.Log(err)
+	}
+	if err := removeDirectoryIfExists(t, fileStoragePath); err != nil {
+		t.Log(err)
+	}
 
 	// Remove user & group
 	if exists, err := dsclKeyExistsForPath(t, "/Users", systemUser); err != nil {
@@ -177,7 +183,7 @@ func unloadLaunchdService(t *testing.T) error {
 
 	output, err := exec.Command("launchctl", "unload", "-w", "otelcol-sumo").Output()
 	if err != nil {
-		fmt.Errorf("error stopping service: %s", string(output))
+		return fmt.Errorf("error stopping service: %s", string(output))
 	}
 	return nil
 }
