@@ -141,7 +141,7 @@ jobs:
             ARGS+=(--submit)
           fi
 
-          if[ "${{ inputs.force }}" = "true" ]; then
+          if [ "${{ inputs.force }}" = "true" ]; then
             ARGS+=(--force)
           fi
 
