@@ -497,7 +497,29 @@ try {
     $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
 
     if ($process.ExitCode -ne 0) {
-        Write-Error "Installation failed with exit code: $($process.ExitCode)" -ErrorAction Stop
+        $errorMsg = @"
+MSI installation failed with exit code: $($process.ExitCode)
+
+Package: $msiPath
+Command: msiexec.exe $($msiArgs -join ' ')
+
+Common exit codes:
+- 1603: Fatal error during installation
+- 1618: Another installation is already in progress
+- 1619: This installation package could not be opened
+- 1633: This installation package is not supported on this platform
+- 1638: Another version of this product is already installed
+
+Troubleshooting steps:
+1. Check Windows Event Viewer (Application logs) for detailed error information
+2. Review MSI installation logs in: $env:TEMP
+3. Ensure you have administrator privileges
+4. Verify no other installations are running
+5. Check available disk space and system requirements
+
+For more information, visit: https://docs.microsoft.com/en-us/windows/win32/msi/error-codes
+"@
+        Write-Error $errorMsg -ErrorAction Stop
     }
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
