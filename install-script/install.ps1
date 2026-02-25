@@ -494,7 +494,11 @@ try {
         $msiProperties += "ADDLOCAL=${addLocalStr}"
     }
     $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
-    Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow
+    $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+
+    if ($process.ExitCode -ne 0) {
+        Write-Error "Installation failed with exit code: $($process.ExitCode)" -ErrorAction Stop
+    }
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 }
