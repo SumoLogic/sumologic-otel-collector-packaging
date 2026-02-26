@@ -381,6 +381,10 @@ function check_dependencies() {
     local error
     error=0
 
+    if [[ "${CONFIG_ONLY}" == "true" ]]; then
+        return 0
+    fi
+
     if [ "$EUID" -ne 0 ]; then
         echo "Please run this script as root."
         error=1
