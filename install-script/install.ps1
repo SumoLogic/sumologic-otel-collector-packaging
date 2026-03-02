@@ -257,7 +257,7 @@ function Get-InstalledApplicationVersion {
     $binPath = "${installLocation}bin\otelcol-sumo.exe"
 
     if (!(Test-Path -Path $binPath -PathType Leaf)) {
-        Write-Warning "Sumo Logic OpenTelemtry Collector is installed but otelcol-sumo.exe could not be found. Continuing as if it were not installed."
+        Write-Warning "Sumo Logic OpenTelemetry Collector is installed but otelcol-sumo.exe could not be found. Continuing as if it were not installed."
         return
     }
 
