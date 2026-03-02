@@ -497,11 +497,12 @@ try {
     $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
 
     if ($process.ExitCode -ne 0) {
+        $redactedMsiArgs = ($msiArgs -join ' ') -replace 'INSTALLATIONTOKEN=\S+', 'INSTALLATIONTOKEN=***'
         $errorMsg = @"
 MSI installation failed with exit code: $($process.ExitCode)
 
 Package: $msiPath
-Command: msiexec.exe $($msiArgs -join ' ')
+Command: msiexec.exe $redactedMsiArgs
 
 Common exit codes:
 - 1603: Fatal error during installation
