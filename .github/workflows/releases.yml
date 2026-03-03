@@ -51,7 +51,7 @@ jobs:
           echo ::notice title=Workflow URL::${url}
 
       - name: Download version artifacts from workflow
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: "*.txt"
           path: artifacts/
@@ -137,7 +137,7 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts from workflow
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: artifacts/
           merge-multiple: true
