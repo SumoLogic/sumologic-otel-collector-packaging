@@ -257,7 +257,7 @@ function Get-InstalledApplicationVersion {
     $binPath = "${installLocation}bin\otelcol-sumo.exe"
 
     if (!(Test-Path -Path $binPath -PathType Leaf)) {
-        Write-Warning "Sumo Logic OpenTelemtry Collector is installed but otelcol-sumo.exe could not be found. Continuing as if it were not installed."
+        Write-Warning "Sumo Logic OpenTelemetry Collector is installed but otelcol-sumo.exe could not be found. Continuing as if it were not installed."
         return
     }
 
@@ -494,7 +494,34 @@ try {
         $msiProperties += "ADDLOCAL=${addLocalStr}"
     }
     $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
-    Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow
+    $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+
+    if ($process.ExitCode -ne 0) {
+        $redactedMsiArgs = ($msiArgs -join ' ') -replace 'INSTALLATIONTOKEN=\S+', 'INSTALLATIONTOKEN=***'
+        $errorMsg = @"
+MSI installation failed with exit code: $($process.ExitCode)
+
+Package: $msiPath
+Command: msiexec.exe $redactedMsiArgs
+
+Common exit codes:
+- 1603: Fatal error during installation
+- 1618: Another installation is already in progress
+- 1619: This installation package could not be opened
+- 1633: This installation package is not supported on this platform
+- 1638: Another version of this product is already installed
+
+Troubleshooting steps:
+1. Check Windows Event Viewer (Application logs) for detailed error information
+2. Review MSI installation logs in: $env:TEMP
+3. Ensure you have administrator privileges
+4. Verify no other installations are running
+5. Check available disk space and system requirements
+
+For more information, visit: https://docs.microsoft.com/en-us/windows/win32/msi/error-codes
+"@
+        Write-Error $errorMsg -ErrorAction Stop
+    }
 } catch [HttpRequestException] {
     Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 }
