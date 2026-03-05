@@ -1,0 +1,119 @@
+receivers:
+  jmx/hadoopmetrics/localhost:
+    jar_path: /opt/opentelemetry-jmx-metrics.jar
+    endpoint: localhost:8004
+    target_system: hadoop
+    collection_interval: 1m
+    username: sumo_jmx
+    password: safe_password
+    log_level: info
+  filelog/hadoop/namenode/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/local/hadoop/logs/hadoop-*-*namenode-*.log
+  filelog/hadoop/datanode/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/local/hadoop/logs/hadoop-*-datanode-*.log
+  filelog/hadoop/resourcemanager/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/local/hadoop/logs/hadoop-*-resourcemanager-*.log
+  filelog/hadoop/nodemanager/localhost:
+    storage: file_storage
+    include_file_name: false
+    include_file_path: true
+    operators:
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["log.file.path"]
+      - type: copy
+        from: resource["log.file.path"]
+        to: resource["_sourceName"]
+    include:
+      - /usr/local/hadoop/logs/hadoop-*-nodemanager-*.log
+processors:
+  resource/hadoop_resource_attributes/localhost:
+    attributes:
+      - key: sumo.datasource
+        value: hadoop
+        action: insert
+      - key: _contentType
+        value: OpenTelemetry
+        action: insert
+      - key: bigdata.system
+        value: hadoop
+        action: insert
+      - key: bigdata.node.name
+        action: insert
+        from_attribute: host.name
+      - key: bigdata.cluster.name
+        value: test
+        action: insert
+  resource/hadoop_resource_attributes/logs/localhost:
+    attributes:
+      - key: _source
+        value: hadoop/filelog
+        action: insert
+  resource/hadoop_resource_attributes/metrics/localhost:
+    attributes:
+      - key: _source
+        value: hadoop/jmx
+        action: insert
+      - key: _sourceName
+        value: hadoop
+        action: insert
+service:
+  pipelines:
+    metrics/hadoop/localhost:
+      receivers:
+        - jmx/hadoopmetrics/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - batch
+        - resource/hadoop_resource_attributes/localhost
+        - resource/hadoop_resource_attributes/metrics/localhost
+      exporters:
+        - sumologic
+    logs/hadoop/localhost:
+      receivers:
+        - filelog/hadoop/namenode/localhost
+        - filelog/hadoop/datanode/localhost
+        - filelog/hadoop/resourcemanager/localhost
+        - filelog/hadoop/nodemanager/localhost
+      processors:
+        - memory_limiter
+        - resourcedetection/system
+        - resource/hadoop_resource_attributes/logs/localhost
+        - resource/hadoop_resource_attributes/localhost
+        - batch
+      exporters:
+        - sumologic
