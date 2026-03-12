@@ -1,5 +1,5 @@
 # Sumo Logic installation token
-# rel: https://help.sumologic.com/docs/manage/security/installation-tokens/
+# rel: https://www.sumologic.com/help/docs/manage/security/installation-tokens/
 # Can be provided via: Chef Vault, Encrypted Data Bag, or directly as attribute
 default['sumologic_otel_collector']['installation_token'] = nil
 
@@ -8,7 +8,7 @@ default['sumologic_otel_collector']['use_vault'] = false
 default['sumologic_otel_collector']['vault']['name'] = 'sumologic'
 default['sumologic_otel_collector']['vault']['item'] = 'tokens'
 
-# Encrypted Data Bag configuration (secure option, requires Chef Server)
+# Encrypted Data Bag configuration (secure option; requires access to the encrypted data bag and its secret, works with Chef Server and chef-solo)
 default['sumologic_otel_collector']['use_data_bag'] = false
 default['sumologic_otel_collector']['credentials']['bag_name'] = 'sumologic'
 default['sumologic_otel_collector']['credentials']['item_name'] = 'tokens'

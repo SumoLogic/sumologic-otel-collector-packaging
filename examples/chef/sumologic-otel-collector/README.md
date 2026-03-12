@@ -73,16 +73,23 @@ end
 
 All attributes are under the `node['sumologic_otel_collector']` namespace.
 
-| Attribute            | Type    | Description                                                                                                                                          | Default          |
-| -------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `installation_token` | String  | Sumo Logic [installation token][installation_token]                                                                                                  | `nil` (required) |
-| `collector_tags`     | Hash    | Collector tags, these are applied to all processed data                                                                                              | `{}`             |
-| `api_url`            | String  | Sumo Logic API url. You shouldn't need to set this in most normal circumstances.                                                                     | `nil`            |
-| `version`            | String  | Version of Sumo Logic Distribution for OpenTelemetry Collector. If not specified, installs the latest stable version.                                | `nil`            |
-| `systemd_service`    | Boolean | Enables creation of Systemd Service for Sumo Logic Distribution for OpenTelemetry Collector. Note: the collector will not start if you disable this. | `true`           |
-| `src_config_path`    | String  | Path to configuration directory for Sumo Logic Distribution for OpenTelemetry Collector                                                              | `nil`            |
-| `remotely_managed`   | Boolean | Enables creation of remotely managed Sumo Logic Distribution for OpenTelemetry Collector                                                             | `false`          |
-| `opamp_api_url`      | String  | Sumo Logic Opamp API url. You shouldn't need to set this in most normal circumstances.                                                               | `nil`            |
+| Attribute                      | Type    | Description                                                                                                                                          | Default          |
+| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `installation_token`           | String  | Sumo Logic [installation token][installation_token]                                                                                                  | `nil` (required) |
+| `use_vault`                    | Boolean | Enable Chef Vault for secure credential storage (requires Chef Server)                                                                               | `false`          |
+| `vault.name`                   | String  | Chef Vault name for credentials                                                                                                                      | `'sumologic'`    |
+| `vault.item`                   | String  | Chef Vault item name containing installation token                                                                                                   | `'tokens'`       |
+| `use_data_bag`                 | Boolean | Enable encrypted data bag for credential storage                                                                                                     | `false`          |
+| `credentials.bag_name`         | String  | Encrypted data bag name                                                                                                                              | `'sumologic'`    |
+| `credentials.item_name`        | String  | Encrypted data bag item name                                                                                                                         | `'tokens'`       |
+| `credentials.secret_file`      | String  | Path to secret file for encrypted data bag decryption                                                                                                | `nil`            |
+| `collector_tags`               | Hash    | Collector tags, these are applied to all processed data                                                                                              | `{}`             |
+| `api_url`                      | String  | Sumo Logic API url. You shouldn't need to set this in most normal circumstances.                                                                     | `nil`            |
+| `version`                      | String  | Version of Sumo Logic Distribution for OpenTelemetry Collector. If not specified, installs the latest stable version.                                | `nil`            |
+| `systemd_service`              | Boolean | Enables creation of Systemd Service for Sumo Logic Distribution for OpenTelemetry Collector. Note: the collector will not start if you disable this. | `true`           |
+| `src_config_path`              | String  | Path to configuration directory for Sumo Logic Distribution for OpenTelemetry Collector                                                              | `nil`            |
+| `remotely_managed`             | Boolean | Enables creation of remotely managed Sumo Logic Distribution for OpenTelemetry Collector                                                             | `false`          |
+| `opamp_api_url`                | String  | Sumo Logic Opamp API url. You shouldn't need to set this in most normal circumstances.                                                               | `nil`            |
 
 ## Resource Properties
 

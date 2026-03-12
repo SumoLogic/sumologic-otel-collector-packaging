@@ -1,6 +1,6 @@
 # Installation token can be provided via multiple methods (in order of precedence):
 # 1. Chef Vault (most secure, requires Chef Server)
-# 2. Encrypted Data Bag (secure, requires Chef Server)
+# 2. Encrypted Data Bag (secure, works with Chef Server and chef-solo)
 # 3. Node attributes (flexible, works with chef-solo)
 
 installation_token = nil
@@ -29,9 +29,14 @@ if installation_token.nil? && node['sumologic_otel_collector']['use_data_bag']
     item_name = node['sumologic_otel_collector']['credentials']['item_name']
     secret_file = node['sumologic_otel_collector']['credentials']['secret_file']
 
-    if secret_file && ::File.exist?(secret_file)
-      secret = Chef::EncryptedDataBagItem.load_secret(secret_file)
-      sumo_creds = Chef::EncryptedDataBagItem.load(bag_name, item_name, secret)
+    if secret_file
+      if ::File.exist?(secret_file)
+        secret = Chef::EncryptedDataBagItem.load_secret(secret_file)
+        sumo_creds = Chef::EncryptedDataBagItem.load(bag_name, item_name, secret)
+      else
+        Chef::Log.warn("Configured secret file #{secret_file} not found, skipping encrypted data bag lookup and falling back to attributes")
+        sumo_creds = {}
+      end
     else
       sumo_creds = Chef::EncryptedDataBagItem.load(bag_name, item_name)
     end
@@ -46,12 +51,16 @@ end
 # Method 3: Fall back to node attributes (works with chef-solo)
 if installation_token.nil?
   installation_token = node['sumologic_otel_collector']['installation_token']
-  Chef::Log.info('Using Sumo Logic credentials from node attributes')
+  if !installation_token.nil? && !installation_token.empty?
+    Chef::Log.info('Using Sumo Logic credentials from node attributes')
+  else
+    Chef::Log.warn('Sumo Logic installation token not set in node attributes')
+  end
 end
 
 # Fail if no token found from any method
 if installation_token.nil? || installation_token.empty?
-  raise <<-ERROR
+  raise <<~ERROR
     Sumo Logic installation token not provided!
 
     Please provide the token using one of these methods:
@@ -60,7 +69,7 @@ if installation_token.nil? || installation_token.empty?
        knife vault create sumologic tokens '{"installation_token":"YOUR_TOKEN"}' --search "role:yourRole"
        Set node['sumologic_otel_collector']['use_vault'] = true
 
-    2. Encrypted Data Bag (for Chef Server):
+    2. Encrypted Data Bag (works with Chef Server and chef-solo):
        knife data bag create sumologic tokens --secret-file ~/.chef/secret
        Set node['sumologic_otel_collector']['use_data_bag'] = true
 
@@ -89,5 +98,4 @@ service_name = platform_family?('windows') ? 'OtelcolSumo' : 'otelcol-sumo'
 
 service service_name do
   action [:enable, :start]
-  only_if { node['sumologic_otel_collector']['systemd_service'] }
 end

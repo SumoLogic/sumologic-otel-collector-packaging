@@ -7,5 +7,5 @@ long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version '0.0.0'
 chef_version '>= 11' if respond_to?(:chef_version)
 
-# Optional gem for Chef Vault support
+# Chef Vault support is optional; ensure the `chef-vault` gem is available in the environment when using it.
 gem 'chef-vault', '~> 4.0'
