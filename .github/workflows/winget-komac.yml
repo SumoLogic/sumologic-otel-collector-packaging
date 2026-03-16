@@ -141,7 +141,10 @@ jobs:
 
   update-fips:
     name: Update SumoLogic.OtelColSumo-FIPS
-    if: inputs.package == 'both' || inputs.package == 'fips'
+    needs: [update-standard]
+    if: |
+      (inputs.package == 'both' || inputs.package == 'fips') &&
+      (needs.update-standard.result == 'success' || needs.update-standard.result == 'skipped')
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
