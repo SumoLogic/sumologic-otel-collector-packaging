@@ -4,6 +4,7 @@
   - [Check end-to-end tests](#check-end-to-end-tests)
   - [Find the package version](#find-the-package-version)
   - [Trigger the release orchestrator](#trigger-the-release-orchestrator)
+  - [Winget package update](#winget-package-update)
   - [Publish GitHub releases](#publish-github-releases)
 
 ## How to release
@@ -28,15 +29,17 @@ entire release process. It will:
 
 1. Validate the package version format and find all related workflow runs
 2. Call packaging promotion workflow as a reusable workflow
-3. Call draft release workflows for all three repositories as reusable workflows (collector, packaging, containers)
-4. Provide a summary with links to all releases
+3. Update [winget][winget] packages using [Komac][komac] (runs in parallel with the collector draft release)
+4. Call draft release workflows for all three repositories as reusable workflows (collector, packaging, containers)
+5. Provide a summary with links to all releases
 
-**Execution Order** (sequential with automatic waiting):
+**Execution Order** (sequential with automatic waiting, unless noted):
 
 1. Packaging RC→Stable promotion
-2. Collector draft release
-3. Packaging draft release
-4. Containers draft release
+2. Winget package update via Komac (runs in parallel with step 3)
+3. Collector draft release
+4. Packaging draft release
+5. Containers draft release
 
 **How it Works**: The orchestrator uses GitHub's `workflow_call` feature to invoke workflows
 across repositories as reusable workflows. This provides automatic waiting for completion -
@@ -71,6 +74,24 @@ of the page. Enter the package version (e.g., 0.108.0-1790) and click the green
 The workflow will discover the related workflow IDs and call release workflows across
 all three repositories as reusable workflows. Each workflow automatically waits for completion
 before proceeding to the next step.
+
+### Winget package update
+
+As part of the release orchestrator, the [Winget Update (Komac)][winget_komac_workflow]
+workflow is automatically triggered after packaging promotion completes. This workflow
+uses [Komac][komac] to submit updated package manifests to the
+[winget-pkgs][winget_pkgs] community repository via the [SumoLogic fork][sumologic_winget_fork].
+
+The workflow updates the following [winget][winget] packages:
+
+| Package Identifier | Description |
+|--------------------|-------------|
+| `Sumologic.OtelcolSumo` | Standard OTel Collector |
+| `SumoLogic.OtelColSumo-FIPS` | FIPS-compliant OTel Collector |
+
+This step runs **in parallel** with the collector draft release since both only
+depend on packaging promotion being complete. A winget update failure will be
+reported in the release summary and will cause the orchestrator to exit with an error.
 
 ### Publish GitHub releases
 
@@ -123,6 +144,11 @@ Common issues include:
   the collector workflow ID
 - **Promotion failure**: If packaging promotion fails, check the promote-release-candidate
   workflow logs for details
+- **Winget update failure**: If the winget-komac workflow fails, check if the MSI installer
+  URL is accessible on the CDN. The URL must return HTTP 200 before Komac can submit the
+  manifest. Also verify the `GH_CI_TOKEN` secret is valid and has permissions to the
+  SumoLogic fork of winget-pkgs. You can re-run the
+  [Winget Update (Komac)][winget_komac_workflow] workflow manually if needed.
 - **Workflow failure**: If any workflow fails, check that workflow's logs in its respective
   repository. The orchestrator will stop at the failed step. You may need to complete
   remaining steps manually using the [manual release documentation](./release.md).
@@ -136,3 +162,8 @@ If any step fails, you can complete the remaining steps manually using the
 [packaging_releases]: https://github.com/SumoLogic/sumologic-otel-collector-packaging/releases
 [post_release_workflow]: https://github.com/SumoLogic/sumologic-otel-collector/actions/workflows/post-release.yml
 [release_orchestrator_workflow]: https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/workflows/release-orchestrator.yml
+[winget_komac_workflow]: https://github.com/SumoLogic/sumologic-otel-collector-packaging/actions/workflows/winget-komac.yml
+[winget]: https://learn.microsoft.com/en-us/windows/package-manager/
+[winget_pkgs]: https://github.com/microsoft/winget-pkgs
+[komac]: https://github.com/russellbanks/Komac
+[sumologic_winget_fork]: https://github.com/SumoLogic/winget-pkgs
