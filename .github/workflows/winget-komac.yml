@@ -25,6 +25,11 @@ on:
         required: false
         type: boolean
         default: false
+      force:
+        description: 'Use --force flag'
+        required: false
+        type: boolean
+        default: false
 
   workflow_dispatch:
     inputs:
