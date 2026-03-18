@@ -1218,8 +1218,13 @@ try {
     Write-Host "Installation successful"
 
 } catch [HttpRequestException] {
-    Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
+    $errorMessage = if ($_.Exception.InnerException -ne $null) {
+        $_.Exception.InnerException.Message
+    } else {
+        $_.Exception.Message
+    }
+    Write-Error $errorMessage -ErrorAction Stop
 } catch {
-    Write-Error $_.Exception.Message -ErrorAction Stop
+    Write-Error $_.Exception.Message
     exit 1
 }
