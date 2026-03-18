@@ -85,10 +85,10 @@ All attributes are under the `node['sumologic_otel_collector']` namespace.
 | `credentials.secret_file`      | String  | Path to secret file for encrypted data bag decryption                                                                                                | `nil`            |
 | `collector_tags`               | Hash    | Collector tags, these are applied to all processed data                                                                                              | `{}`             |
 | `api_url`                      | String  | Sumo Logic API url. You shouldn't need to set this in most normal circumstances.                                                                     | `nil`            |
-| `version`                      | String  | Version of Sumo Logic Distribution for OpenTelemetry Collector. If not specified, installs the latest stable version.                                | `nil`            |
-| `systemd_service`              | Boolean | Enables creation of Systemd Service for Sumo Logic Distribution for OpenTelemetry Collector. Note: the collector will not start if you disable this. | `true`           |
+| `version`                      | String  | Version of Sumo Logic Distribution for OpenTelemetry Collector. The default is the latest stable version.                                            | `nil`            |
+| `systemd_service`              | Boolean | Enables creation of Systemd Service for Sumo Logic Distribution for OpenTelemetry Collector. Enabled by default. Note that this cookbook will not start the collector if you disable this. | `true`           |
 | `src_config_path`              | String  | Path to configuration directory for Sumo Logic Distribution for OpenTelemetry Collector                                                              | `nil`            |
-| `remotely_managed`             | Boolean | Enables creation of remotely managed Sumo Logic Distribution for OpenTelemetry Collector                                                             | `false`          |
+| `remotely_managed`             | Boolean | Enables creation of remotely managed Sumo Logic Distribution for OpenTelemetry Collector. Disabled by default.                                       | `false`          |
 | `opamp_api_url`                | String  | Sumo Logic Opamp API url. You shouldn't need to set this in most normal circumstances.                                                               | `nil`            |
 
 ## Resource Properties
@@ -97,12 +97,12 @@ The `sumologic_otel_collector` resource accepts the following properties (same a
 
 - `installation_token`: Sumo Logic [installation token][installation_token] (required)
 - `collector_tags`: Collector tags, these are applied to all processed data
-- `api_url`: Sumo Logic API url
-- `version`: version of Sumo Logic Distribution for OpenTelemetry Collector
-- `systemd_service`: enables creation of Systemd Service
-- `src_config_path`: path to configuration directory
-- `remotely_managed`: enables remote management
-- `opamp_api_url`: Sumo Logic Opamp API url
+- `api_url`: Sumo Logic API url. You shouldn't need to set this in most normal circumstances.
+- `version`: version of Sumo Logic Distribution for OpenTelemetry Collector. The default is the latest stable version.
+- `systemd_service`: enables creation of Systemd Service for Sumo Logic Distribution for OpenTelemetry Collector. Enabled by default. Note that this cookbook will not start the collector if you disable this.
+- `src_config_path`: path to configuration directory for Sumo Logic Distribution for OpenTelemetry Collector
+- `remotely_managed`: enables creation of remotely managed Sumo Logic Distribution for OpenTelemetry Collector. Disabled by default.
+- `opamp_api_url`: Sumo Logic Opamp API url. You shouldn't need to set this in most normal circumstances.
 
 ## Test on Vagrant
 
