@@ -1082,6 +1082,13 @@ try {
     if ($Upgrade) {
         Write-Host "Upgrading OpenTelemetry Collector..."
 
+        # Verify that the collector is currently installed
+        $installedVersion = Get-InstalledPackageVersion
+        if ($installedVersion -eq $null) {
+            Write-Error "OpenTelemetry Collector is not installed. Use the install command instead of -Upgrade." -ErrorAction Stop
+        }
+        Write-Host "Currently installed version:`t${installedVersion}"
+
         # Stop service first
         Stop-CollectorService
 
