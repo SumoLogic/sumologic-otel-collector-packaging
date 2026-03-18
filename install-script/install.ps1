@@ -486,8 +486,8 @@ function Stop-CollectorService {
         Write-Host "Stopping service '$SERVICE_NAME'..."
         Stop-Service -Name $SERVICE_NAME -Force -ErrorAction SilentlyContinue
 
-        # Wait for service to stop (max 30 seconds)
-        $timeout = 30
+        # Wait for service to stop (max 60 seconds total)
+        $timeout = 60
         $elapsed = 0
         while ((Get-Service -Name $SERVICE_NAME).Status -ne 'Stopped' -and $elapsed -lt $timeout) {
             Start-Sleep -Seconds 1
@@ -497,23 +497,9 @@ function Stop-CollectorService {
         if ((Get-Service -Name $SERVICE_NAME).Status -eq 'Stopped') {
             Write-Host "Service stopped successfully"
         } else {
-            Write-Warning "Service did not stop within $timeout seconds, waiting 30 seconds more"
-
-            $elapsed = 0
-            while ((Get-Service -Name $SERVICE_NAME).Status -ne 'Stopped' -and $elapsed -lt $timeout) {
-            Start-Sleep -Seconds 1
-            $elapsed++
-
-            if ((Get-Service -Name $SERVICE_NAME).Status -eq 'Stopped') {
-                Write-Host "Service stopped successfully"
-            } else {
-                $errorMessage = "Service '$SERVICE_NAME' did not stop within $timeout seconds. Aborting operation."
-                Write-Error $errorMessage
-                throw $errorMessage
-            }
-
-        }
-
+            $errorMessage = "Service '$SERVICE_NAME' did not stop within $timeout seconds. Aborting operation."
+            Write-Error $errorMessage
+            throw $errorMessage
         }
     } else {
         Write-Host "Service '$SERVICE_NAME' is not running"
