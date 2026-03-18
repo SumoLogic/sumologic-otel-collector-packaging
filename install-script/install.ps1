@@ -69,17 +69,20 @@ param (
     # UseWinget enables installation via Windows Package Manager (winget).
     # When set, the script will attempt to install using winget first.
     # If winget installation fails, it falls back to MSI.
-    # Note: This flag only affects installation. Upgrade and uninstall operations
-    # automatically detect the installation method used.
+    # Note: This flag only affects installation behavior. For upgrade and
+    # uninstall operations, the script will attempt to use winget when available
+    # and fall back to MSI if needed.
     [switch] $UseWinget,
 
     # Uninstall removes the Sumo Logic OpenTelemetry Collector from the system.
-    # The installation method (winget or MSI) is automatically detected.
+    # When uninstalling, the script attempts to use winget when available and
+    # falls back to MSI if winget-based uninstallation is not possible.
     # Use with -Purge to also remove configuration and data files.
     [switch] $Uninstall,
 
     # Upgrade updates the collector to the latest version (or specified version).
-    # The installation method (winget or MSI) is automatically detected.
+    # When upgrading, the script attempts to use winget when available and
+    # falls back to MSI if winget-based upgrade is not possible.
     [switch] $Upgrade,
 
     # Purge removes all configuration and data files when used with -Uninstall.
