@@ -128,8 +128,6 @@ $COLLECTOR_DATA_ROOT = "$env:ProgramData\Sumo Logic\OpenTelemetry Collector"
 # TODO: validate config dir
 $CONFIG_DIRECTORY = "$COLLECTOR_DATA_ROOT\config"
 $DATA_DIRECTORY = "$COLLECTOR_DATA_ROOT\data"
-# TODO: Add log directory path when logging location is determined
-# $LOG_DIRECTORY = "$COLLECTOR_DATA_ROOT\logs"
 
 
 ##
@@ -655,6 +653,8 @@ function Install-ViaWinget {
     if ($MsiProperties -ne $null) {
         foreach ($key in $MsiProperties.Keys) {
             $value = $MsiProperties[$key]
+            # Escape embedded double quotes to prevent command injection
+            $value = $value -replace '"', '""'
             if ($value -match '\s') {
                 $customProps += "$key=`"$value`""
             } else {
@@ -816,8 +816,6 @@ function Remove-CollectorData {
     $paths = @(
         $CONFIG_DIRECTORY
         $DATA_DIRECTORY
-        # TODO: Add log directory when logging location is determined
-        # $LOG_DIRECTORY
     )
 
     foreach ($path in $paths) {
@@ -954,6 +952,8 @@ function Install-ViaMsi {
     }
     foreach ($key in $props.Keys) {
         $value = $props[$key]
+        # Escape embedded double quotes to prevent command injection
+        $value = $value -replace '"', '""'
         if ($value -match '\s') {
             $msiProperties += "$key=`"$value`""
         } else {

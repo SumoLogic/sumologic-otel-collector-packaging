@@ -236,6 +236,107 @@ func TestInstallScript(t *testing.T) {
 				checkCollectorNameInSumoConfig(configPath),
 			},
 		},
+		{
+			name: "purge without uninstall fails",
+			options: installOptions{
+				installToken: installToken,
+				purge:        true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkAbortedDueToPurgeWithoutUninstall},
+			installCode: 1,
+		},
+		{
+			name: "uninstall and upgrade together fails",
+			options: installOptions{
+				installToken: installToken,
+				uninstall:    true,
+				upgrade:      true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkAbortedDueToUninstallAndUpgrade},
+			installCode: 1,
+		},
+		{
+			name: "upgrade when not installed fails",
+			options: installOptions{
+				upgrade: true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkAbortedDueToUpgradeNotInstalled},
+			installCode: 1,
+		},
+		{
+			name: "uninstall when not installed",
+			options: installOptions{
+				uninstall: true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkBinaryNotCreated, checkConfigNotCreated},
+			installCode: 1,
+		},
+		{
+			name: "install then uninstall",
+			options: installOptions{
+				installToken: installToken,
+				uninstall:    true,
+			},
+			preActions: []checkFunc{
+				preActionInstallCollector,
+			},
+			preChecks: []checkFunc{checkBinaryCreated},
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkUninstallationSuccessOutput,
+			},
+		},
+		{
+			name: "install then uninstall with purge",
+			options: installOptions{
+				installToken: installToken,
+				uninstall:    true,
+				purge:        true,
+			},
+			preActions: []checkFunc{
+				preActionInstallCollector,
+			},
+			preChecks: []checkFunc{checkBinaryCreated},
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkUninstallationSuccessOutput,
+				checkDataDirectoryNotPresent,
+			},
+		},
+		{
+			name: "install then upgrade",
+			options: installOptions{
+				upgrade: true,
+			},
+			preActions: []checkFunc{
+				preActionInstallCollector,
+			},
+			preChecks: []checkFunc{checkBinaryCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+			},
+		},
+		{
+			name: "install with UseWinget flag falls back to MSI",
+			options: installOptions{
+				installToken: installToken,
+				useWinget:    true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInConfig,
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {

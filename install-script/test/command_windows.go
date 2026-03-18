@@ -23,6 +23,10 @@ type installOptions struct {
 	timezone           string
 	clobber            bool
 	collectorName      string
+	uninstall          bool
+	upgrade            bool
+	purge              bool
+	useWinget          bool
 }
 
 func (io *installOptions) string() []string {
@@ -52,6 +56,22 @@ func (io *installOptions) string() []string {
 	}
 	if io.collectorName != "" {
 		opts = append(opts, "-CollectorName", io.collectorName)
+	}
+
+	if io.uninstall {
+		opts = append(opts, "-Uninstall")
+	}
+
+	if io.upgrade {
+		opts = append(opts, "-Upgrade")
+	}
+
+	if io.purge {
+		opts = append(opts, "-Purge")
+	}
+
+	if io.useWinget {
+		opts = append(opts, "-UseWinget")
 	}
 
 	if len(io.tags) > 0 {

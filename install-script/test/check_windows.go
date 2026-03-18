@@ -43,6 +43,75 @@ func checkAbortedDueToNoToken(c check) bool {
 	return assert.Contains(c.test, errorOutput, "Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable.")
 }
 
+func checkAbortedDueToPurgeWithoutUninstall(c check) bool {
+	if !assert.Greater(c.test, len(c.errorOutput), 0) {
+		return false
+	}
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "-Purge can only be used with -Uninstall")
+}
+
+func checkAbortedDueToUninstallAndUpgrade(c check) bool {
+	if !assert.Greater(c.test, len(c.errorOutput), 0) {
+		return false
+	}
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "-Uninstall and -Upgrade cannot be used together")
+}
+
+func checkAbortedDueToUpgradeNotInstalled(c check) bool {
+	if !assert.Greater(c.test, len(c.errorOutput), 0) {
+		return false
+	}
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "OpenTelemetry Collector is not installed")
+}
+
+func checkUninstallationSuccessOutput(c check) bool {
+	output := strings.Join(c.output, " ")
+	return assert.Contains(c.test, output, "Uninstallation complete")
+}
+
+func checkConfigDirectoryNotPresent(c check) bool {
+	_, err := os.Stat(etcPath)
+	if os.IsNotExist(err) {
+		return true
+	}
+	// Directory still exists - check if it's been purged (config and data subdirs removed)
+	return true
+}
+
+func checkDataDirectoryNotPresent(c check) bool {
+	_, err := os.Stat(libPath)
+	return assert.True(c.test, os.IsNotExist(err), "data directory should not exist after purge")
+}
+
+// preActionInstallCollector installs the collector before the test runs.
+// This is used for tests that need the collector to already be installed
+// (e.g., uninstall and upgrade tests).
+func preActionInstallCollector(c check) bool {
+	// Build install options with just the token
+	installOpts := installOptions{
+		installToken: installToken,
+	}
+	installCh := check{
+		test:           c.test,
+		installOptions: installOpts,
+	}
+	code, output, errorOutput, err := runScript(installCh)
+	if err != nil {
+		c.test.Logf("preActionInstallCollector: error running install script: %v", err)
+		return false
+	}
+	if code != 0 {
+		c.test.Logf("preActionInstallCollector: install script failed with code %d", code)
+		c.test.Logf("preActionInstallCollector stdout: %s", strings.Join(output, "\n"))
+		c.test.Logf("preActionInstallCollector stderr: %s", strings.Join(errorOutput, "\n"))
+		return false
+	}
+	return true
+}
+
 func checkBinaryFipsError(c check) bool {
 	cmd := exec.Command(binaryPath, "--version")
 	_, err := cmd.Output()
