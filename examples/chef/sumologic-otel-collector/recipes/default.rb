@@ -18,7 +18,7 @@ if node['sumologic_otel_collector']['use_vault']
   rescue LoadError
     Chef::Log.warn('chef-vault gem not available, falling back to data bags or attributes')
   rescue ChefVault::Exceptions::KeysNotFound
-    Chef::Log.warn('Chef Vault item not found, falling back to data bags or attributes')
+    Chef::Log.warn('Chef Vault keys not found or access denied, falling back to data bags or attributes')
   end
 end
 
@@ -33,16 +33,16 @@ if installation_token.nil? && node['sumologic_otel_collector']['use_data_bag']
       if ::File.exist?(secret_file)
         secret = Chef::EncryptedDataBagItem.load_secret(secret_file)
         sumo_creds = Chef::EncryptedDataBagItem.load(bag_name, item_name, secret)
+        installation_token = sumo_creds['installation_token']
+        Chef::Log.info('Loaded Sumo Logic credentials from encrypted data bag')
       else
         Chef::Log.warn("Configured secret file #{secret_file} not found, skipping encrypted data bag lookup and falling back to attributes")
-        sumo_creds = {}
       end
     else
       sumo_creds = Chef::EncryptedDataBagItem.load(bag_name, item_name)
+      installation_token = sumo_creds['installation_token']
+      Chef::Log.info('Loaded Sumo Logic credentials from encrypted data bag')
     end
-
-    installation_token = sumo_creds['installation_token']
-    Chef::Log.info('Loaded Sumo Logic credentials from encrypted data bag')
   rescue Net::HTTPClientException, Chef::Exceptions::InvalidDataBagPath
     Chef::Log.warn('Data bag not found, falling back to attributes')
   end
@@ -98,4 +98,5 @@ service_name = platform_family?('windows') ? 'OtelcolSumo' : 'otelcol-sumo'
 
 service service_name do
   action [:enable, :start]
+  only_if { node['sumologic_otel_collector']['systemd_service'] }
 end
