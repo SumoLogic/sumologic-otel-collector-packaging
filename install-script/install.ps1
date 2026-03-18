@@ -655,8 +655,11 @@ function Install-ViaWinget {
     if ($MsiProperties -ne $null) {
         foreach ($key in $MsiProperties.Keys) {
             $value = $MsiProperties[$key]
-            if ($value -match '\s') {
-                $customProps += "$key=`"$value`""
+            if ($value -match '[\s"]') {
+                # Escape embedded double quotes by doubling them (MSI command-line convention),
+                # then wrap the value in double quotes.
+                $escapedValue = $value -replace '"', '""'
+                $customProps += "$key=`"$escapedValue`""
             } else {
                 $customProps += "$key=$value"
             }
