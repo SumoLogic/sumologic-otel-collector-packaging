@@ -1019,11 +1019,6 @@ try {
     $httpClient.DefaultRequestHeaders.UserAgent.Add($userAgentHeader)
     $httpClient.Timeout = New-Object System.TimeSpan(0, 0, 30)
 
-    if ($Version -eq "" -or $Version -eq $null -or $Version -eq "True" -or $Version -eq "False") {
-        Write-Host "Getting latest version..."
-        $Version = Get-LatestVersion -HttpClient $httpClient
-    }
-
     # ========================================
     # Handle Uninstall
     # ========================================
@@ -1063,6 +1058,11 @@ try {
 
         Write-Host "Uninstallation complete"
         exit 0
+    }
+
+    if ($Version -eq "" -or $Version -eq $null -or $Version -eq "True" -or $Version -eq "False") {
+        Write-Host "Getting latest version..."
+        $Version = Get-LatestVersion -HttpClient $httpClient
     }
 
     # ========================================
