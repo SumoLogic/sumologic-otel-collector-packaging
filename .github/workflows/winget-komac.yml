@@ -15,8 +15,18 @@ on:
         description: 'Build number (e.g., 1790)'
         required: true
         type: string
+      package:
+        description: 'Package to update (standard, fips, or both)'
+        required: false
+        type: string
+        default: 'both'
       dry_run:
         description: 'Dry run (validate only, do not submit PR)'
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: 'Use --force flag'
         required: false
         type: boolean
         default: false
@@ -62,28 +72,10 @@ env:
   KOMAC_CREATED_WITH_URL: https://github.com/SumoLogic/sumologic-otel-collector-packaging
 
 jobs:
-  update:
-    name: Update ${{ matrix.identifier }}
+  update-standard:
+    name: Update Sumologic.OtelcolSumo
+    if: inputs.package == 'both' || inputs.package == 'standard'
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - identifier: Sumologic.OtelcolSumo
-            msi_suffix: ""
-            package_filter: standard
-          # - identifier: SumoLogic.OtelColSumo-FIPS
-          #   msi_suffix: "-fips"
-          #   package_filter: fips
-
-    # Skip based on package selection (workflow_dispatch only)
-    # For workflow_call, always run both
-    # if: >-
-    #   github.event_name == 'workflow_call' ||
-    #   inputs.package == 'both' ||
-    #   inputs.package == matrix.package_filter
-    # Commenting out fips code as fips base package is not yet deployed
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -98,14 +90,13 @@ jobs:
           BUILD_NUMBER="${{ inputs.otc_build_number }}"
           WINGET_VERSION="${OTC_VERSION}.${BUILD_NUMBER}"
 
-          # MSI filename: otelcol-sumo_{version}_en-US.x64[-fips].msi
-          MSI_FILENAME="otelcol-sumo_${WINGET_VERSION}_en-US.x64${{ matrix.msi_suffix }}.msi"
+          MSI_FILENAME="otelcol-sumo_${WINGET_VERSION}_en-US.x64.msi"
           INSTALLER_URL="${CDN_BASE_URL}/${OTC_VERSION}-${BUILD_NUMBER}/${MSI_FILENAME}"
 
           echo "version=${WINGET_VERSION}" >> "$GITHUB_OUTPUT"
           echo "url=${INSTALLER_URL}" >> "$GITHUB_OUTPUT"
 
-          echo "Package: ${{ matrix.identifier }}"
+          echo "Package: Sumologic.OtelcolSumo"
           echo "Version: ${WINGET_VERSION}"
           echo "URL: ${INSTALLER_URL}"
 
@@ -129,7 +120,82 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: |
           ARGS=(
-            "${{ matrix.identifier }}"
+            "Sumologic.OtelcolSumo"
+            --version "${{ steps.vars.outputs.version }}"
+            --urls "${{ steps.vars.outputs.url }}"
+            --release-notes-url "https://github.com/SumoLogic/sumologic-otel-collector/releases"
+          )
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS+=(--dry-run)
+          else
+            ARGS+=(--submit)
+          fi
+
+          if [ "${{ inputs.force }}" = "true" ]; then
+            ARGS+=(--force)
+          fi
+
+          komac update "${ARGS[@]}"
+
+      - name: Cleanup merged branches
+        if: ${{ !inputs.dry_run }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: komac cleanup --only-merged || true
+
+  update-fips:
+    name: Update SumoLogic.OtelColSumo-FIPS
+    needs: [update-standard]
+    if: |
+      (inputs.package == 'both' || inputs.package == 'fips') &&
+      (needs.update-standard.result == 'success' || needs.update-standard.result == 'skipped')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Komac
+        uses: ./.github/actions/komac-setup
+
+      - name: Construct version and URL
+        id: vars
+        run: |
+          OTC_VERSION="${{ inputs.otc_version }}"
+          BUILD_NUMBER="${{ inputs.otc_build_number }}"
+          WINGET_VERSION="${OTC_VERSION}.${BUILD_NUMBER}"
+
+          MSI_FILENAME="otelcol-sumo_${WINGET_VERSION}_en-US.x64-fips.msi"
+          INSTALLER_URL="${CDN_BASE_URL}/${OTC_VERSION}-${BUILD_NUMBER}/${MSI_FILENAME}"
+
+          echo "version=${WINGET_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "url=${INSTALLER_URL}" >> "$GITHUB_OUTPUT"
+
+          echo "Package: SumoLogic.OtelColSumo-FIPS"
+          echo "Version: ${WINGET_VERSION}"
+          echo "URL: ${INSTALLER_URL}"
+
+      - name: Verify URL is accessible
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.vars.outputs.url }}")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Installer URL returned HTTP $HTTP_STATUS: ${{ steps.vars.outputs.url }}"
+            exit 1
+          fi
+          echo "URL is accessible (HTTP 200)"
+
+      - name: Sync fork
+        if: ${{ !inputs.dry_run }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: komac sync-fork
+
+      - name: Update package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: |
+          ARGS=(
+            "SumoLogic.OtelColSumo-FIPS"
             --version "${{ steps.vars.outputs.version }}"
             --urls "${{ steps.vars.outputs.url }}"
             --release-notes-url "https://github.com/SumoLogic/sumologic-otel-collector/releases"

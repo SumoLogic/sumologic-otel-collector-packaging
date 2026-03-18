@@ -6,7 +6,7 @@
   <Package Name="!(loc.ApplicationFullName)" Manufacturer="!(loc.ManufacturerName)" Version="$(ProductVersion)" UpgradeCode="$(UpgradeCode)" Scope="perMachine">
     <SummaryInformation Description="!(loc.ProductDescription)" />
 
-    <MajorUpgrade DowngradeErrorMessage="!(loc.NewerInstalled)" AllowSameVersionUpgrades="yes" AllowDowngrades="no" IgnoreLanguage="yes" />
+    <MajorUpgrade DowngradeErrorMessage="!(loc.NewerInstalled)" AllowSameVersionUpgrades="yes" AllowDowngrades="no" IgnoreLanguage="yes" Schedule="afterInstallExecute" />
 
     <MediaTemplate EmbedCab="yes" />
 
