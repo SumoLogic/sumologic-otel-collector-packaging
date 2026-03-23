@@ -427,7 +427,6 @@ jobs:
 
   test_install_script:
     name: Run install script tests
-    if: inputs.build_tool == 'cmake'
     needs: build_package
     runs-on: inputs.runs-on
     steps:
