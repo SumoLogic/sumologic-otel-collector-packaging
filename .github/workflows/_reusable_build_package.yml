@@ -424,3 +424,40 @@ jobs:
       - name: Run unit tests
         working-directory: ./msi/SumoLogic.wixext/SumoLogicTests/bin/Release
         run: dotnet test -v:n ./SumoLogicTests.dll
+
+  test_install_script:
+    name: Run install script tests
+    if: inputs.build_tool == 'cmake'
+    needs: build_package
+    strategy:
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+          - runs-on: macos-latest
+          - runs-on: windows-latest
+          - runs-on: ubuntu-latest
+            fips: true
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+
+      - name: Download package artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build_package.outputs.package_path }}
+          path: artifacts/
+
+      - name: Run install script tests
+        working-directory: install-script/test
+        env:
+          GITHUB_TOKEN: ${{ secrets.gh_ci_token }}
+          OTELCOL_SUMO_PACKAGE_PATH: ${{ github.workspace }}/artifacts/${{ needs.build_package.outputs.package_path }}
+          OTC_VERSION: ${{ needs.build_package.outputs.otc_version }}
+          OTC_BUILD_NUMBER: ${{ needs.build_package.outputs.otc_build_number }}
+        run: make test
