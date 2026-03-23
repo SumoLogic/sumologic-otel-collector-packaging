@@ -142,6 +142,46 @@ func checkTokenInSumoConfig(c check) bool {
 	return assert.Equal(c.test, c.installOptions.installToken, conf.Extensions.Sumologic.InstallationToken, "installation token is different than expected")
 }
 
+func checkAbortedDueToPurgeWithoutUninstall(c check) bool {
+	if !assert.Greater(c.test, len(c.errorOutput), 0) {
+		return false
+	}
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "-Purge can only be used with -Uninstall")
+}
+
+func checkAbortedDueToUninstallAndUpgrade(c check) bool {
+	if !assert.Greater(c.test, len(c.errorOutput), 0) {
+		return false
+	}
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "-Uninstall and -Upgrade cannot be used together")
+}
+
+func checkAbortedDueToNotInstalled(c check) bool {
+	if !assert.Greater(c.test, len(c.errorOutput), 0) {
+		return false
+	}
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "OpenTelemetry Collector is not installed")
+}
+
+func checkConfigDirectoryRemoved(c check) bool {
+	return assert.NoDirExists(c.test, etcPath, "config directory should have been removed by purge")
+}
+
+func checkDataDirectoryRemoved(c check) bool {
+	return assert.NoDirExists(c.test, libPath, "data directory should have been removed by purge")
+}
+
+func checkConfigDirectoryNotRemoved(c check) bool {
+	return assert.DirExists(c.test, etcPath, "config directory should not have been removed without purge")
+}
+
+func checkDataDirectoryNotRemoved(c check) bool {
+	return assert.DirExists(c.test, libPath, "data directory should not have been removed without purge")
+}
+
 func checkConfigFilesOwnershipAndPermissions(ownerSid string) func(c check) bool {
 	return func(c check) bool {
 		etcPathGlob := filepath.Join(etcPath, "*")
