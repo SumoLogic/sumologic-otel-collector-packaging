@@ -429,15 +429,7 @@ jobs:
     name: Run install script tests
     if: inputs.build_tool == 'cmake'
     needs: build_package
-    strategy:
-      matrix:
-        include:
-          - runs-on: ubuntu-latest
-          - runs-on: macos-latest
-          - runs-on: windows-latest
-          - runs-on: ubuntu-latest
-            fips: true
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: inputs.runs-on
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -460,4 +452,7 @@ jobs:
           OTELCOL_SUMO_PACKAGE_PATH: ${{ github.workspace }}/artifacts/${{ needs.build_package.outputs.package_path }}
           OTC_VERSION: ${{ needs.build_package.outputs.otc_version }}
           OTC_BUILD_NUMBER: ${{ needs.build_package.outputs.otc_build_number }}
-        run: make test
+        run: |
+          make test ${{
+            inputs.fips && 'CGO_ENABLED=1 GOEXPERIMENT=boringcrypto' || ''
+          }}
