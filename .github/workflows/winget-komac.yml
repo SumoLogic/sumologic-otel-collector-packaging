@@ -145,7 +145,7 @@ jobs:
         run: komac cleanup --only-merged || true
 
   update-fips:
-    name: Update SumoLogic.OtelColSumo-FIPS
+    name: Update SumoLogic.OtelcolSumo.Fips
     needs: [update-standard]
     if: |
       (inputs.package == 'both' || inputs.package == 'fips') &&
