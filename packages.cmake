@@ -105,7 +105,7 @@ function(create_wait_for_packagecloud_indexing_target _pc_user _pc_repo _pkg_pat
   set(_repo_id "${_pc_user}/${_pc_repo}")
   set(_base_cmd "packagecloud search")
   set(_query_arg "--query ${_pkg_name}")
-  set(_wait_args "--wait-for-indexing --wait-seconds 30 --wait-max-retries 12")
+  set(_wait_args "--wait-for-indexing --wait-seconds 30 --wait-max-retries 20")
   set(_cmd "${_base_cmd} ${_repo_id} ${_query_arg} ${_wait_args}")
   separate_arguments(_packagecloud_search_cmd UNIX_COMMAND "${_cmd}")
 
