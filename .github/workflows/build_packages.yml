@@ -245,7 +245,7 @@ jobs:
   test-install-script:
     name: Test Install Script
     runs-on: ${{ matrix.runs_on }}
-    timeout-minutes: 70
+    timeout-minutes: 120
     needs:
       - build_packages
     strategy:
@@ -257,7 +257,7 @@ jobs:
           - arch_os: darwin_amd64
             runs_on: macos-latest
           - arch_os: windows_amd64
-            runs_on: windows-2022
+            runs_on: windows-2022-large
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
