@@ -64,7 +64,29 @@ param (
     # S3Region is used to specify which S3 region to download the MSI package
     # from. The default value is set to the value of the S3_REGION environment
     # variable.
-    [string] $S3Region = $env:S3_REGION
+    [string] $S3Region = $env:S3_REGION,
+
+    # UseWinget enables installation via Windows Package Manager (winget).
+    # When set, the script will attempt to install using winget first.
+    # If winget installation fails, it falls back to MSI.
+    # Note: This flag only affects installation behavior. For upgrade and
+    # uninstall operations, the script will attempt to use winget when available
+    # and fall back to MSI if needed.
+    [switch] $UseWinget,
+
+    # Uninstall removes the Sumo Logic OpenTelemetry Collector from the system.
+    # When uninstalling, the script attempts to use winget when available and
+    # falls back to MSI if winget-based uninstallation is not possible.
+    # Use with -Purge to also remove configuration and data files.
+    [switch] $Uninstall,
+
+    # Upgrade updates the collector to the latest version (or specified version).
+    # When upgrading, the script attempts to use winget when available and
+    # falls back to MSI if winget-based upgrade is not possible.
+    [switch] $Upgrade,
+
+    # Purge removes all configuration and data files when used with -Uninstall.
+    [switch] $Purge
 )
 
 # If the environment variable SKIP_ARCH_DETECTION is set and is not
@@ -91,6 +113,24 @@ if ($S3Bucket -eq "sumologic-osc-stable") {
 }
 
 Write-Host "DOWNLOAD_URI = $DOWNLOAD_URI"
+
+##
+# Constants for winget and service management
+##
+
+# Winget package identifiers
+$WINGET_PACKAGE_ID = "Sumologic.OtelcolSumo"
+$WINGET_PACKAGE_ID_FIPS = "Sumologic.OtelcolSumo.Fips"
+
+# Windows service name (from msi/wix/package.en-us.wxl)
+$SERVICE_NAME = "OtelcolSumo"
+
+# Windows paths for purge (based on WiX folders.wxs)
+# CommonAppDataFolder\Sumo Logic\OpenTelemetry Collector
+$COLLECTOR_DATA_ROOT = "$env:ProgramData\Sumo Logic\OpenTelemetry Collector"
+# TODO: validate config dir
+$CONFIG_DIRECTORY = "$COLLECTOR_DATA_ROOT\config"
+$DATA_DIRECTORY = "$COLLECTOR_DATA_ROOT\data"
 
 
 ##
@@ -355,77 +395,513 @@ function Get-BinaryFromURI {
 }
 
 ##
-# Main code
+# Winget and service management functions
 ##
 
-try {
-    if ($InstallationToken -eq $null -or $InstallationToken -eq "") {
-        Write-Error "Installation token has not been provided. Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable." -ErrorAction Stop
+function Test-WingetAvailable {
+    <#
+    .SYNOPSIS
+        Check if winget is available on the system
+    .OUTPUTS
+        Boolean indicating if winget command is available
+    #>
+    try {
+        $null = Get-Command winget -ErrorAction Stop
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+function ConvertTo-MsiVersion {
+    <#
+    .SYNOPSIS
+        Convert version string to MSI format (dots instead of dashes)
+    .DESCRIPTION
+        Converts version formats like "0.109.0-1800" to "0.109.0.1800"
+        MSI uses the same format as winget (4-part dotted version).
+    .PARAMETER Version
+        The version string to convert
+    .OUTPUTS
+        Version string in MSI format (a.b.c.build)
+    #>
+    param (
+        [Parameter(Mandatory)]
+        [string] $Version
+    )
+
+    if ($Version -match '^\d+\.\d+\.\d+-\d+$') {
+        # Convert dashed format to dotted MSI format
+        return $Version -replace '-', '.'
+    }
+    if ($Version -match '^\d+\.\d+\.\d+\.\d+$') {
+        # Already in valid MSI/winget format
+        return $Version
+    }
+    throw "Invalid version format '$Version'. Expected 'X.Y.Z-BUILD' or 'X.Y.Z.BUILD'."
+}
+
+function ConvertTo-DownloadVersion {
+    <#
+    .SYNOPSIS
+        Convert version string to download path format (dash before build number)
+    .DESCRIPTION
+        Converts version formats like "0.109.0.1800" to "0.109.0-1800"
+        The download path on the CDN uses a dash to separate the build number.
+    .PARAMETER Version
+        The version string to convert
+    .OUTPUTS
+        Version string in download path format (a.b.c-build)
+    #>
+    param (
+        [Parameter(Mandatory)]
+        [string] $Version
+    )
+
+    if ($Version -match '^\d+\.\d+\.\d+-\d+$') {
+        # Already in download path format
+        return $Version
+    }
+    if ($Version -match '^(\d+\.\d+\.\d+)\.(\d+)$') {
+        # Convert dotted format to dashed download path format
+        return "$($Matches[1])-$($Matches[2])"
+    }
+    throw "Invalid version format '$Version'. Expected 'X.Y.Z-BUILD' or 'X.Y.Z.BUILD'."
+}
+
+function Stop-CollectorService {
+    <#
+    .SYNOPSIS
+        Stop the OpenTelemetry Collector service if running
+    #>
+
+    $service = Get-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue
+
+    if ($service -eq $null) {
+        Write-Host "Service '$SERVICE_NAME' not found"
+        return
     }
 
-    $osName = Get-OSName
-    Write-Host "Detected OS type:`t${osName}"
+    if ($service.Status -eq 'Running') {
+        Write-Host "Stopping service '$SERVICE_NAME'..."
+        Stop-Service -Name $SERVICE_NAME -Force -ErrorAction SilentlyContinue
 
-    if ($SkipArchDetection -eq $False) {
-        $archName = Get-ArchName -AllowUnsupported ($OverrideArch -ne "")
-        Write-Host "Detected architecture:`t${archName}"
+        # Wait for service to stop (max 60 seconds total)
+        $timeout = 60
+        $elapsed = 0
+        while ((Get-Service -Name $SERVICE_NAME).Status -ne 'Stopped' -and $elapsed -lt $timeout) {
+            Start-Sleep -Seconds 1
+            $elapsed++
+        }
+
+        if ((Get-Service -Name $SERVICE_NAME).Status -eq 'Stopped') {
+            Write-Host "Service stopped successfully"
+        } else {
+            $errorMessage = "Service '$SERVICE_NAME' did not stop within $timeout seconds. Aborting operation."
+            Write-Error $errorMessage
+            throw $errorMessage
+        }
     } else {
-        if ($OverrideArch -eq "") {
-            Write-Error "OverrideArch flag must be set when using SkipArchDetection" -ErrorAction Stop
+        Write-Host "Service '$SERVICE_NAME' is not running"
+    }
+}
+
+function Build-MsiProperties {
+    <#
+    .SYNOPSIS
+        Build a hashtable of MSI properties from common installation parameters.
+        Used by both the MSI and winget installation paths to avoid duplication.
+    .PARAMETER Tags
+        Tags hashtable
+    .PARAMETER Api
+        API URL
+    .PARAMETER OpAmpApi
+        OpAmp API URL
+    .PARAMETER InstallHostMetrics
+        Whether to install host metrics
+    .PARAMETER RemotelyManaged
+        Whether remotely managed
+    .PARAMETER Ephemeral
+        Whether ephemeral
+    .PARAMETER Timezone
+        Timezone setting
+    .PARAMETER CollectorName
+        Collector name
+    .PARAMETER Clobber
+        Whether to clobber
+    .OUTPUTS
+        Hashtable of MSI property key-value pairs
+    #>
+    param (
+        [hashtable] $Tags,
+
+        [string] $Api,
+
+        [string] $OpAmpApi,
+
+        [bool] $InstallHostMetrics,
+
+        [bool] $RemotelyManaged,
+
+        [bool] $Ephemeral,
+
+        [string] $Timezone,
+
+        [string] $CollectorName,
+
+        [bool] $Clobber
+    )
+
+    $msiProps = @{}
+
+    if ($Tags -ne $null -and $Tags.Count -gt 0) {
+        [string[]] $tagStrs = @()
+        $Tags.GetEnumerator().ForEach({
+            $tagStrs += "$($_.Key)=$($_.Value)"
+        })
+        $msiProps["TAGS"] = $tagStrs -join ","
+    }
+    if ($Api.Length -gt 0) {
+        $msiProps["API"] = $Api
+    }
+
+    [string[]] $addLocalFeatures = @()
+    if ($InstallHostMetrics -eq $true) {
+        $addLocalFeatures += "HOSTMETRICS"
+    }
+    if ($RemotelyManaged -eq $true) {
+        $addLocalFeatures += "REMOTELYMANAGED"
+        if ($OpAmpApi.Length -gt 0) {
+            $msiProps["OPAMPAPI"] = $OpAmpApi
         }
-        Write-Host "Skipping architecture detection"
+    }
+    if ($Ephemeral -eq $true) {
+        $addLocalFeatures += "EPHEMERAL"
+    }
+    if ($Clobber -eq $true) {
+        $addLocalFeatures += "CLOBBER"
+    }
+    if ($addLocalFeatures.Count -gt 0) {
+        $msiProps["ADDLOCAL"] = $addLocalFeatures -join ","
     }
 
-    if ($OverrideArch -ne "") {
-        $archName = $OverrideArch
-        Write-Host "Architecture overridden: `t${archName}"
+    if ($Timezone.Length -gt 0) {
+        $msiProps["TIMEZONE"] = $Timezone
+    }
+    if ($CollectorName.Length -gt 0) {
+        $msiProps["COLLECTORNAME"] = $CollectorName
     }
 
-    $handler = New-Object HttpClientHandler
-    $handler.AllowAutoRedirect = $true
+    return $msiProps
+}
 
-    $httpClient = New-Object System.Net.Http.HttpClient($handler)
-    $userAgentHeader = New-Object System.Net.Http.Headers.ProductInfoHeaderValue("otelcol-sumo-installer", "0.1")
-    $httpClient.DefaultRequestHeaders.UserAgent.Add($userAgentHeader)
+function Install-ViaWinget {
+    <#
+    .SYNOPSIS
+        Install package via winget
+    .PARAMETER PackageId
+        The winget package identifier
+    .PARAMETER Version
+        Optional specific version to install (winget format: a.b.c.build)
+    .PARAMETER InstallationToken
+        The Sumo Logic installation token
+    .PARAMETER MsiProperties
+        Additional MSI properties to pass via --custom
+    .OUTPUTS
+        Boolean indicating success or failure
+    #>
+    param (
+        [Parameter(Mandatory)]
+        [string] $PackageId,
 
-    # set http client timeout to 30 seconds
-    $httpClient.Timeout = New-Object System.TimeSpan(0, 0, 30)
+        [string] $Version,
 
-    if ($Fips -eq $true) {
-        if ($osName -ne "Win32NT" -or $archName -ne "x64") {
-            Write-Error "Error: The FIPS-approved binary is only available for windows/amd64" -ErrorAction Stop
+        [string] $InstallationToken,
+
+        [hashtable] $MsiProperties = @{}
+    )
+
+    $wingetArgs = @(
+        "install"
+        "--id", $PackageId
+        "--exact"
+        "--accept-package-agreements"
+        "--accept-source-agreements"
+        "--silent"
+    )
+
+    if ($Version -ne "" -and $Version -ne $null -and $Version -ne "True" -and $Version -ne "False") {
+        $wingetArgs += @("--version", $Version)
+    }
+
+    # Build custom MSI properties string
+    $customProps = @()
+    if ($InstallationToken -ne "" -and $InstallationToken -ne $null) {
+        $customProps += "INSTALLATIONTOKEN=$InstallationToken"
+    }
+    if ($MsiProperties -ne $null) {
+        foreach ($key in $MsiProperties.Keys) {
+            $value = $MsiProperties[$key]
+            # Escape embedded double quotes to prevent command injection
+            $value = $value -replace '"', '""'
+            if ($value -match '\s') {
+                $customProps += "$key=`"$value`""
+            } else {
+                $customProps += "$key=$value"
+            }
         }
     }
 
-    Write-Host "Getting installed version..."
-    $installedAppVersion = Get-InstalledApplicationVersion
-    $installedAppVersionStr = "none"
-    if ($installedAppVersion -ne $null) {
-        $installedAppVersionStr = $installedAppVersion
-    }
-    $installedPackageVersion = Get-InstalledPackageVersion
-    $installedPackageVersionStr = "none"
-    if ($installedPackageVersion -ne $null) {
-        $installedPackageVersionStr = $installedPackageVersion
-    }
-    Write-Host "Installed app version:`t${installedAppVersionStr}"
-    Write-Host "Installed package version:`t${installedPackageVersionStr}"
-
-    # Use user's version if set, otherwise get latest version from API (or website)
-    if ($Version -eq "") {
-        Write-Host "Getting latest version..."
-        $Version = Get-LatestVersion -HttpClient $httpClient
+    if ($customProps.Count -gt 0) {
+        $customStr = $customProps -join " "
+        $wingetArgs += @("--custom", $customStr)
     }
 
-    # versions have a dash before the build number, the Windows convention is a dot
-    $msiVersion = $Version.Replace("-", ".")
-
-    Write-Host "Package version to install:`t${Version}"
-
-    # Check if otelcol is already in newest version
-    if ($installedPackageVersion -eq $msiVersion) {
-        Write-Host "OpenTelemetry collector is already in newest (${msiVersion}) version"
+    Write-Host "Installing via winget: $PackageId"
+    if ($Version) {
+        Write-Host "Version: $Version"
     }
+    # Write-Host "Running: winget"
+    # ToDo: remove below log, re add above log after testing
+    # Log a sanitized version of the command to avoid exposing INSTALLATIONTOKEN
+    $logWingetArgs = $wingetArgs.Clone()
+    for ($i = 0; $i -lt $logWingetArgs.Count; $i++) {
+        if ($logWingetArgs[$i] -is [string]) {
+            $logWingetArgs[$i] = $logWingetArgs[$i] -replace 'INSTALLATIONTOKEN=\S+', 'INSTALLATIONTOKEN=<redacted>'
+        }
+    }
+    Write-Host "Running: winget $($logWingetArgs -join ' ')"
+
+    # Capture output to prevent it from being included in function return value
+    $null = & winget @wingetArgs
+    $wingetExitCode = $LASTEXITCODE
+
+    if ($wingetExitCode -ne 0) {
+        Write-Warning "Winget installation failed with exit code: $wingetExitCode"
+        return $false
+    }
+
+    return $true
+}
+
+function Update-ViaWinget {
+    <#
+    .SYNOPSIS
+        Upgrade package via winget
+    .PARAMETER PackageId
+        The winget package identifier
+    .PARAMETER Version
+        Optional specific version to upgrade to (winget format: a.b.c.build)
+    .OUTPUTS
+        Boolean indicating success or failure
+    #>
+    param (
+        [Parameter(Mandatory)]
+        [string] $PackageId,
+
+        [string] $Version
+    )
+
+    $wingetArgs = @(
+        "upgrade"
+        "--id", $PackageId
+        "--exact"
+        "--accept-package-agreements"
+        "--accept-source-agreements"
+        "--silent"
+    )
+
+    if ($Version -ne "" -and $Version -ne $null -and $Version -ne "True" -and $Version -ne "False") {
+        $wingetArgs += @("--version", $Version)
+    }
+
+    Write-Host "Upgrading via winget: $PackageId"
+    if ($Version) {
+        Write-Host "Target version: $Version"
+    }
+    Write-Host "Running: winget $($wingetArgs -join ' ')"
+
+    # Capture output to prevent it from being included in function return value
+    $null = & winget @wingetArgs
+    $wingetExitCode = $LASTEXITCODE
+
+    if ($wingetExitCode -ne 0) {
+        Write-Warning "Winget upgrade failed with exit code: $wingetExitCode"
+        return $false
+    }
+
+    return $true
+}
+
+function Uninstall-ViaWinget {
+    <#
+    .SYNOPSIS
+        Uninstall package via winget
+    .PARAMETER PackageId
+        The winget package identifier
+    .OUTPUTS
+        Boolean indicating success or failure
+    #>
+    param (
+        [Parameter(Mandatory)]
+        [string] $PackageId
+    )
+
+    $wingetArgs = @(
+        "uninstall"
+        "--id", $PackageId
+        "--exact"
+        "--accept-source-agreements"
+        "--silent"
+    )
+
+    Write-Host "Uninstalling via winget: $PackageId"
+    Write-Host "Running: winget $($wingetArgs -join ' ')"
+
+    # Capture output to prevent it from being included in function return value
+    $null = & winget @wingetArgs
+    $wingetExitCode = $LASTEXITCODE
+
+    if ($wingetExitCode -ne 0) {
+        Write-Warning "Winget uninstallation failed with exit code: $wingetExitCode"
+        return $false
+    }
+
+    return $true
+}
+
+function Uninstall-ViaMsi {
+    <#
+    .SYNOPSIS
+        Uninstall package via Windows Package/MSI system
+    .OUTPUTS
+        Boolean indicating success or failure
+    #>
+
+    $package = Get-Package -Name "OpenTelemetry Collector" -ErrorAction SilentlyContinue
+
+    if ($package -eq $null) {
+        Write-Warning "Package 'OpenTelemetry Collector' not found"
+        return $false
+    }
+
+    Write-Host "Uninstalling via MSI: OpenTelemetry Collector"
+
+    try {
+        $package | Uninstall-Package -Force -ErrorAction Stop
+        return $true
+    } catch {
+        Write-Warning "MSI uninstallation failed: $_"
+        return $false
+    }
+}
+
+function Remove-CollectorData {
+    <#
+    .SYNOPSIS
+        Remove all collector configuration and data (purge)
+    #>
+
+    $paths = @(
+        $CONFIG_DIRECTORY
+        $DATA_DIRECTORY
+    )
+
+    foreach ($path in $paths) {
+        if (Test-Path $path) {
+            Write-Host "Removing: $path"
+            try {
+                Remove-Item -Path $path -Recurse -Force -ErrorAction Stop
+            } catch {
+                Write-Warning "Failed to remove ${path}: $_"
+            }
+        }
+    }
+
+    # Remove parent directory if empty
+    if (Test-Path $COLLECTOR_DATA_ROOT) {
+        $remaining = Get-ChildItem -Path $COLLECTOR_DATA_ROOT -ErrorAction SilentlyContinue
+        if ($remaining.Count -eq 0) {
+            Write-Host "Removing empty directory: $COLLECTOR_DATA_ROOT"
+            Remove-Item -Path $COLLECTOR_DATA_ROOT -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Install-ViaMsi {
+    <#
+    .SYNOPSIS
+        Install or upgrade package via MSI
+    .PARAMETER HttpClient
+        The HTTP client for downloading
+    .PARAMETER Version
+        The version to install
+    .PARAMETER ArchName
+        The architecture name (x64, etc.)
+    .PARAMETER Fips
+        Whether to use FIPS binary
+    .PARAMETER InstallationToken
+        The installation token
+    .PARAMETER Tags
+        Tags hashtable
+    .PARAMETER Api
+        API URL
+    .PARAMETER OpAmpApi
+        OpAmp API URL
+    .PARAMETER InstallHostMetrics
+        Whether to install host metrics
+    .PARAMETER RemotelyManaged
+        Whether remotely managed
+    .PARAMETER Ephemeral
+        Whether ephemeral
+    .PARAMETER Timezone
+        Timezone setting
+    .PARAMETER CollectorName
+        Collector name
+    .PARAMETER Clobber
+        Whether to clobber
+    .PARAMETER PackagePath
+        Path to local MSI package
+    #>
+    param (
+        [Parameter(Mandatory)]
+        [HttpClient] $HttpClient,
+
+        [Parameter(Mandatory)]
+        [string] $Version,
+
+        [Parameter(Mandatory)]
+        [string] $ArchName,
+
+        [bool] $Fips,
+
+        [string] $InstallationToken,
+
+        [hashtable] $Tags,
+
+        [string] $Api,
+
+        [string] $OpAmpApi,
+
+        [bool] $InstallHostMetrics,
+
+        [bool] $RemotelyManaged,
+
+        [bool] $Ephemeral,
+
+        [string] $Timezone,
+
+        [string] $CollectorName,
+
+        [bool] $Clobber,
+
+        [string] $PackagePath
+    )
+
+    # Convert version to MSI format (dots instead of dashes)
+    $msiVersion = ConvertTo-MsiVersion -Version $Version
+    # Convert version to download path format (dashes instead of dots)
+    $downloadVersion = ConvertTo-DownloadVersion -Version $Version
 
     # Add -fips to the msi filename if necessary
     $fipsSuffix = ""
@@ -436,8 +912,9 @@ try {
 
     # Download MSI or install from provided path
     $msiLanguage = "en-US"
-    $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${archName}${fipsSuffix}.msi"
-    $msiURI = $DOWNLOAD_URI + "/" + $Version + "/" + $msiFileName
+    $msiFileName = "otelcol-sumo_${msiVersion}_${msiLanguage}.${ArchName}${fipsSuffix}.msi"
+    $msiURI = $DOWNLOAD_URI + "/" + $downloadVersion + "/" + $msiFileName
+
     if ($PackagePath.Length -gt 0) {
         # Convert Unix-style path (e.g., /d/a/path) to Windows format (D:\a\path)
         if ($PackagePath -match '^/([a-zA-Z])/(.*)$') {
@@ -448,52 +925,42 @@ try {
         Write-Host "Using package from: ${msiPath}"
     } else {
         $msiPath = "${env:TEMP}\${msiFileName}"
-        Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $httpClient
+        Get-BinaryFromURI $msiURI -Path $msiPath -HttpClient $HttpClient
     }
 
-    # Install MSI
+    # Build MSI properties
+    $props = Build-MsiProperties `
+        -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
+        -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
+        -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
+        -Clobber $Clobber
+
     [string[]] $msiProperties = @()
-    [string[]] $msiAddLocal = @()
-    $msiProperties += "INSTALLATIONTOKEN=${InstallationToken}"
-    if ($Tags.Count -gt 0) {
-        [string[]] $tagStrs = @()
-        $Tags.GetEnumerator().ForEach({
-            $tagStrs += "$($_.Key)=$($_.Value)"
-        })
-        $tagsProperty = $tagStrs -Join ","
-        $msiProperties += "TAGS=`"${tagsProperty}`""
+    if ($InstallationToken.Length -gt 0) {
+        $msiProperties += "INSTALLATIONTOKEN=${InstallationToken}"
     }
-    if ($Api.Length -gt 0) {
-        $msiProperties += "API=`"${Api}`""
-    }
-    if ($InstallHostMetrics -eq $true) {
-        $msiAddLocal += "HOSTMETRICS"
-    }
-    if ($RemotelyManaged -eq $true) {
-        $msiAddLocal += "REMOTELYMANAGED"
-        if ($OpAmpApi.Length -gt 0) {
-            $msiProperties += "OPAMPAPI=`"${OpAmpApi}`""
+    foreach ($key in $props.Keys) {
+        $value = $props[$key]
+        # Escape embedded double quotes to prevent command injection
+        $value = $value -replace '"', '""'
+        if ($value -match '\s') {
+            $msiProperties += "$key=`"$value`""
+        } else {
+            $msiProperties += "$key=$value"
         }
     }
-    if ($Ephemeral -eq $true) {
-        $msiAddLocal += "EPHEMERAL"
-    }
-    if ($Timezone.Length -gt 0) {
-        $msiProperties += "TIMEZONE=`"${Timezone}`""
-    }
 
-    if ($CollectorName.Length -gt 0) {
-        $msiProperties += "COLLECTORNAME=`"${CollectorName}`""
-    }
-
-    if ($Clobber -eq $true) {
-        $msiAddLocal += "CLOBBER"
-    }
-    if ($msiAddLocal.Count -gt 0) {
-        $addLocalStr = $msiAddLocal -Join ","
-        $msiProperties += "ADDLOCAL=${addLocalStr}"
-    }
     $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
+    # Write-Host "Running: msiexec.exe"
+    # Todo: remove below log, replace with above commented log.
+    $sanitizedMsiArgs = $msiArgs | ForEach-Object {
+        if ($_ -match '^(?i)INSTALLATIONTOKEN=') {
+            'INSTALLATIONTOKEN=****'
+        } else {
+            $_
+        }
+    }
+    Write-Host "Running: msiexec.exe $($sanitizedMsiArgs -join ' ')"
     $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
 
     if ($process.ExitCode -ne 0) {
@@ -522,8 +989,242 @@ For more information, visit: https://docs.microsoft.com/en-us/windows/win32/msi/
 "@
         Write-Error $errorMsg -ErrorAction Stop
     }
-} catch [HttpRequestException] {
-    Write-Error $_.Exception.InnerException.Message -ErrorAction Stop
 }
 
-Write-Host "Installation successful"
+##
+# Main code
+##
+
+try {
+    # Validate parameter combinations
+    if ($Purge -and -not $Uninstall) {
+        Write-Error "-Purge can only be used with -Uninstall" -ErrorAction Stop
+    }
+
+    if ($Uninstall -and $Upgrade) {
+        Write-Error "-Uninstall and -Upgrade cannot be used together" -ErrorAction Stop
+    }
+
+    # Determine winget package ID based on FIPS flag
+    $wingetPackageId = if ($Fips) { $WINGET_PACKAGE_ID_FIPS } else { $WINGET_PACKAGE_ID }
+
+    $handler = New-Object HttpClientHandler
+    $handler.AllowAutoRedirect = $true
+
+    $httpClient = New-Object System.Net.Http.HttpClient($handler)
+
+    # Set timeout and user-agent before any requests are made.
+    # HttpClient properties cannot be modified after the first request.
+    $userAgentHeader = New-Object System.Net.Http.Headers.ProductInfoHeaderValue("otelcol-sumo-installer", "0.1")
+    $httpClient.DefaultRequestHeaders.UserAgent.Add($userAgentHeader)
+    $httpClient.Timeout = New-Object System.TimeSpan(0, 0, 30)
+
+    # ========================================
+    # Handle Uninstall
+    # ========================================
+    if ($Uninstall) {
+        Write-Host "Uninstalling OpenTelemetry Collector..."
+
+        # Stop service first
+        Stop-CollectorService
+
+        $uninstallSuccess = $false
+
+        # Try winget first if available, then fall back to MSI
+        if (Test-WingetAvailable) {
+            Write-Host "Attempting uninstall via winget..."
+            $uninstallSuccess = Uninstall-ViaWinget -PackageId $wingetPackageId
+
+            if (-not $uninstallSuccess) {
+                Write-Warning "Winget uninstall failed. Falling back to MSI uninstall..."
+            }
+        } else {
+            Write-Host "Winget is not available on this system."
+        }
+
+        if (-not $uninstallSuccess) {
+            Write-Host "Attempting uninstall via MSI..."
+            $uninstallSuccess = Uninstall-ViaMsi
+        }
+
+        if (-not $uninstallSuccess) {
+            Write-Error "Uninstallation failed" -ErrorAction Stop
+        }
+
+        if ($Purge) {
+            Write-Host "Purging configuration and data..."
+            Remove-CollectorData
+        }
+
+        Write-Host "Uninstallation complete"
+        exit 0
+    }
+
+    if ($Version -eq "" -or $Version -eq $null -or $Version -eq "True" -or $Version -eq "False") {
+        Write-Host "Getting latest version..."
+        $Version = Get-LatestVersion -HttpClient $httpClient
+    }
+
+    # ========================================
+    # Handle Upgrade
+    # ========================================
+    if ($Upgrade) {
+        Write-Host "Upgrading OpenTelemetry Collector..."
+
+        # Verify that the collector is currently installed
+        $installedVersion = Get-InstalledPackageVersion
+        if ($installedVersion -eq $null) {
+            Write-Error "OpenTelemetry Collector is not installed. Use the install command instead of -Upgrade." -ErrorAction Stop
+        }
+        Write-Host "Currently installed version:`t${installedVersion}"
+
+        # Stop service first
+        Stop-CollectorService
+
+        # Try winget first if available, then fall back to MSI
+        if (Test-WingetAvailable) {
+            Write-Host "Attempting upgrade via winget..."
+            $wingetUpgradeVersion = if ($Version) { ConvertTo-MsiVersion -Version $Version } else { $null }
+            $upgradeSuccess = Update-ViaWinget -PackageId $wingetPackageId -Version $wingetUpgradeVersion
+
+            if ($upgradeSuccess) {
+                Write-Host "Upgrade via winget successful"
+                exit 0
+            }
+
+            Write-Warning "Winget upgrade failed. Falling back to MSI upgrade..."
+        } else {
+            Write-Host "Winget is not available on this system. Proceeding with MSI upgrade..."
+        }
+
+        # Fall through to MSI installation path below
+        # MSI handles upgrades automatically via MajorUpgrade element
+    }
+
+    # ========================================
+    # Handle Install (and MSI Upgrade fallback)
+    # ========================================
+
+    # Installation token is required for fresh install, but not for upgrade
+    if (-not $Upgrade) {
+        if ($InstallationToken -eq $null -or $InstallationToken -eq "") {
+            Write-Error "Installation token has not been provided. Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable." -ErrorAction Stop
+        }
+    }
+
+    $osName = Get-OSName
+    Write-Host "Detected OS type:`t${osName}"
+
+    if ($SkipArchDetection -eq $False) {
+        $archName = Get-ArchName -AllowUnsupported ($OverrideArch -ne "")
+        Write-Host "Detected architecture:`t${archName}"
+    } else {
+        if ($OverrideArch -eq "") {
+            Write-Error "OverrideArch flag must be set when using SkipArchDetection" -ErrorAction Stop
+        }
+        Write-Host "Skipping architecture detection"
+    }
+
+    if ($OverrideArch -ne "") {
+        $archName = $OverrideArch
+        Write-Host "Architecture overridden:`t${archName}"
+    }
+
+    if ($Fips -eq $true) {
+        if ($osName -ne "Win32NT" -or $archName -ne "x64") {
+            Write-Error "Error: The FIPS-approved binary is only available for windows/amd64" -ErrorAction Stop
+        }
+    }
+
+    Write-Host "Getting installed version..."
+    $installedAppVersion = Get-InstalledApplicationVersion
+    $installedAppVersionStr = "none"
+    if ($installedAppVersion -ne $null) {
+        $installedAppVersionStr = $installedAppVersion
+    }
+    $installedPackageVersion = Get-InstalledPackageVersion
+    $installedPackageVersionStr = "none"
+    if ($installedPackageVersion -ne $null) {
+        $installedPackageVersionStr = $installedPackageVersion
+    }
+    Write-Host "Installed app version:`t${installedAppVersionStr}"
+    Write-Host "Installed package version:`t${installedPackageVersionStr}"
+
+    Write-Host "Package version to install:`t${Version}"
+
+    # Check if otelcol is already in newest version (for non-upgrade installs)
+    $msiVersion = ConvertTo-MsiVersion -Version $Version
+    if (-not $Upgrade -and $installedPackageVersion -eq $msiVersion) {
+        Write-Host "OpenTelemetry collector is already in newest (${msiVersion}) version"
+        exit 0
+    }
+
+    # ========================================
+    # Try winget installation if requested (only for fresh install, not upgrade)
+    # ========================================
+    if ($UseWinget -and -not $Upgrade) {
+        if (-not (Test-WingetAvailable)) {
+            Write-Warning "Winget is not available on this system. Falling back to MSI installation."
+        } else {
+            Write-Host "Attempting installation via winget..."
+
+            # Build MSI properties for winget --custom
+            $msiProps = Build-MsiProperties `
+                -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
+                -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
+                -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
+                -Clobber $Clobber
+
+            # Convert version to winget format (dots instead of dashes)
+            $wingetVersion = ConvertTo-MsiVersion -Version $Version
+
+            $wingetSuccess = Install-ViaWinget `
+                -PackageId $wingetPackageId `
+                -Version $wingetVersion `
+                -InstallationToken $InstallationToken `
+                -MsiProperties $msiProps
+
+            if ($wingetSuccess) {
+                Write-Host "Installation via winget successful"
+                exit 0
+            } else {
+                Write-Warning "Winget installation failed (version may not be available). Falling back to MSI installation."
+            }
+        }
+    }
+
+    # ========================================
+    # MSI Installation (or fallback from winget)
+    # ========================================
+    Write-Host "Installing via MSI..."
+
+    Install-ViaMsi `
+        -HttpClient $httpClient `
+        -Version $Version `
+        -ArchName $archName `
+        -Fips $Fips `
+        -InstallationToken $InstallationToken `
+        -Tags $Tags `
+        -Api $Api `
+        -OpAmpApi $OpAmpApi `
+        -InstallHostMetrics $InstallHostMetrics `
+        -RemotelyManaged $RemotelyManaged `
+        -Ephemeral $Ephemeral `
+        -Timezone $Timezone `
+        -CollectorName $CollectorName `
+        -Clobber $Clobber `
+        -PackagePath $PackagePath
+
+    Write-Host "Installation successful"
+
+} catch [HttpRequestException] {
+    $errorMessage = if ($_.Exception.InnerException -ne $null) {
+        $_.Exception.InnerException.Message
+    } else {
+        $_.Exception.Message
+    }
+    Write-Error $errorMessage -ErrorAction Stop
+} catch {
+    Write-Error $_.Exception.Message
+    exit 1
+}
