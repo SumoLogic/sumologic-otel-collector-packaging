@@ -37,7 +37,6 @@ action :default do
   if platform_family?('windows')
     run_action :install_windows_collector
     run_action :prepare_windows_config
-    run_action :restart_windows_service
   else
     run_action :get_install_script
     install_command = get_install_script_command(new_resource)
