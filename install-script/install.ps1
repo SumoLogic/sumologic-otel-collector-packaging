@@ -493,10 +493,22 @@ try {
         $addLocalStr = $msiAddLocal -Join ","
         $msiProperties += "ADDLOCAL=${addLocalStr}"
     }
-    $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
-    $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+    $msiArgs = @("/i", "`"$msiPath`"", "/passive", "REBOOT=ReallySuppress") + $msiProperties
+    # Stop OtelcolSumo service if it exists
+    $service = Get-Service -Name "OtelcolSumo" -ErrorAction SilentlyContinue
 
-    if ($process.ExitCode -ne 0) {
+    if ($service) {
+        if ($service.Status -ne "Stopped") {
+            Stop-Service -Name "OtelcolSumo" -Force
+            Start-Sleep -Seconds 5
+        }
+    }
+
+    $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
+    if ($process.ExitCode -eq 3010) {
+        Write-Warning "Installation succeeded but requires reboot (exit code 3010)."
+    }
+    elseif ($process.ExitCode -ne 0) {
         $redactedMsiArgs = ($msiArgs -join ' ') -replace 'INSTALLATIONTOKEN=\S+', 'INSTALLATIONTOKEN=***'
         $errorMsg = @"
 MSI installation failed with exit code: $($process.ExitCode)
