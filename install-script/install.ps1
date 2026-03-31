@@ -950,9 +950,7 @@ function Install-ViaMsi {
         }
     }
 
-    $msiArgs = @("/i", "`"$msiPath`"", "/passive") + $msiProperties
-    # Write-Host "Running: msiexec.exe"
-    # Todo: remove below log, replace with above commented log.
+    $msiArgs = @("/i", "`"$msiPath`"", "/passive", "REBOOT=ReallySuppress") + $msiProperties
     $sanitizedMsiArgs = $msiArgs | ForEach-Object {
         if ($_ -match '^(?i)INSTALLATIONTOKEN=') {
             'INSTALLATIONTOKEN=****'
@@ -963,7 +961,10 @@ function Install-ViaMsi {
     Write-Host "Running: msiexec.exe $($sanitizedMsiArgs -join ' ')"
     $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
 
-    if ($process.ExitCode -ne 0) {
+    if ($process.ExitCode -eq 3010) {
+        Write-Warning "Installation succeeded but requires reboot (exit code 3010)."
+    }
+    elseif ($process.ExitCode -ne 0) {
         $redactedMsiArgs = ($msiArgs -join ' ') -replace 'INSTALLATIONTOKEN=\S+', 'INSTALLATIONTOKEN=***'
         $errorMsg = @"
 MSI installation failed with exit code: $($process.ExitCode)
