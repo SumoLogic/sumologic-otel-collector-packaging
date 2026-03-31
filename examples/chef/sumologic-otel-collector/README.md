@@ -148,6 +148,22 @@ The following steps describe procedure of testing changes:
   Get-Service -Name OtelcolSumo
   ```
 
+## Testing
+
+For detailed testing instructions, troubleshooting, and verification steps, see [TESTING.md](TESTING.md).
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for Chef cookbook-specific guidelines and the [main repository CONTRIBUTING.md](../../../CONTRIBUTING.md) for general contribution guidelines.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
+## License
+
+This cookbook is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.
+
 [otc_link]: https://github.com/open-telemetry/opentelemetry-collector
 [installation_token]: https://www.sumologic.com/help/docs/manage/security/installation-tokens/
 [base_configuration]: ../../sumologic.yaml
