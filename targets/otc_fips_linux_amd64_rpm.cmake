@@ -31,7 +31,6 @@ ol_10()
 
 # Supported SUSE Linux Enterprise Server versions
 sles_12_5()
-sles_15_3()
 sles_15_4()
 sles_15_5()
 sles_15_6()
