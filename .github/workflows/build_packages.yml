@@ -115,7 +115,7 @@ jobs:
             runs_on: macos-latest
             build_tool: cmake
           - target: otc_windows_amd64_wix
-            runs_on: windows-2022-large
+            runs_on: windows-2022
             goarch: amd64
             package_arch: x64
             build_tool: wix
@@ -133,7 +133,7 @@ jobs:
             runs_on: ubuntu-24.04
             build_tool: cmake
           - target: otc_fips_windows_amd64_wix
-            runs_on: windows-2022-large
+            runs_on: windows-2022
             goarch: amd64
             package_arch: x64
             build_tool: wix
@@ -257,7 +257,7 @@ jobs:
           - arch_os: darwin_amd64
             runs_on: macos-latest
           - arch_os: windows_amd64
-            runs_on: windows-2022-large
+            runs_on: windows-2022
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
