@@ -5,6 +5,22 @@
 # Release Notes: https://www.suse.com/releasenotes/index.html
 ##
 
+# SUSE Linux Enterprise Server 16.0
+#
+# End of General Support: November 30, 2027
+# End of LTSS Support: November 20, 2030
+function(sles_16_0)
+  set(_distro_name "SUSE Linux Enterprise Server 16.0")
+  set(_distro_index_name "sles/16.0")
+  set(_supported_architectures
+    "aarch64"
+    "ppc64le"
+    "s390x"
+    "x86_64"
+  )
+  check_architecture_support()
+endfunction()
+
 # SUSE Linux Enterprise Server 15.7
 #
 # End of General Support: July 31, 2031
@@ -69,21 +85,6 @@ function(sles_15_4)
   check_architecture_support()
 endfunction()
 
-# SUSE Linux Enterprise Server 15.3
-#
-# End of General Support: December 31, 2022
-# End of LTSS Support: December 31, 2025
-function(sles_15_3)
-  set(_distro_name "SUSE Linux Enterprise Server 15.3")
-  set(_distro_index_name "sles/15.3")
-  set(_supported_architectures
-    "aarch64"
-    "ppc64le"
-    "s390x"
-    "x86_64"
-  )
-  check_architecture_support()
-endfunction()
 
 # SUSE Linux Enterprise Server 12.5
 #
