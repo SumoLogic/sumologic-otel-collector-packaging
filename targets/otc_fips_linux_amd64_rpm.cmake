@@ -35,7 +35,6 @@ sles_15_4()
 sles_15_5()
 sles_15_6()
 sles_15_7()
-sles_16_0()
 
 set_common_settings()
 set_otc_settings()

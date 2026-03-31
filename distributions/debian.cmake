@@ -11,7 +11,7 @@
 # End of LTS Support: 2030-06-30
 # End of Extended LTS Support: 2035-06-30
 function(debian_trixie)
-  set(_distro_name "Debian 12 Trixie")
+  set(_distro_name "Debian 13 Trixie")
   set(_distro_index_name "debian/trixie")
   set(_supported_architectures
     "amd64"
