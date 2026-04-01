@@ -9,17 +9,17 @@
 #
 # End of General Support: November 30, 2027
 # End of LTSS Support: November 20, 2030
-# function(sles_16_0)
-#   set(_distro_name "SUSE Linux Enterprise Server 16.0")
-#   set(_distro_index_name "sles/16.0")
-#   set(_supported_architectures
-#     "aarch64"
-#     "ppc64le"
-#     "s390x"
-#     "x86_64"
-#   )
-#   check_architecture_support()
-# endfunction()
+function(sles_16_0)
+  set(_distro_name "SUSE Linux Enterprise Server 16.0")
+  set(_distro_index_name "sles/16.0")
+  set(_supported_architectures
+    "aarch64"
+    "ppc64le"
+    "s390x"
+    "x86_64"
+  )
+  check_architecture_support()
+endfunction()
 
 # SUSE Linux Enterprise Server 15.7
 #
