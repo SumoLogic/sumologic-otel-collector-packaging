@@ -10,6 +10,7 @@ debian_stretch()
 debian_buster()
 debian_bullseye()
 debian_bookworm()
+debian_trixie()
 
 # Supported Ubuntu versions
 ubuntu_trusty()

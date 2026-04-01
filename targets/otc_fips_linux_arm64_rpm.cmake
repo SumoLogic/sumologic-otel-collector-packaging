@@ -16,11 +16,12 @@ el_9()
 el_10()
 
 # Supported Fedora versions
-fedora_41()
 fedora_42()
+fedora_43()
 
 # Supported openSUSE versions
 opensuse_15_6()
+opensuse_16_0()
 
 # Supported Oracle Linux versions
 ol_7()
@@ -30,11 +31,11 @@ ol_10()
 
 # Supported SUSE Linux Enterprise Server versions
 sles_12_5()
-sles_15_3()
 sles_15_4()
 sles_15_5()
 sles_15_6()
 sles_15_7()
+sles_16_0()
 
 set_common_settings()
 set_otc_settings()
