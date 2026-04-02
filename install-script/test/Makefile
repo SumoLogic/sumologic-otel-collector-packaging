@@ -22,16 +22,22 @@ GOTEST=go test
 GOTESTBINARY=sumologic_scripts_tests.test
 GOTESTNAME ?= ""
 GOTESTRUN=
+GOTESTSKIP ?= ""
+GOTESTSKIPFLAG=
 
 ifneq ($(GOTESTNAME),"")
 	GOTESTRUN=-test.run $(GOTESTNAME)
+endif
+
+ifneq ($(GOTESTSKIP),"")
+	GOTESTSKIPFLAG=-test.skip $(GOTESTSKIP)
 endif
 
 # We build the test binary separately to avoid downloading modules as root
 .PHONY: test
 test:
 	$(GOTEST) -c
-	$(GOTESTPREFIX) ./$(GOTESTBINARY) -test.v $(GOTESTRUN)
+	$(GOTESTPREFIX) ./$(GOTESTBINARY) -test.v $(GOTESTRUN) $(GOTESTSKIPFLAG)
 
 .PHONY: fmt
 fmt:

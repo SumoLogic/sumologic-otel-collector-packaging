@@ -256,8 +256,30 @@ jobs:
             runs_on: ubuntu-24.04
           - arch_os: darwin_amd64
             runs_on: macos-latest
-          - arch_os: windows_amd64
+          # Windows ITs are split into 4 shards running in parallel, plus a catch-all shard
+          # that automatically picks up any new tests not yet assigned to a specific shard.
+          # When adding new tests, they will run in the catch-all without any workflow changes.
+          # When rebalancing shards, move test names between test_filter entries and keep
+          # test_skip on the catch-all in sync with the union of all test_filter values.
+          # This is done to improve the windows IT runner time, which had reached >90 minutes before.
+          - arch_os: windows_amd64_1
             runs_on: windows-2022
+            test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral$|installation_token_and_fips)"
+          - arch_os: windows_amd64_2
+            runs_on: windows-2022
+            test_filter: "TestInstallScript/(installation_token_and_hostmetrics|installation_token_and_remotely-managed$|installation_token,_remotely-managed,_and_ephemeral)"
+          - arch_os: windows_amd64_3
+            runs_on: windows-2022
+            test_filter: "TestInstallScript/(configuration_with_tags|installation_token_and_clobber$|installation_token,_remotely-managed,_and_clobber)"
+          - arch_os: windows_amd64_4
+            runs_on: windows-2022
+            test_filter: "TestInstallScript/(installed_from_package_path|installation_token_and_CollectorName$|installation_token,_remotely-managed,_and__CollectorName)"
+          # Catch-all: runs any Windows ITs not covered by shards 1-4 above.
+          # Today this runner starts with 0 tests; new tests land here automatically.
+          # Keep test_skip in sync with the union of all test_filter values above.
+          - arch_os: windows_amd64_catchall
+            runs_on: windows-2022
+            test_skip: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral$|installation_token_and_fips|installation_token_and_hostmetrics|installation_token_and_remotely-managed$|installation_token,_remotely-managed,_and_ephemeral|configuration_with_tags|installation_token_and_clobber$|installation_token,_remotely-managed,_and_clobber|installed_from_package_path|installation_token_and_CollectorName$|installation_token,_remotely-managed,_and__CollectorName)"
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -363,7 +385,7 @@ jobs:
           OVERRIDE_ARCH: x64
           SKIP_ARCH_DETECTION: 1
         run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
-          make test
+          make test GOTESTNAME="${{ matrix.test_filter }}" GOTESTSKIP="${{ matrix.test_skip }}"
 
   config-management-assets:
     name: Store Config Management Assets
