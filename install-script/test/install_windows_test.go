@@ -236,7 +236,92 @@ func TestInstallScript(t *testing.T) {
 				checkCollectorNameInSumoConfig(configPath),
 			},
 		},
-		// Note: if new tests are added here, make sure to add them in build_packages.yml as well.
+		{
+			name: "purge without uninstall",
+			options: installOptions{
+				purge: true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkAbortedDueToPurgeWithoutUninstall},
+			installCode: 1,
+		},
+		{
+			name: "uninstall and upgrade together",
+			options: installOptions{
+				installToken: installToken,
+				uninstall:    true,
+				upgrade:      true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkAbortedDueToUninstallAndUpgrade},
+			installCode: 1,
+		},
+		{
+			name: "upgrade when not installed",
+			options: installOptions{
+				upgrade: true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkAbortedDueToNotInstalled},
+			installCode: 1,
+		},
+		{
+			name: "uninstall after installation",
+			options: installOptions{
+				uninstall: true,
+			},
+			setupOptions: &installOptions{
+				installToken: installToken,
+			},
+			preChecks: []checkFunc{checkBinaryCreated, checkConfigCreated},
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkConfigDirectoryNotRemoved,
+				checkDataDirectoryNotRemoved,
+			},
+		},
+		{
+			name: "uninstall with purge after installation",
+			options: installOptions{
+				uninstall: true,
+				purge:     true,
+			},
+			setupOptions: &installOptions{
+				installToken: installToken,
+			},
+			preChecks: []checkFunc{checkBinaryCreated, checkConfigCreated},
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkConfigDirectoryRemoved,
+				checkDataDirectoryRemoved,
+			},
+		},
+		{
+			name: "uninstall when not installed",
+			options: installOptions{
+				uninstall: true,
+			},
+			preChecks:   notInstalledChecks,
+			postChecks:  []checkFunc{checkBinaryNotCreated},
+			installCode: 1,
+		},
+		{
+			name: "install with UseWinget flag",
+			options: installOptions{
+				installToken: installToken,
+				useWinget:    true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInConfig,
+			},
+		},
+		// Note: if new tests are added here, make sure to add them in build_packages.yml as well.    
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {

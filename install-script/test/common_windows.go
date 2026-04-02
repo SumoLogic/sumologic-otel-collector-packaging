@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 )
@@ -31,12 +32,12 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 
 	mockAPI, err := startMockAPI(t)
 	if err != nil {
-		return fmt.Errorf("Failed to start mock API: %s", err)
+		return fmt.Errorf("Failed to start mock API: %w", err)
 	}
 
 	defer func() {
 		if err := mockAPI.Shutdown(context.Background()); err != nil {
-			fErr = fmt.Errorf("Failed to shutdown API: %s", err)
+			fErr = fmt.Errorf("Failed to shutdown API: %w", err)
 			return
 		}
 	}()
@@ -46,6 +47,29 @@ func runTest(t *testing.T, spec *testSpec) (fErr error) {
 		if ok := a(ch); !ok {
 			return nil
 		}
+	}
+
+	// Run setup script if setupOptions is provided (e.g. install before uninstall/upgrade)
+	if spec.setupOptions != nil {
+		t.Log(time.Now(), "Running setup script")
+		setupCh := check{
+			test:                t,
+			installOptions:      *spec.setupOptions,
+			expectedInstallCode: 0,
+		}
+		setupCode, setupOut, setupErrOut, setupErr := runScript(setupCh)
+		if setupErr != nil {
+			return fmt.Errorf("setup script error: %w", setupErr)
+		}
+		if setupCode != 0 {
+			return fmt.Errorf("setup script failed with exit code: %d\nstdout:\n%s\nstderr:\n%s",
+				setupCode, strings.Join(setupOut, "\n"), strings.Join(setupErrOut, "\n"))
+		}
+		// Wait for the Windows Installer service to release the MSI mutex.
+		// Without this delay, subsequent MSI operations may fail with exit
+		// code 1618 ("Another installation is already in progress").
+		t.Log(time.Now(), "Waiting for Windows Installer service to release MSI mutex")
+		time.Sleep(15 * time.Second)
 	}
 
 	t.Log(time.Now(), "Running pre checks")
