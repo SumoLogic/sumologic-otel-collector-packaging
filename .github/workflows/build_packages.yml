@@ -360,12 +360,17 @@ jobs:
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows)
-        shell: bash
+        shell: powershell
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo*.msi)"
-          echo "using ${fp}"
-          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
+          $msi = Get-ChildItem -Path artifacts -Filter "otelcol-sumo*x64.msi" -File -Recurse | Select-Object -First 1
+          if ($msi -eq $null) {
+            Write-Error "No MSI package found in artifacts/"
+            exit 1
+          }
+          $fp = $msi.FullName
+          Write-Host "using ${fp}"
+          echo "OTELCOL_SUMO_PACKAGE_PATH=${fp}" >> $env:GITHUB_ENV
 
       - name: Set S3_BUCKET (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
