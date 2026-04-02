@@ -26,11 +26,11 @@ GOTESTSKIP ?= ""
 GOTESTSKIPFLAG=
 
 ifneq ($(GOTESTNAME),"")
-	GOTESTRUN=-test.run $(GOTESTNAME)
+	GOTESTRUN=-test.run "$(GOTESTNAME)"
 endif
 
 ifneq ($(GOTESTSKIP),"")
-	GOTESTSKIPFLAG=-test.skip $(GOTESTSKIP)
+	GOTESTSKIPFLAG=-test.skip "$(GOTESTSKIP)"
 endif
 
 # We build the test binary separately to avoid downloading modules as root
