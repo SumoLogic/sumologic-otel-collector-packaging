@@ -11,6 +11,7 @@ import (
 type testSpec struct {
 	name              string
 	options           installOptions
+	setupOptions      *installOptions // Used to run install before testing upgrade/uninstall
 	preChecks         []checkFunc
 	postChecks        []checkFunc
 	preActions        []checkFunc
