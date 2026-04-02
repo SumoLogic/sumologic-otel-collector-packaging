@@ -326,6 +326,7 @@ jobs:
         with:
           path: artifacts/
           pattern: otelcol-sumo_*x64.msi
+          merge-multiple: true
 
       - name: Show packages
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
