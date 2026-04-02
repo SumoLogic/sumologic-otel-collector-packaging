@@ -273,7 +273,7 @@ jobs:
             test_filter: "TestInstallScript/(configuration_with_tags|installation_token_and_clobber$|installation_token,_remotely-managed,_and_clobber)"
           - arch_os: windows_amd64_4
             runs_on: windows-2022
-            test_filter: "TestInstallScript/(installed_from_package_path|installation_token_and_CollectorName$|installation_token,_remotely-managed,_and__CollectorName)"
+            test_filter: "TestInstallScript/(no_arguments|installed_from_package_path|installation_token_and_CollectorName$|installation_token,_remotely-managed,_and__CollectorName)"
           # Catch-all: runs any Windows ITs not covered by shards 1-4 above.
           # Today this runner starts with 0 tests; new tests land here automatically.
           # Keep test_skip in sync with the union of all test_filter values above.
