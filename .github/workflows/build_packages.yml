@@ -384,7 +384,7 @@ jobs:
           OVERRIDE_ARCH: x64
           SKIP_ARCH_DETECTION: 1
         run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
-          make test GOTESTNAME="${{ matrix.test_filter }}" GOTESTSKIP="${{ matrix.test_skip }}"
+          make test GOTESTNAME="${{ matrix.test_filter }}"
 
   config-management-assets:
     name: Store Config Management Assets
