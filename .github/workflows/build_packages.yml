@@ -256,11 +256,11 @@ jobs:
             runs_on: ubuntu-24.04
           - arch_os: darwin_amd64
             runs_on: macos-latest
-          # Windows ITs are split into 4 shards running in parallel, plus a catch-all shard
-          # that automatically picks up any new tests not yet assigned to a specific shard.
-          # When adding new tests, make sure to add them in either one of the 4 shards here.
-          # When rebalancing shards, move test names between test_filter entries and keep
-          # This is done to improve the windows IT runner time, which had reached >90 minutes before.
+          # Windows ITs are split into 4 explicit shards running in parallel.
+          # There is no catch-all shard in this matrix, so new tests must be added to
+          # one of the 4 test_filter entries below to ensure they are covered.
+          # When rebalancing shards, move test names between test_filter entries.
+          # This is done to improve the Windows IT runner time, which had reached >90 minutes before.
           - arch_os: windows_amd64_1
             runs_on: windows-2022
             test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral$|installation_token_and_fips|installation_token_and_hostmetrics|installation_token_and_remotely-managed$)"
