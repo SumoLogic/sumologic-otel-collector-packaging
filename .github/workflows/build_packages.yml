@@ -256,8 +256,23 @@ jobs:
             runs_on: ubuntu-24.04
           - arch_os: darwin_amd64
             runs_on: macos-latest
-          - arch_os: windows_amd64
+          # Windows ITs are split into 4 explicit shards running in parallel.
+          # There is no catch-all shard in this matrix, so new tests must be added to
+          # one of the 4 test_filter entries below to ensure they are covered.
+          # When rebalancing shards, move test names between test_filter entries.
+          # This is done to improve the Windows IT runner time, which had reached >90 minutes before.
+          - arch_os: windows_amd64_1
             runs_on: windows-2022
+            test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral|installation_token_and_fips|installation_token_and_hostmetrics|installation_token_and_remotely-managed)"
+          - arch_os: windows_amd64_2
+            runs_on: windows-2022
+            test_filter: "TestInstallScript/(installation_token,_remotely-managed,_and_ephemeral|configuration_with_tags|installation_token_and_clobber|installation_token,_remotely-managed,_and_clobber)"
+          - arch_os: windows_amd64_3
+            runs_on: windows-2022
+            test_filter: "TestInstallScript/(install_with_UseWinget_flag|uninstall_when_not_installed|uninstall_with_purge_after_installation|uninstall_after_installation|upgrade_when_not_installed|uninstall_and_upgrade_together|purge_without_uninstall)"
+          - arch_os: windows_amd64_4
+            runs_on: windows-2022
+            test_filter: "TestInstallScript/(installed_from_package_path|installation_token_and_CollectorName|installation_token,_remotely-managed,_and__CollectorName)"
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -304,6 +319,7 @@ jobs:
         with:
           path: artifacts/
           pattern: otelcol-sumo_*x64.msi
+          merge-multiple: true
 
       - name: Show packages
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
@@ -337,12 +353,17 @@ jobs:
           echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows)
-        shell: bash
+        shell: powershell
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
         run: |
-          fp="$(readlink -f artifacts/otelcol-sumo*.msi)"
-          echo "using ${fp}"
-          echo OTELCOL_SUMO_PACKAGE_PATH="${fp}" >> "${GITHUB_ENV}"
+          $msi = Get-ChildItem -Path artifacts -Filter "otelcol-sumo*x64.msi" -File -Recurse | Select-Object -First 1
+          if ($msi -eq $null) {
+            Write-Error "No MSI package found in artifacts/"
+            exit 1
+          }
+          $fp = $msi.FullName
+          Write-Host "using ${fp}"
+          echo "OTELCOL_SUMO_PACKAGE_PATH=${fp}" >> $env:GITHUB_ENV
 
       - name: Set S3_BUCKET (macOS)
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'macOS' }}
@@ -363,7 +384,7 @@ jobs:
           OVERRIDE_ARCH: x64
           SKIP_ARCH_DETECTION: 1
         run: |  # note: we run tests with elevated permissions here to capture the OTELCOL_SUMO_PACKAGE_PATH
-          make test
+          make test GOTESTNAME="${{ matrix.test_filter }}"
 
   config-management-assets:
     name: Store Config Management Assets

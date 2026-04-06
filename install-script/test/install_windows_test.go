@@ -321,6 +321,7 @@ func TestInstallScript(t *testing.T) {
 				checkTokenInConfig,
 			},
 		},
+		// Note: if new tests are added here, make sure to add them in build_packages.yml as well.    
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
