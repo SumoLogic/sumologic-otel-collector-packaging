@@ -263,16 +263,16 @@ jobs:
           # This is done to improve the Windows IT runner time, which had reached >90 minutes before.
           - arch_os: windows_amd64_1
             runs_on: windows-2022
-            test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral$|installation_token_and_fips|installation_token_and_hostmetrics|installation_token_and_remotely-managed$)"
+            test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral|installation_token_and_fips|installation_token_and_hostmetrics|installation_token_and_remotely-managed)"
           - arch_os: windows_amd64_2
             runs_on: windows-2022
-            test_filter: "TestInstallScript/(installation_token_and_remotely-managed$|installation_token,_remotely-managed,_and_ephemeral|configuration_with_tags|installation_token_and_clobber$|installation_token,_remotely-managed,_and_clobber)"
+            test_filter: "TestInstallScript/(installation_token,_remotely-managed,_and_ephemeral|configuration_with_tags|installation_token_and_clobber|installation_token,_remotely-managed,_and_clobber)"
           - arch_os: windows_amd64_3
             runs_on: windows-2022
             test_filter: "TestInstallScript/(install_with_UseWinget_flag|uninstall_when_not_installed|uninstall_with_purge_after_installation|uninstall_after_installation_upgrade_when_not_installed|uninstall_and_upgrade_together|purge without uninstall)"
           - arch_os: windows_amd64_4
             runs_on: windows-2022
-            test_filter: "TestInstallScript/(installed_from_package_path|installation_token_and_CollectorName$|installation_token,_remotely-managed,_and__CollectorName)"
+            test_filter: "TestInstallScript/(installed_from_package_path|installation_token_and_CollectorName|installation_token,_remotely-managed,_and__CollectorName)"
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_CI_TOKEN: ${{ secrets.GITHUB_TOKEN }}
