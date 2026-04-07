@@ -958,6 +958,10 @@ function Install-ViaMsi {
             $_
         }
     }
+    
+    # Stop service first
+    Stop-CollectorService
+
     Write-Host "Running: msiexec.exe $($sanitizedMsiArgs -join ' ')"
     $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
 
