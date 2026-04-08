@@ -960,7 +960,11 @@ function Install-ViaMsi {
     }
     
     # Stop service first
-    Stop-CollectorService
+    try {
+        Stop-CollectorService
+    } catch {
+        Write-Warning "Failed to stop the collector service before MSI install. Continuing with msiexec, which may still stop or upgrade the service as needed. Error: $($_.Exception.Message)"
+    }
 
     Write-Host "Running: msiexec.exe $($sanitizedMsiArgs -join ' ')"
     $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -NoNewWindow -PassThru
