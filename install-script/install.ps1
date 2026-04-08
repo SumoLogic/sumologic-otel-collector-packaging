@@ -67,12 +67,12 @@ param (
     [string] $S3Region = $env:S3_REGION,
 
     # UseWinget enables installation via Windows Package Manager (winget).
-    # When set, the script will attempt to install using winget first.
+    # When set to $true, the script will attempt to install using winget first.
     # If winget installation fails, it falls back to MSI.
     # Note: This flag only affects installation behavior. For upgrade and
     # uninstall operations, the script will attempt to use winget when available
     # and fall back to MSI if needed.
-    [switch] $UseWinget,
+    [bool] $UseWinget = $false,
 
     # Uninstall removes the Sumo Logic OpenTelemetry Collector from the system.
     # When uninstalling, the script attempts to use winget when available and
@@ -1171,7 +1171,7 @@ try {
     # ========================================
     # Try winget installation if requested (only for fresh install, not upgrade)
     # ========================================
-    if ($UseWinget -and -not $Upgrade) {
+    if ($UseWinget -eq $true -and -not $Upgrade) {
         if (-not (Test-WingetAvailable)) {
             Write-Warning "Winget is not available on this system. Falling back to MSI installation."
         } else {

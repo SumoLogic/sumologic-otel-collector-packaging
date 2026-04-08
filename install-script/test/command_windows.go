@@ -59,7 +59,7 @@ func (io *installOptions) string() []string {
 	}
 
 	if io.useWinget {
-		opts = append(opts, "-UseWinget")
+		opts = append(opts, "-UseWinget", "1")
 	}
 
 	if io.uninstall {
