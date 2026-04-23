@@ -72,7 +72,7 @@ param (
     # Note: This flag only affects installation behavior. For upgrade and
     # uninstall operations, the script will attempt to use winget when available
     # and fall back to MSI if needed.
-    [bool] $UseWinget = $false,
+    [bool] $UseWinget = $true,
 
     # Uninstall removes the Sumo Logic OpenTelemetry Collector from the system.
     # When uninstalling, the script attempts to use winget when available and
