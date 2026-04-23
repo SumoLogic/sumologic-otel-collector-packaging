@@ -1034,6 +1034,27 @@ try {
     if ($Uninstall) {
         Write-Host "Uninstalling OpenTelemetry Collector..."
 
+        # Check if the collector is installed before attempting uninstall.
+        # When -Fips is set, check specifically for the FIPS variant via winget.
+        $msiInstalled = $null -ne (Get-Package -Name "OpenTelemetry Collector" -ErrorAction SilentlyContinue)
+        $wingetInstalled = $false
+        if (Test-WingetAvailable) {
+            $null = & winget list --id $wingetPackageId --exact --accept-source-agreements 2>&1
+            $wingetInstalled = ($LASTEXITCODE -eq 0)
+        }
+
+        if (-not $msiInstalled -and -not $wingetInstalled) {
+            $variant = if ($Fips) { "OpenTelemetry Collector (FIPS)" } else { "OpenTelemetry Collector" }
+            Write-Warning "$variant is not installed. Nothing to uninstall."
+
+            if ($Purge) {
+                Write-Host "Purging configuration and data..."
+                Remove-CollectorData
+                Write-Host "Purge complete"
+            }
+            exit 0
+        }
+
         # Stop service first
         Stop-CollectorService
 
