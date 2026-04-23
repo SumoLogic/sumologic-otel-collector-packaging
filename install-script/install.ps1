@@ -1046,6 +1046,12 @@ try {
         if (-not $msiInstalled -and -not $wingetInstalled) {
             $variant = if ($Fips) { "OpenTelemetry Collector (FIPS)" } else { "OpenTelemetry Collector" }
             Write-Warning "$variant is not installed. Nothing to uninstall."
+
+            if ($Purge) {
+                Write-Host "Purging configuration and data..."
+                Remove-CollectorData
+                Write-Host "Purge complete"
+            }
             exit 0
         }
 
