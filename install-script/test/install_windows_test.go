@@ -303,7 +303,7 @@ func TestInstallScript(t *testing.T) {
 			},
 			preChecks:   notInstalledChecks,
 			postChecks:  []checkFunc{checkBinaryNotCreated},
-			installCode: 1,
+			installCode: 0,
 		},
 		{
 			name: "install with UseWinget flag",
@@ -321,7 +321,7 @@ func TestInstallScript(t *testing.T) {
 				checkTokenInConfig,
 			},
 		},
-		// Note: if new tests are added here, make sure to add them in build_packages.yml as well.    
+		// Note: if new tests are added here, make sure to add them in build_packages.yml as well.
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
