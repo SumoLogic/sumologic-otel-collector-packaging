@@ -19,6 +19,31 @@ defaults:
     shell: bash
 
 jobs:
+  parse-version:
+    name: Parse version
+    runs-on: ubuntu-24.04
+    outputs:
+      otc-version: ${{ steps.parse.outputs.otc-version }}
+      build-number: ${{ steps.parse.outputs.build-number }}
+    steps:
+      - name: Parse version string
+        id: parse
+        run: |
+          VERSION="${{ inputs.version }}"
+          OTC_VERSION="${VERSION%-*}"
+          BUILD_NUMBER="${VERSION##*-}"
+
+          if [ -z "${OTC_VERSION}" ] || [ -z "${BUILD_NUMBER}" ]; then
+            echo "::error::Failed to parse version '${VERSION}'. Expected format: <otc_version>-<build_number> (e.g., 0.108.0-1790)"
+            exit 1
+          fi
+
+          echo "otc-version=${OTC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "build-number=${BUILD_NUMBER}" >> "$GITHUB_OUTPUT"
+
+          echo "OTC Version: ${OTC_VERSION}"
+          echo "Build Number: ${BUILD_NUMBER}"
+
   rollback:
     name: Packages & artifacts
     uses: ./.github/workflows/workflow-rollback.yml
@@ -26,4 +51,13 @@ jobs:
       destination-channel: release-candidates
       source-channel: stable
       version: ${{ inputs.version }}
+    secrets: inherit
+
+  rollback-winget:
+    name: Winget rollback
+    needs: [parse-version, rollback]
+    uses: ./.github/workflows/winget-komac-rollback.yml
+    with:
+      otc_version: ${{ needs.parse-version.outputs.otc-version }}
+      otc_build_number: ${{ needs.parse-version.outputs.build-number }}
     secrets: inherit

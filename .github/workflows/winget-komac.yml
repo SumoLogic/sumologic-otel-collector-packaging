@@ -145,7 +145,7 @@ jobs:
         run: komac cleanup --only-merged || true
 
   update-fips:
-    name: Update SumoLogic.OtelcolSumo.Fips
+    name: Update Sumologic.OtelcolSumo.Fips
     needs: [update-standard]
     if: |
       (inputs.package == 'both' || inputs.package == 'fips') &&
@@ -171,7 +171,7 @@ jobs:
           echo "version=${WINGET_VERSION}" >> "$GITHUB_OUTPUT"
           echo "url=${INSTALLER_URL}" >> "$GITHUB_OUTPUT"
 
-          echo "Package: SumoLogic.OtelColSumo-FIPS"
+          echo "Package: Sumologic.OtelColSumo-FIPS"
           echo "Version: ${WINGET_VERSION}"
           echo "URL: ${INSTALLER_URL}"
 
@@ -195,7 +195,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
         run: |
           ARGS=(
-            "SumoLogic.OtelcolSumo.Fips"
+            "Sumologic.OtelcolSumo.Fips"
             --version "${{ steps.vars.outputs.version }}"
             --urls "${{ steps.vars.outputs.url }}"
             --release-notes-url "https://github.com/SumoLogic/sumologic-otel-collector/releases"
