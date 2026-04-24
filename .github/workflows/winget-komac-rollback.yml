@@ -1,0 +1,143 @@
+################################################################################
+# Workflow to rollback (remove) winget packages using Komac.
+################################################################################
+
+name: Winget Rollback (Komac)
+
+on:
+  workflow_call:
+    inputs:
+      otc_version:
+        description: 'OTC version (e.g., 0.108.0)'
+        required: true
+        type: string
+      otc_build_number:
+        description: 'Build number (e.g., 1790)'
+        required: true
+        type: string
+      package:
+        description: 'Package to rollback (standard, fips, or both)'
+        required: false
+        type: string
+        default: 'both'
+
+  workflow_dispatch:
+    inputs:
+      otc_version:
+        description: 'OTC version (e.g., 0.108.0)'
+        required: true
+        type: string
+      otc_build_number:
+        description: 'Build number (e.g., 1790)'
+        required: true
+        type: string
+      package:
+        description: 'Package to rollback'
+        required: false
+        type: choice
+        options:
+          - both
+          - standard
+          - fips
+        default: 'both'
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  KOMAC_FORK_OWNER: SumoLogic
+  KOMAC_CREATED_WITH: sumologic-otel-collector-packaging
+  KOMAC_CREATED_WITH_URL: https://github.com/SumoLogic/sumologic-otel-collector-packaging
+
+jobs:
+  remove-standard:
+    name: Remove Sumologic.OtelcolSumo
+    if: inputs.package == 'both' || inputs.package == 'standard'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Komac
+        uses: ./.github/actions/komac-setup
+
+      - name: Construct version
+        id: vars
+        run: |
+          OTC_VERSION="${{ inputs.otc_version }}"
+          BUILD_NUMBER="${{ inputs.otc_build_number }}"
+          WINGET_VERSION="${OTC_VERSION}.${BUILD_NUMBER}"
+
+          echo "version=${WINGET_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Package: Sumologic.OtelcolSumo"
+          echo "Version: ${WINGET_VERSION}"
+
+      - name: Sync fork
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: komac sync-fork
+
+      - name: Remove package version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+
+          komac remove "Sumologic.OtelcolSumo" \
+            --version "${VERSION}" \
+            --reason "Rolling back version ${VERSION}" \
+            --submit
+
+      - name: Cleanup merged branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: komac cleanup --only-merged || true
+
+  remove-fips:
+    name: Remove Sumologic.OtelcolSumo.Fips
+    needs: [remove-standard]
+    if: |
+      (inputs.package == 'both' || inputs.package == 'fips') &&
+      (needs.remove-standard.result == 'success' || needs.remove-standard.result == 'skipped')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Komac
+        uses: ./.github/actions/komac-setup
+
+      - name: Construct version
+        id: vars
+        run: |
+          OTC_VERSION="${{ inputs.otc_version }}"
+          BUILD_NUMBER="${{ inputs.otc_build_number }}"
+          WINGET_VERSION="${OTC_VERSION}.${BUILD_NUMBER}"
+
+          echo "version=${WINGET_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "Package: Sumologic.OtelcolSumo.Fips"
+          echo "Version: ${WINGET_VERSION}"
+
+      - name: Sync fork
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: komac sync-fork
+
+      - name: Remove package version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+
+          komac remove "Sumologic.OtelcolSumo.Fips" \
+            --version "${VERSION}" \
+            --reason "Rolling back version ${VERSION}" \
+            --submit
+
+      - name: Cleanup merged branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_CI_TOKEN }}
+        run: komac cleanup --only-merged || true
