@@ -82,11 +82,10 @@ jobs:
       apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD_NOV_25 }}
       productbuild_identity_name: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_IDENTITY }}
       gh_artifacts_token: ${{ secrets.GH_ARTIFACTS_TOKEN }}
-      microsoft_certificate: ${{ secrets.MICROSOFT_CERTIFICATE }}
-      microsoft_certificate_password: ${{ secrets.MICROSOFT_CERTIFICATE_PASSWORD }}
-      microsoft_certhash: ${{ secrets.MICROSOFT_CERTHASH }}
-      microsoft_certname: ${{ secrets.MICROSOFT_CERTNAME }}
-      microsoft_description: ${{ secrets.MICROSOFT_DESCRIPTION }}
+      sm_api_key: ${{ secrets.SM_API_KEY }}
+      sm_client_cert_file_b64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+      sm_client_cert_password: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+      sm_keypair_alias: ${{ secrets.SM_KEYPAIR_ALIAS }}
       gh_ci_token: ${{ secrets.GH_CI_TOKEN }}
       packagecloud_token: ${{ secrets.PACKAGECLOUD_TOKEN }}
       aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
