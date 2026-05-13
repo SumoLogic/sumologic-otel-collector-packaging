@@ -37,15 +37,13 @@ on:
         required: false
       productbuild_identity_name:
         required: false
-      microsoft_certificate:
+      sm_api_key:
         required: false
-      microsoft_certificate_password:
+      sm_client_cert_file_b64:
         required: false
-      microsoft_certhash:
+      sm_client_cert_password:
         required: false
-      microsoft_certname:
-        required: false
-      microsoft_description:
+      sm_keypair_alias:
         required: false
       gh_ci_token:
         required: true
@@ -357,15 +355,24 @@ jobs:
           echo "package_filename=$(basename "$package_path")"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Setup DigiCert certificate file
+        if: github.actor != 'dependabot[bot]'
+        run: |
+          echo "${{ secrets.sm_client_cert_file_b64 }}" | base64 --decode > "${RUNNER_TEMP}/Certificate_pkcs12.p12"
+          echo "SM_CLIENT_CERT_FILE=${RUNNER_TEMP}/Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+
       - name: Sign MSI
         if: github.actor != 'dependabot[bot]'
-        uses: skymatic/code-sign-action@v3
+        uses: digicert/code-signing-software-trust-action@v1.2.1
         with:
-          certificate: ${{ secrets.microsoft_certificate }}
-          password: ${{ secrets.microsoft_certificate_password }}
-          certificatesha1: ${{ secrets.microsoft_certhash }}
-          description: ${{ secrets.microsoft_description }}
-          folder: ./msi/wix/bin/${{ inputs.package_arch }}/en-US
+          simple-signing-mode: true
+          input: ./msi/wix/bin/${{ inputs.package_arch }}/en-US
+          keypair-alias: ${{ secrets.sm_keypair_alias }}
+        env:
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.sm_api_key }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.sm_client_cert_password }}
 
       - name: Store MSI as action artifact
         uses: actions/upload-artifact@v7
