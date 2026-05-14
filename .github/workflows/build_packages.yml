@@ -265,7 +265,7 @@ jobs:
             test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral|installation_token_and_fips_on_non_fips_system|installation_token_and_hostmetrics|installation_token_and_remotely-managed)"
           - arch_os: windows_amd64_fips
             runs_on: [self-hosted, windows, fips]
-            test_filter: "TestInstallScript/installation_token_and_fips"
+            test_filter: "TestInstallScript/installation_token_and_fips$$"
             fips_runner: true
           - arch_os: windows_amd64_2
             runs_on: windows-2022
