@@ -262,7 +262,11 @@ jobs:
           # This is done to improve the Windows IT runner time, which had reached >90 minutes before.
           - arch_os: windows_amd64_1
             runs_on: windows-2022
-            test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral|installation_token_and_fips|installation_token_and_hostmetrics|installation_token_and_remotely-managed)"
+            test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral|installation_token_and_fips_on_non_fips_system|installation_token_and_hostmetrics|installation_token_and_remotely-managed)"
+          - arch_os: windows_amd64_fips
+            runs_on: [self-hosted, windows, fips]
+            test_filter: "TestInstallScript/installation_token_and_fips"
+            fips_runner: true
           - arch_os: windows_amd64_2
             runs_on: windows-2022
             test_filter: "TestInstallScript/(installation_token,_remotely-managed,_and_ephemeral|configuration_with_tags|installation_token_and_clobber|installation_token,_remotely-managed,_and_clobber)"
@@ -313,11 +317,19 @@ jobs:
           pattern: otelcol-sumo_*amd64.deb
 
       - name: Download Windows package and use it for install.ps1
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && matrix.fips_runner != true }}
         uses: actions/download-artifact@v8
         with:
           path: artifacts/
           pattern: otelcol-sumo_*x64.msi
+          merge-multiple: true
+
+      - name: Download Windows FIPS package and use it for install.ps1
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && matrix.fips_runner == true }}
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts/
+          pattern: otelcol-sumo_*x64-fips.msi
           merge-multiple: true
 
       - name: Show packages
@@ -353,11 +365,24 @@ jobs:
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows)
         shell: powershell
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && matrix.fips_runner != true }}
         run: |
           $msi = Get-ChildItem -Path artifacts -Filter "otelcol-sumo*x64.msi" -File -Recurse | Select-Object -First 1
           if ($msi -eq $null) {
             Write-Error "No MSI package found in artifacts/"
+            exit 1
+          }
+          $fp = $msi.FullName
+          Write-Host "using ${fp}"
+          echo "OTELCOL_SUMO_PACKAGE_PATH=${fp}" >> $env:GITHUB_ENV
+
+      - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows, FIPS)
+        shell: powershell
+        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && matrix.fips_runner == true }}
+        run: |
+          $msi = Get-ChildItem -Path artifacts -Filter "otelcol-sumo*x64-fips.msi" -File -Recurse | Select-Object -First 1
+          if ($msi -eq $null) {
+            Write-Error "No FIPS MSI package found in artifacts/"
             exit 1
           }
           $fp = $msi.FullName

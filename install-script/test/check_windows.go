@@ -43,6 +43,31 @@ func checkAbortedDueToNoToken(c check) bool {
 	return assert.Contains(c.test, errorOutput, "Please set the SUMOLOGIC_INSTALLATION_TOKEN environment variable.")
 }
 
+func checkAbortedDueToNoFips(c check) bool {
+	errorOutput := strings.Join(c.errorOutput, " ")
+	return assert.Contains(c.test, errorOutput, "FIPS mode is not enabled on this system")
+}
+
+// checkWindowsFipsEnabled is a condCheckFunc that skips the test when Windows
+// FIPS mode is not active. Use this on happy-path FIPS tests that require a
+// FIPS-enabled runner.
+func checkWindowsFipsEnabled(c check) bool {
+	cmd := exec.Command("powershell", "-NoProfile", "-Command",
+		`(Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy' -Name Enabled -ErrorAction SilentlyContinue).Enabled -eq 1`)
+	out, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	return strings.TrimSpace(string(out)) == "True"
+}
+
+// checkWindowsFipsNotEnabled is a condCheckFunc that skips the test when
+// Windows FIPS mode is active. Use this on tests that verify the install
+// script rejects installation on non-FIPS systems.
+func checkWindowsFipsNotEnabled(c check) bool {
+	return !checkWindowsFipsEnabled(c)
+}
+
 func checkBinaryFipsError(c check) bool {
 	cmd := exec.Command(binaryPath, "--version")
 	_, err := cmd.Output()

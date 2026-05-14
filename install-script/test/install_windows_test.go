@@ -59,22 +59,46 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			// Happy-path FIPS installation test. Runs only on self-hosted runners
+			// with Windows FIPS mode pre-enabled. The FIPS binary is built with
+			// GOEXPERIMENT=systemcrypto and requires OS-level FIPS mode to start.
 			name: "installation token and fips",
 			options: installOptions{
 				installToken: installToken,
 				ephemeral:    true,
 				fips:         true,
 			},
-			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			conditionalChecks: []condCheckFunc{checkWindowsFipsEnabled},
+			preChecks:         []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
 			postChecks: []checkFunc{
 				checkBinaryCreated,
-				checkBinaryFipsError,
+				checkBinaryIsRunning,
 				checkConfigCreated,
 				checkConfigFilesOwnershipAndPermissions(localSystemSID),
 				checkUserConfigCreated,
 				checkTokenInConfig,
 				checkEphemeralInConfig(userConfigPath),
 				checkHostmetricsConfigNotCreated,
+			},
+		},
+		{
+			// The FIPS binary is built with GOEXPERIMENT=systemcrypto which requires
+			// Windows FIPS mode to be enabled at the OS level. The install script
+			// checks the registry before installing and fails fast with a clear error
+			// when FIPS mode is not active, preventing a silent failure where the
+			// binary installs but immediately panics at startup.
+			name:        "installation token and fips on non fips system",
+			installCode: 1,
+			options: installOptions{
+				installToken: installToken,
+				ephemeral:    true,
+				fips:         true,
+			},
+			conditionalChecks: []condCheckFunc{checkWindowsFipsNotEnabled},
+			preChecks:         []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryNotCreated,
+				checkAbortedDueToNoFips,
 			},
 		},
 		{
