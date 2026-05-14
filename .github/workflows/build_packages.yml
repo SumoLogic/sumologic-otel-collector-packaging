@@ -288,6 +288,7 @@ jobs:
 
       - name: Check if test related files changed
         id: changed-files
+        if: matrix.fips_runner != true
         uses: tj-actions/changed-files@v47
         with:
           files: |
@@ -295,7 +296,7 @@ jobs:
             .github/**
 
       - name: Setup go
-        if: steps.changed-files.outputs.any_changed == 'true'
+        if: steps.changed-files.outputs.any_changed == 'true' || matrix.fips_runner == true
         uses: actions/setup-go@v6
         with:
           go-version: stable
@@ -325,7 +326,7 @@ jobs:
           merge-multiple: true
 
       - name: Download Windows FIPS package and use it for install.ps1
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && matrix.fips_runner == true }}
+        if: ${{ runner.os == 'Windows' && matrix.fips_runner == true }}
         uses: actions/download-artifact@v8
         with:
           path: artifacts/
@@ -339,7 +340,7 @@ jobs:
           find artifacts -mindepth 1 -type f -ls 2>/dev/null || echo "All files shown above"
 
       - name: Show packages (Windows)
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' }}
+        if: ${{ (steps.changed-files.outputs.any_changed == 'true' || matrix.fips_runner == true) && runner.os == 'Windows' }}
         run: |
           cd artifacts
           gci
@@ -378,7 +379,7 @@ jobs:
 
       - name: Set OTELCOL_SUMO_PACKAGE_PATH (windows, FIPS)
         shell: powershell
-        if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && matrix.fips_runner == true }}
+        if: ${{ runner.os == 'Windows' && matrix.fips_runner == true }}
         run: |
           $msi = Get-ChildItem -Path artifacts -Filter "otelcol-sumo*x64-fips.msi" -File -Recurse | Select-Object -First 1
           if ($msi -eq $null) {
@@ -401,7 +402,7 @@ jobs:
 
       - name: Run install script tests (Windows)
         shell: powershell
-        if: steps.changed-files.outputs.any_changed == 'true' && runner.os == 'Windows' && github.actor != 'dependabot[bot]' && !contains(github.event.pull_request.title, 'actions/')
+        if: (steps.changed-files.outputs.any_changed == 'true' || matrix.fips_runner == true) && runner.os == 'Windows' && github.actor != 'dependabot[bot]' && !contains(github.event.pull_request.title, 'actions/')
         working-directory: install-script/test
         env:
           S3_BUCKET: sumologic-osc-ci-builds
