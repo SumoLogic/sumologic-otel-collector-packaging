@@ -284,6 +284,18 @@ function Get-ArchName {
     return $archName
 }
 
+function Test-WindowsFipsEnabled {
+    # Check if FIPS mode is enabled via the Windows registry.
+    # The registry key is set by Windows when FIPS mode is activated through
+    $fipsRegistryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy"
+    try {
+        $fipsRegistryValue = Get-ItemProperty -Path $fipsRegistryPath -Name "Enabled" -ErrorAction Stop
+        return $fipsRegistryValue.Enabled -eq 1
+    } catch {
+        return $false
+    }
+}
+
 function Get-InstalledApplicationVersion {
     $product = Get-CimInstance Win32_Product | Where-Object {
         $_.Name -eq "OpenTelemetry Collector" -and $_.Vendor -eq "Sumo Logic"
@@ -1164,6 +1176,12 @@ try {
         if ($osName -ne "Win32NT" -or $archName -ne "x64") {
             Write-Error "Error: The FIPS-approved binary is only available for windows/amd64" -ErrorAction Stop
         }
+
+        if (-not (Test-WindowsFipsEnabled)) {
+            Write-Error "Error: FIPS mode is not enabled on this system. The FIPS-approved binary requires Windows FIPS mode to be active." -ErrorAction Stop
+        }
+
+        Write-Host "FIPS mode is enabled on this system"
     }
 
     Write-Host "Getting installed version..."
