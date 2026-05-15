@@ -149,6 +149,7 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.GH_CI_TOKEN }}
           name: v${{ needs.get-version.outputs.package-version }}
           commit: ${{ needs.get-version.outputs.git-sha }}
           tag: v${{ needs.get-version.outputs.package-version }}
