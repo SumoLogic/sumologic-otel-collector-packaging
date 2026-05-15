@@ -21,9 +21,9 @@ fi
 BUILD_NUMBER="${BASH_REMATCH[2]}"
 echo "::notice::Validating version ${VERSION} (Build: ${BUILD_NUMBER})"
 
-# Find packaging workflow by build number
+# Find packaging workflow by build number (search all branches, not just main)
 PKG_RUN=$(gh run list -R SumoLogic/sumologic-otel-collector-packaging \
-  -w build_packages.yml -s success -b main -L 200 \
+  -w build_packages.yml -s success -L 200 \
   --json databaseId,displayTitle,number \
   -q ".[] | select(.number == ${BUILD_NUMBER}) | {id: .databaseId, title: .displayTitle}")
 
