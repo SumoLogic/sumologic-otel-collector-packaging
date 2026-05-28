@@ -109,7 +109,7 @@
           Name="!(loc.ServiceName)"
           Start="install"
           Wait="no">
-          <![CDATA[START_SERVICE <> "0"]]>
+          <![CDATA[START_SERVICE <> "false"]]>
         </ServiceControl>
       </Component>
     </ComponentGroup>
