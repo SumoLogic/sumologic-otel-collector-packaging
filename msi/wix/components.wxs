@@ -101,15 +101,13 @@
         <ServiceControl Id="ServiceControlLifecycle"
           Name="!(loc.ServiceName)"
           Stop="both"
+          Start="install"
           Remove="uninstall"
           Wait="no" />
       </Component>
-      <Component Directory="BinFolder">
-        <Condition><![CDATA[START_SERVICE <> "false"]]></Condition>
-        <!-- Start only when START_SERVICE is not explicitly false -->
-        <ServiceControl Id="ServiceControlStart" Name="!(loc.ServiceName)" Start="install" Wait="no">
-        </ServiceControl>
-      </Component>
     </ComponentGroup>
+    <InstallExecuteSequence>
+      <StartServices Condition='START_SERVICE &lt;&gt; "false"' />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>
