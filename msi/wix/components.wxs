@@ -3,7 +3,7 @@
   <?include variables.wxi ?>
 
   <Fragment>
-    <Property Id="START_SERVICE" Value="false" Secure="yes" />
+    <Property Id="START_SERVICE" Value="true" Secure="yes" />
     <ComponentGroup Id="HostMetricsComponents" Directory="APPDATAFOLDER">
       <Component Directory="ConfigFragmentsFolder">
         <File Id="HostMetricsConfig" Name="hostmetrics.yaml" Source="!(bindpath.assets)\conf.d\windows.yaml" />
@@ -105,11 +105,8 @@
           Wait="no" />
 
         <!-- Start only when START_SERVICE is not explicitly false -->
-        <ServiceControl Id="ServiceControlStart"
-          Name="!(loc.ServiceName)"
-          Start="install"
-          Wait="no">
-          <![CDATA[START_SERVICE <> "false"]]>
+        <ServiceControl Id="ServiceControlStart" Name="!(loc.ServiceName)" Start="install" Wait="no">
+          <Condition><![CDATA[START_SERVICE <> "false"]]></Condition>
         </ServiceControl>
       </Component>
     </ComponentGroup>
