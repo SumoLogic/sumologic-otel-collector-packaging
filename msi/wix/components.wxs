@@ -103,10 +103,11 @@
           Stop="both"
           Remove="uninstall"
           Wait="no" />
-
+      </Component>
+      <Component Directory="BinFolder">
+        <Condition><![CDATA[START_SERVICE <> "false"]]></Condition>
         <!-- Start only when START_SERVICE is not explicitly false -->
         <ServiceControl Id="ServiceControlStart" Name="!(loc.ServiceName)" Start="install" Wait="no">
-          <Condition><![CDATA[START_SERVICE <> "false"]]></Condition>
         </ServiceControl>
       </Component>
     </ComponentGroup>
