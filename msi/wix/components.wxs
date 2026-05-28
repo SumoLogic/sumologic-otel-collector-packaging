@@ -3,6 +3,7 @@
   <?include variables.wxi ?>
 
   <Fragment>
+    <Property Id="START_SERVICE" Value="true" Secure="yes" />
     <ComponentGroup Id="HostMetricsComponents" Directory="APPDATAFOLDER">
       <Component Directory="ConfigFragmentsFolder">
         <File Id="HostMetricsConfig" Name="hostmetrics.yaml" Source="!(bindpath.assets)\conf.d\windows.yaml" />
@@ -96,8 +97,20 @@
             ThirdFailureActionType="restart" RestartServiceDelayInSeconds="0" ResetPeriodInDays="0" />
         </ServiceInstall>
 
-        <!-- Start/Stop/Remove OTC service -->
-        <ServiceControl Id="StartServiceControl" Name="!(loc.ServiceName)" Start="install" Stop="both" Remove="uninstall" Wait="no" />
+        <!-- Stop/remove always -->
+        <ServiceControl Id="ServiceControlLifecycle"
+          Name="!(loc.ServiceName)"
+          Stop="both"
+          Remove="uninstall"
+          Wait="no" />
+
+        <!-- Start only when START_SERVICE is not explicitly 0 -->
+        <ServiceControl Id="ServiceControlStart"
+          Name="!(loc.ServiceName)"
+          Start="install"
+          Wait="no">
+          <![CDATA[START_SERVICE <> "0"]]>
+        </ServiceControl>
       </Component>
     </ComponentGroup>
   </Fragment>
