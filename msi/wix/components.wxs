@@ -104,7 +104,7 @@
           Remove="uninstall"
           Wait="no" />
 
-        <!-- Start only when START_SERVICE is not explicitly 0 -->
+        <!-- Start only when START_SERVICE is not explicitly false -->
         <ServiceControl Id="ServiceControlStart"
           Name="!(loc.ServiceName)"
           Start="install"
