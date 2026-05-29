@@ -3,7 +3,7 @@
   <?include variables.wxi ?>
 
   <Fragment>
-    <Property Id="START_SERVICE" Value="false" Secure="yes" />
+    <Property Id="START_SERVICE" Value="true" Secure="yes" />
     <ComponentGroup Id="HostMetricsComponents" Directory="APPDATAFOLDER">
       <Component Directory="ConfigFragmentsFolder">
         <File Id="HostMetricsConfig" Name="hostmetrics.yaml" Source="!(bindpath.assets)\conf.d\windows.yaml" />
