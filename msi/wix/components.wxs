@@ -107,7 +107,7 @@
       </Component>
     </ComponentGroup>
     <InstallExecuteSequence>
-      <StartServices Condition='START_SERVICE &lt;&gt; "false" AND NOT Installed' />
+      <StartServices Condition='(NOT Installed AND START_SERVICE &lt;&gt; "false") OR WIX_UPGRADE_DETECTED' />
     </InstallExecuteSequence>
   </Fragment>
 </Wix>
