@@ -337,9 +337,9 @@ jobs:
         if: ${{ runner.os == 'Windows' && matrix.fips_runner == true }}
         shell: powershell
         run: |
-          Set-ItemProperty `
+          New-ItemProperty `
             -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy" `
-            -Name "Enabled" -Value 1 -Type DWord
+            -Name "Enabled" -Value 1 -PropertyType DWord -Force | Out-Null
           Write-Host "FIPS registry key set - verifying..."
           $val = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy" -Name Enabled).Enabled
           if ($val -ne 1) { Write-Error "FIPS registry key not set correctly"; exit 1 }
