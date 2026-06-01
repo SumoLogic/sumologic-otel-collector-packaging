@@ -264,7 +264,7 @@ jobs:
             runs_on: windows-2022
             test_filter: "TestInstallScript/(no_arguments|installation_token_only|installation_token_and_ephemeral|installation_token_and_fips_on_non_fips_system|installation_token_and_hostmetrics|installation_token_and_remotely-managed)"
           - arch_os: windows_amd64_fips
-            runs_on: [self-hosted, windows, fips]
+            runs_on: windows-2022
             test_filter: "TestInstallScript/installation_token_and_fips$$"
             fips_runner: true
           - arch_os: windows_amd64_2
@@ -332,6 +332,18 @@ jobs:
           path: artifacts/
           pattern: otelcol-sumo_*x64-fips.msi
           merge-multiple: true
+
+      - name: Enable FIPS mode via registry
+        if: ${{ runner.os == 'Windows' && matrix.fips_runner == true }}
+        shell: powershell
+        run: |
+          Set-ItemProperty `
+            -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy" `
+            -Name "Enabled" -Value 1 -Type DWord
+          Write-Host "FIPS registry key set - verifying..."
+          $val = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy" -Name Enabled).Enabled
+          if ($val -ne 1) { Write-Error "FIPS registry key not set correctly"; exit 1 }
+          Write-Host "FIPS mode enabled (registry value: $val)"
 
       - name: Show packages
         if: ${{ steps.changed-files.outputs.any_changed == 'true' && runner.os != 'Windows' }}
