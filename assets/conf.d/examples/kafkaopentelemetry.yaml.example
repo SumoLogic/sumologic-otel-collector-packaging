@@ -75,7 +75,6 @@ service:
         - resourcedetection/system
         - resource/kafka_resource_attributes/metrics/localhost
         - resource/kafka_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
     logs/kafka/localhost:
@@ -87,6 +86,5 @@ service:
         - resourcedetection/system
         - resource/kafka_resource_attributes/logs/localhost
         - resource/kafka_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

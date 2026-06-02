@@ -55,7 +55,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/memcached_resource_attributes/localhost
         - resource/memcached_resource_attributes/metrics/localhost
       exporters:
@@ -66,7 +65,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/memcached_resource_attributes/localhost
         - resource/memcached_resource_attributes/logs/localhost
       exporters:

@@ -107,7 +107,6 @@ service:
         - resource/postgresql_resource_attributes/localhost
         - resource/postgresql/split_schema_table/localhost
         - resource/postgresql/rename_attr/localhost
-        - batch
       exporters:
         - sumologic
     logs/postgresql/localhost:
@@ -118,6 +117,5 @@ service:
         - resourcedetection/system
         - resource/postgresql_resource_attributes/logs/localhost
         - resource/postgresql_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

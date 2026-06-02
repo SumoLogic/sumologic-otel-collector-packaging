@@ -84,6 +84,5 @@ service:
         - resourcedetection/system
         - resource/couchbase_resource_attributes/logs/localhost
         - resource/couchbase_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

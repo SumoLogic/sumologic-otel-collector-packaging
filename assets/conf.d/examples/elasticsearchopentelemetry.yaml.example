@@ -97,7 +97,6 @@ service:
         - resource/elasticsearch_resource_attributes/metrics/localhost
         - resource/elasticsearch_resource_attributes/localhost
         - resource/elasticsearch_metric_label_translation/localhost
-        - batch
       exporters:
         - sumologic
     logs/elasticsearch/localhost:
@@ -108,6 +107,5 @@ service:
         - resourcedetection/system
         - resource/elasticsearch_resource_attributes/logs/localhost
         - resource/elasticsearch_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

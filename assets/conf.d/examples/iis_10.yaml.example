@@ -448,7 +448,6 @@ service:
         - resourcedetection/system
         - resource/iis_resource_attributes/localhost
         - resource/iis_resource_attributes/metrics/localhost
-        - batch
       exporters:
         - sumologic
     logs/iis/localhost:
@@ -458,7 +457,6 @@ service:
       processors:
         - memory_limiter
         - resource/iis_resource_attributes/localhost
-        - batch
         - resourcedetection/system
         - resource/iis_resource_attributes/logs/localhost
       exporters:

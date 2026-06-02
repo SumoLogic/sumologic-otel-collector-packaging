@@ -63,7 +63,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/redis_resource_attributes/metrics/localhost
         - resource/redis_resource_attributes/localhost
       exporters:
@@ -74,7 +73,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/redis_resource_attributes/localhost
         - resource/redis_resource_attributes/logs/localhost
       exporters:

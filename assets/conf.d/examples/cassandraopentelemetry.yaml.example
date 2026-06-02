@@ -57,7 +57,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/cassandra_resource_attributes/localhost
         - resource/cassandra_resource_attributes/metrics/localhost
       exporters:
@@ -69,7 +68,6 @@ service:
         - memory_limiter
         - resourcedetection/system
         - resource/cassandra_resource_attributes/localhost
-        - batch
         - resource/cassandra_resource_attributes/logs/localhost
       exporters:
         - sumologic
