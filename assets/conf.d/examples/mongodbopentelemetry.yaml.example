@@ -106,7 +106,6 @@ service:
         - resourcedetection/system
         - resource/mongodb_resource_attributes/localhost
         - resource/mongodb_resource_attributes/metrics/localhost
-        - batch
       exporters:
         - sumologic
     logs/mongodb/localhost:
@@ -114,7 +113,6 @@ service:
         - filelog/mongodb/localhost
       processors:
         - memory_limiter
-        - batch
         - resourcedetection/system
         - resource/mongodb_resource_attributes/localhost
         - resource/mongodb_resource_attributes/logs/localhost

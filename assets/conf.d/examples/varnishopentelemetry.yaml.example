@@ -41,7 +41,6 @@ service:
         - memory_limiter
         - resourcedetection/system
         - resource/varnish_resource_attributes/localhost
-        - batch
         - resource/varnish_resource_attributes/logs/localhost
       exporters:
         - sumologic

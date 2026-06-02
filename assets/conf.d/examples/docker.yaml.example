@@ -76,7 +76,6 @@ service:
         - resourcedetection/system
         - resource/docker_resource_attributes/metrics/localhost
         - resource/docker_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
     logs/docker/localhost:
@@ -87,6 +86,5 @@ service:
         - resourcedetection/system
         - resource/docker_resource_attributes/logs/localhost
         - resource/docker_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

@@ -58,6 +58,5 @@ service:
         - resourcedetection/system
         - resource/mariadb_resource_attributes/logs/localhost
         - resource/mariadb_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

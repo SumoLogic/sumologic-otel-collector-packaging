@@ -48,6 +48,5 @@ service:
         - resource/linux_resource_attributes/localhost
         - resourcedetection/system
         - resource/linux_resource_attributes/logs/localhost
-        - batch
       exporters:
         - sumologic

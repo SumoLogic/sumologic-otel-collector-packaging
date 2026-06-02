@@ -118,7 +118,6 @@ service:
         - resourcedetection/system
         - resource/sqlserver_resource_attributes/metrics/localhost
         - resource/sqlserver_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
     logs/sqlserver/localhost:
@@ -129,6 +128,5 @@ service:
         - resourcedetection/system
         - resource/sqlserver_resource_attributes/logs/localhost
         - resource/sqlserver_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

@@ -40,6 +40,5 @@ service:
         - resourcedetection/system
         - resource/jmx_resource_attributes/metrics/localhost
         - resource/jmx_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

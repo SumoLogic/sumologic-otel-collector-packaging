@@ -43,6 +43,5 @@ service:
         - resourcedetection/system
         - resource/sqlserver_linux_resource_attributes/logs/localhost
         - resource/sqlserver_linux_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

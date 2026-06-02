@@ -40,7 +40,6 @@ service:
       processors:
         - memory_limiter
         - resource/squidproxy_resource_attributes/localhost
-        - batch
         - resourcedetection/system
         - resource/squidproxy_resource_attributes/logs/localhost
       exporters:

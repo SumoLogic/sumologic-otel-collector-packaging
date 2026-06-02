@@ -56,7 +56,6 @@ service:
         - resourcedetection/system
         - resource/haproxy_resource_attributes/metrics/localhost
         - resource/haproxy_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
     logs/haproxy/localhost:
@@ -67,6 +66,5 @@ service:
         - resourcedetection/system
         - resource/haproxy_resource_attributes/logs/localhost
         - resource/haproxy_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
