@@ -33,6 +33,7 @@ type installOptions struct {
 	clobber            bool
 	collectorName      string
 	configOnly         bool
+	skipRegistration   bool
 }
 
 func (io *installOptions) string() []string {
@@ -116,6 +117,10 @@ func (io *installOptions) string() []string {
 
 	if io.timeout != 0 {
 		opts = append(opts, "--download-timeout", fmt.Sprintf("%f", io.timeout))
+	}
+
+	if io.skipRegistration {
+		opts = append(opts, "--skip-registration")
 	}
 
 	if io.opampEndpoint != "" {

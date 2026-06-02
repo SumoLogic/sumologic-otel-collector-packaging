@@ -124,6 +124,25 @@ func checkVarLogACL(c check) bool {
 	return true
 }
 
+const linuxServiceName = "otelcol-sumo"
+
+// checkServiceNotStarted asserts that the otelcol-sumo systemd service is NOT active/running.
+// Used to verify that --skip-registration prevented the service from starting.
+func checkServiceNotStarted(c check) bool {
+	cmd := exec.Command("systemctl", "is-active", "--quiet", linuxServiceName)
+	err := cmd.Run()
+	// is-active returns exit code 0 if active, non-zero otherwise.
+	// We want the service to NOT be active.
+	return assert.Error(c.test, err, "service '%s' should not be running (--skip-registration was set)", linuxServiceName)
+}
+
+// checkServiceStarted asserts that the otelcol-sumo systemd service is active/running.
+func checkServiceStarted(c check) bool {
+	cmd := exec.Command("systemctl", "is-active", "--quiet", linuxServiceName)
+	err := cmd.Run()
+	return assert.NoError(c.test, err, "service '%s' should be running", linuxServiceName)
+}
+
 func preActionCreateHomeDirectory(c check) bool {
 	err := os.MkdirAll(libPath, fs.FileMode(etcPathPermissions))
 	return assert.NoError(c.test, err)

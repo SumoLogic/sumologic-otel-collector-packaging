@@ -60,6 +60,8 @@ ARG_SHORT_COLLECTOR_NAME='N'
 ARG_LONG_COLLECTOR_NAME='collector-name'
 ARG_SHORT_PACKAGE_PATH='P'
 ARG_LONG_PACKAGE_PATH='package-path'
+ARG_SHORT_SKIP_REGISTRATION='s'
+ARG_LONG_SKIP_REGISTRATION='skip-registration'
 
 readonly ARG_SHORT_TOKEN ARG_LONG_TOKEN ARG_SHORT_HELP ARG_LONG_HELP ARG_SHORT_API ARG_LONG_API
 readonly ARG_SHORT_TAG ARG_LONG_TAG ARG_SHORT_VERSION ARG_LONG_VERSION ARG_SHORT_YES ARG_LONG_YES
@@ -183,6 +185,7 @@ Supported arguments:
   -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
   -${ARG_SHORT_CONFIG_ONLY}, --${ARG_LONG_CONFIG_ONLY}             Skip the install and only create configuration based on arguments.
+  -${ARG_SHORT_SKIP_REGISTRATION}, --${ARG_LONG_SKIP_REGISTRATION} Skip starting the collector after install and config.
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
 
@@ -279,12 +282,15 @@ function parse_options() {
       "--${ARG_LONG_CONFIG_ONLY}")
         set -- "$@" "-${ARG_SHORT_CONFIG_ONLY}"
         ;;
-      "--${ARG_LONG_TIMEOUT}")
-        set -- "$@" "-${ARG_SHORT_TIMEOUT}"
-        ;;
-      "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_ONLY}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}"|"-${ARG_SHORT_COLLECTOR_NAME}")
-        set -- "$@" "${arg}"
-        ;;
+            "--${ARG_LONG_TIMEOUT}")
+                set -- "$@" "-${ARG_SHORT_TIMEOUT}"
+                ;;
+            "--${ARG_LONG_SKIP_REGISTRATION}")
+                set -- "$@" "-${ARG_SHORT_SKIP_REGISTRATION}"
+                ;;
+            "-${ARG_SHORT_TOKEN}"|"-${ARG_SHORT_HELP}"|"-${ARG_SHORT_API}"|"-${ARG_SHORT_OPAMP_API}"|"-${ARG_SHORT_TAG}"|"-${ARG_SHORT_VERSION}"|"-${ARG_SHORT_FIPS}"|"-${ARG_SHORT_YES}"|"-${ARG_SHORT_UNINSTALL}"|"-${ARG_SHORT_UPGRADE}"|"-${ARG_SHORT_PURGE}"|"-${ARG_SHORT_SKIP_TOKEN}"|"-${ARG_SHORT_DOWNLOAD}"|"-${ARG_SHORT_CONFIG_ONLY}"|"-${ARG_SHORT_CONFIG_BRANCH}"|"-${ARG_SHORT_BINARY_BRANCH}"|"-${ARG_SHORT_BRANCH}"|"-${ARG_SHORT_KEEP_DOWNLOADS}"|"-${ARG_SHORT_TIMEOUT}"|"-${ARG_SHORT_INSTALL_HOSTMETRICS}"|"-${ARG_SHORT_REMOTELY_MANAGED}"|"-${ARG_SHORT_EPHEMERAL}"|"-${ARG_SHORT_TIMEZONE}"|"-${ARG_SHORT_CLOBBER}"|"-${ARG_SHORT_PACKAGE_PATH}"|"-${ARG_SHORT_COLLECTOR_NAME}"|"-${ARG_SHORT_SKIP_REGISTRATION}")
+                set -- "$@" "${arg}"
+                ;;
       "--${ARG_LONG_INSTALL_HOSTMETRICS}")
         set -- "$@" "-${ARG_SHORT_INSTALL_HOSTMETRICS}"
         ;;
@@ -318,7 +324,7 @@ function parse_options() {
 
   while true; do
     set +e
-    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_CONFIG_ONLY}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_COLLECTOR_NAME}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}:" opt
+    getopts "${ARG_SHORT_HELP}${ARG_SHORT_TOKEN}:${ARG_SHORT_API}:${ARG_SHORT_OPAMP_API}:${ARG_SHORT_TAG}:${ARG_SHORT_VERSION}:${ARG_SHORT_FIPS}${ARG_SHORT_YES}${ARG_SHORT_CONFIG_ONLY}${ARG_SHORT_UPGRADE}${ARG_SHORT_UNINSTALL}${ARG_SHORT_PURGE}${ARG_SHORT_SKIP_TOKEN}${ARG_SHORT_DOWNLOAD}${ARG_SHORT_KEEP_DOWNLOADS}${ARG_SHORT_CONFIG_BRANCH}:${ARG_SHORT_BINARY_BRANCH}:${ARG_SHORT_BRANCH}:${ARG_SHORT_EPHEMERAL}${ARG_SHORT_TIMEZONE}:${ARG_SHORT_COLLECTOR_NAME}:${ARG_SHORT_CLOBBER}${ARG_SHORT_REMOTELY_MANAGED}${ARG_SHORT_INSTALL_HOSTMETRICS}${ARG_SHORT_TIMEOUT}:${ARG_SHORT_PACKAGE_PATH}${ARG_SHORT_SKIP_REGISTRATION}" opt
     set -e
 
     # Invalid argument catched, print and exit
@@ -361,6 +367,7 @@ function parse_options() {
       "${ARG_SHORT_TIMEOUT}") CURL_MAX_TIME="${OPTARG}" ;;
       "${ARG_SHORT_TAG}") FIELDS+=("${OPTARG}") ;;
       "${ARG_SHORT_PACKAGE_PATH}") PACKAGE_PATH=("${OPTARG}") ;;
+      "${ARG_SHORT_SKIP_REGISTRATION}") SKIP_REGISTRATION=true ;;
     esac
 
     # Exit loop as we iterated over all arguments
@@ -1430,6 +1437,11 @@ systemctl daemon-reload
 
 echo 'Enable otelcol-sumo service'
 systemctl enable otelcol-sumo
+
+if [[ "${SKIP_REGISTRATION}" == "true" ]]; then
+    echo "Skipping starting otelcol-sumo due to --skip-registration flag."
+    exit 0
+fi
 
 echo 'Starting otelcol-sumo service'
 systemctl restart otelcol-sumo

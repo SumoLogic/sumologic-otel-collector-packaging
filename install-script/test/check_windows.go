@@ -3,6 +3,7 @@
 package sumologic_scripts_tests
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -326,4 +327,37 @@ func ExplicitEntryToACLRecord(entry windows.EXPLICIT_ACCESS) *ACLRecord {
 		AccessMode:        entry.AccessMode,
 		AccessPermissions: entry.AccessPermissions,
 	}
+}
+
+const windowsServiceName = "OtelcolSumo"
+
+// getWindowsServiceStatus returns the status string of the named Windows service,
+// e.g. "Running", "Stopped". Returns an error if the service does not exist.
+func getWindowsServiceStatus(name string) (string, error) {
+	cmd := exec.Command("powershell", "-NoProfile", "-Command",
+		fmt.Sprintf(`(Get-Service -Name '%s' -ErrorAction Stop).Status`, name))
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// checkServiceStarted asserts that the collector Windows service is in the "Running" state.
+func checkServiceStarted(c check) bool {
+	status, err := getWindowsServiceStatus(windowsServiceName)
+	if !assert.NoError(c.test, err, "could not query service '%s'", windowsServiceName) {
+		return false
+	}
+	return assert.Equal(c.test, "Running", status, "service '%s' should be running", windowsServiceName)
+}
+
+// checkServiceNotStarted asserts that the collector Windows service is NOT in the "Running" state.
+// This is used to verify that -SkipRegistration prevented the service from starting.
+func checkServiceNotStarted(c check) bool {
+	status, err := getWindowsServiceStatus(windowsServiceName)
+	if !assert.NoError(c.test, err, "could not query service '%s'", windowsServiceName) {
+		return false
+	}
+	return assert.NotEqual(c.test, "Running", status, "service '%s' should not be running (SkipRegistration was set)", windowsServiceName)
 }

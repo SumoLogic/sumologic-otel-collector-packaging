@@ -27,6 +27,7 @@ type installOptions struct {
 	uninstall          bool
 	upgrade            bool
 	purge              bool
+	skipRegistration   bool
 }
 
 func (io *installOptions) string() []string {
@@ -72,6 +73,10 @@ func (io *installOptions) string() []string {
 
 	if io.purge {
 		opts = append(opts, "-Purge")
+	}
+
+	if io.skipRegistration {
+		opts = append(opts, "-SkipRegistration")
 	}
 
 	if len(io.tags) > 0 {
