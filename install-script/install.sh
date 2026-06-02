@@ -80,6 +80,7 @@ readonly ARG_SHORT_TIMEZONE ARG_LONG_TIMEZONE
 readonly ARG_SHORT_CLOBBER ARG_LONG_CLOBBER
 readonly ARG_SHORT_COLLECTOR_NAME ARG_LONG_COLLECTOR_NAME
 readonly ARG_SHORT_PACKAGE_PATH ARG_LONG_PACKAGE_PATH
+readonly ARG_SHORT_SKIP_REGISTRATION ARG_LONG_SKIP_REGISTRATION
 readonly DEPRECATED_ARG_LONG_TOKEN DEPRECATED_ENV_TOKEN DEPRECATED_ARG_LONG_SKIP_TOKEN
 
 ############################ Variables (see set_defaults function for default values)
@@ -205,6 +206,7 @@ function set_defaults() {
     PACKAGE_PATH=""
     CLOBBER="false"
     COLLECTOR_NAME=""
+    SKIP_REGISTRATION="false"
     LAUNCHD_CONFIG="/Library/LaunchDaemons/com.sumologic.otelcol-sumo.plist"
     LAUNCHD_ENV_KEY="EnvironmentVariables"
     LAUNCHD_TOKEN_KEY="${LAUNCHD_ENV_KEY}.${ENV_TOKEN}"
