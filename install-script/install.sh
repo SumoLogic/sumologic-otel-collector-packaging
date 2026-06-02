@@ -186,7 +186,7 @@ Supported arguments:
   -${ARG_SHORT_PACKAGE_PATH}, --${ARG_LONG_PACKAGE_PATH} <path>    Install package from file path instead of fetching it.
   -${ARG_SHORT_YES}, --${ARG_LONG_YES}                             Disable confirmation asks.
   -${ARG_SHORT_CONFIG_ONLY}, --${ARG_LONG_CONFIG_ONLY}             Skip the install and only create configuration based on arguments.
-  -${ARG_SHORT_SKIP_REGISTRATION}, --${ARG_LONG_SKIP_REGISTRATION} Skip starting the collector after install and config.
+  -${ARG_SHORT_SKIP_REGISTRATION}, --${ARG_LONG_SKIP_REGISTRATION} Skip starting the collector after install and config. (Linux only; not supported on macOS)
 
   -${ARG_SHORT_HELP}, --${ARG_LONG_HELP}                            Prints this help and usage.
 
@@ -1367,6 +1367,9 @@ if [[ "${OS_TYPE}" == "darwin" ]]; then
     setup_config_darwin
 
     # Run an unload/load launchd config to pull in new changes & restart the service
+    if [[ "${SKIP_REGISTRATION}" == "true" ]]; then
+        echo "Warning: --${ARG_LONG_SKIP_REGISTRATION} is not supported on macOS. The collector service will be started."
+    fi
     launchctl unload "${LAUNCHD_CONFIG}"
     launchctl load -w "${LAUNCHD_CONFIG}"
 
