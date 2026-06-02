@@ -3,6 +3,7 @@
   <?include variables.wxi ?>
 
   <Fragment>
+    <Property Id="START_SERVICE" Value="true" Secure="yes" />
     <ComponentGroup Id="HostMetricsComponents" Directory="APPDATAFOLDER">
       <Component Directory="ConfigFragmentsFolder">
         <File Id="HostMetricsConfig" Name="hostmetrics.yaml" Source="!(bindpath.assets)\conf.d\windows.yaml" />
@@ -96,9 +97,17 @@
             ThirdFailureActionType="restart" RestartServiceDelayInSeconds="0" ResetPeriodInDays="0" />
         </ServiceInstall>
 
-        <!-- Start/Stop/Remove OTC service -->
-        <ServiceControl Id="StartServiceControl" Name="!(loc.ServiceName)" Start="install" Stop="both" Remove="uninstall" Wait="no" />
+        <!-- Stop/remove always -->
+        <ServiceControl Id="ServiceControlLifecycle"
+          Name="!(loc.ServiceName)"
+          Stop="both"
+          Start="install"
+          Remove="uninstall"
+          Wait="no" />
       </Component>
     </ComponentGroup>
+    <InstallExecuteSequence>
+      <StartServices Condition='Installed OR WIX_UPGRADE_DETECTED OR (NOT Installed AND START_SERVICE &lt;&gt; "false")' />
+    </InstallExecuteSequence>
   </Fragment>
 </Wix>
