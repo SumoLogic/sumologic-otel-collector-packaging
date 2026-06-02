@@ -46,6 +46,5 @@ service:
         - resourcedetection/system
         - resource/activedirectory_resource_attributes/logs/localhost
         - resource/activedirectory_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

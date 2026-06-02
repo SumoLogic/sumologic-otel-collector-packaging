@@ -41,7 +41,6 @@ service:
         - memory_limiter
         - resourcedetection/system
         - resource/squidproxy_resource_attributes/localhost
-        - batch
         - resource/squidproxy_resource_attributes/logs/localhost
       exporters:
         - sumologic

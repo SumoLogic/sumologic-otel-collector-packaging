@@ -39,6 +39,5 @@ service:
         - resourcedetection/system
         - resource/windows_resource_attributes/logs/localhost
         - resource/windows_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

@@ -29,7 +29,6 @@ service:
       processors:
         - memory_limiter
         - resource/sqlserver_resource_attributes/localhost
-        - batch
         - resourcedetection/system
       exporters:
         - sumologic

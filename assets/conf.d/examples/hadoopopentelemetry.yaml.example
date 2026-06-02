@@ -98,7 +98,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/hadoop_resource_attributes/localhost
         - resource/hadoop_resource_attributes/metrics/localhost
       exporters:
@@ -114,6 +113,5 @@ service:
         - resourcedetection/system
         - resource/hadoop_resource_attributes/logs/localhost
         - resource/hadoop_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

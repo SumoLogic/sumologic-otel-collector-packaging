@@ -72,7 +72,6 @@ service:
         - resourcedetection/system
         - resource/mongodb_resource_attributes/localhost
         - resource/mongodb_resource_attributes/metrics/localhost
-        - batch
       exporters:
         - sumologic
     logs/mongodb/localhost:
@@ -81,7 +80,6 @@ service:
       processors:
         - memory_limiter
         - resource/mongodb_resource_attributes/localhost
-        - batch
         - resourcedetection/system
         - resource/mongodb_resource_attributes/logs/localhost
       exporters:

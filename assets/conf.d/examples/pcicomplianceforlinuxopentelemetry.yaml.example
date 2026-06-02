@@ -48,6 +48,5 @@ service:
         - resource/PCILinux_resource_attributes/localhost
         - resourcedetection/system
         - resource/PCILinux_resource_attributes/logs/localhost
-        - batch
       exporters:
         - sumologic

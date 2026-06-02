@@ -100,7 +100,6 @@ service:
         - resourcedetection/system
         - resource/activemq_resource_attributes/metrics/localhost
         - resource/activemq_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
     logs/activemq/localhost:
@@ -112,6 +111,5 @@ service:
         - resourcedetection/system
         - resource/activemq_resource_attributes/logs/localhost
         - resource/activemq_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

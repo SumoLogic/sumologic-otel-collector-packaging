@@ -53,7 +53,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/rabbitmq_resource_attributes/localhost
         - resource/rabbitmq_resource_attributes/metrics/localhost
       exporters:
@@ -64,7 +63,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/rabbitmq_resource_attributes/localhost
         - resource/rabbitmq_resource_attributes/logs/localhost
       exporters:

@@ -65,7 +65,6 @@ service:
       processors:
         - memory_limiter
         - resource/jira_resource_attributes/localhost
-        - batch
         - resourcedetection/system
         - resource/jira_resource_attributes/logs/localhost
       exporters:

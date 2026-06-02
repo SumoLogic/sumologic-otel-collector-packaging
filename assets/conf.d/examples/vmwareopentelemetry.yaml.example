@@ -41,7 +41,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/vmware_resource_attributes/localhost
         - resource/vmware_resource_attributes/metrics/localhost
       exporters:
