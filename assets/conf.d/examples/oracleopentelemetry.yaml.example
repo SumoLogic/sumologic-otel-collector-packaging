@@ -118,7 +118,6 @@ service:
       processors:
         - memory_limiter
         - resourcedetection/system
-        - batch
         - resource/oracle_resource_attributes/localhost
         - resource/oracle_resource_attributes/metrics/localhost
       exporters:
@@ -131,7 +130,6 @@ service:
         - memory_limiter
         - resourcedetection/system
         - resource/oracle_resource_attributes/localhost
-        - batch
         - resource/oracle_resource_attributes/logs/localhost
       exporters:
         - sumologic
@@ -142,7 +140,6 @@ service:
         - memory_limiter
         - resourcedetection/system
         - resource/oracle_resource_attributes/localhost
-        - batch
         - resource/oracle_resource_attributes/logs/localhost
       exporters:
         - sumologic

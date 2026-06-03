@@ -70,7 +70,6 @@ service:
         - resourcedetection/system
         - resource/nginx_resource_attributes/metrics/localhost
         - resource/nginx_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
     logs/nginx/localhost:
@@ -82,6 +81,5 @@ service:
         - resourcedetection/system
         - resource/nginx_resource_attributes/logs/localhost
         - resource/nginx_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic

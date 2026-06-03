@@ -124,7 +124,6 @@ service:
         - resource/mysql_resource_attributes/metrics/localhost
         - resource/mysql_resource_attributes/localhost
         - attributes/mysql_metric_label_translation/localhost
-        - batch
       exporters:
         - sumologic
     logs/mysql/localhost:
@@ -136,6 +135,5 @@ service:
         - resourcedetection/system
         - resource/mysql_resource_attributes/logs/localhost
         - resource/mysql_resource_attributes/localhost
-        - batch
       exporters:
         - sumologic
