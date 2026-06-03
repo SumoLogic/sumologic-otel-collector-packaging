@@ -337,6 +337,35 @@ func TestInstallScript(t *testing.T) {
 				checkTokenInConfig,
 			},
 		},
+		{
+			name: "skip registration",
+			options: installOptions{
+				installToken:     installToken,
+				skipRegistration: true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkConfigCreated,
+				checkUserConfigCreated,
+				checkTokenInConfig,
+				checkServiceNotStarted,
+			},
+		},
+		{
+			name: "skip registration from package path",
+			options: installOptions{
+				installToken:     installToken,
+				packagePath:      getPackagePath(t),
+				skipRegistration: true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkConfigCreated,
+				checkServiceNotStarted,
+			},
+		},
 		// Note: if new tests are added here, make sure to add them in build_packages.yml as well.
 	} {
 		t.Run(spec.name, func(t *testing.T) {

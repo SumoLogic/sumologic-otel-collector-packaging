@@ -86,7 +86,10 @@ param (
     [switch] $Upgrade,
 
     # Purge removes all configuration and data files when used with -Uninstall.
-    [switch] $Purge
+    [switch] $Purge,
+
+    # SkipRegistration skips starting the collector service after install.
+    [switch] $SkipRegistration
 )
 
 # If the environment variable SKIP_ARCH_DETECTION is set and is not
@@ -541,6 +544,8 @@ function Build-MsiProperties {
         Collector name
     .PARAMETER Clobber
         Whether to clobber
+    .PARAMETER SkipRegistration
+        Whether to prevent the service from starting after install
     .OUTPUTS
         Hashtable of MSI property key-value pairs
     #>
@@ -561,7 +566,9 @@ function Build-MsiProperties {
 
         [string] $CollectorName,
 
-        [bool] $Clobber
+        [bool] $Clobber,
+
+        [switch] $SkipRegistration
     )
 
     $msiProps = @{}
@@ -602,6 +609,12 @@ function Build-MsiProperties {
     }
     if ($CollectorName.Length -gt 0) {
         $msiProps["COLLECTORNAME"] = $CollectorName
+    }
+
+    # Prevent service start when SkipRegistration is set. The WiX ServiceControl
+    # condition (START_SERVICE <> "false") uses this to skip starting the service.
+    if ($SkipRegistration) {
+        $msiProps["START_SERVICE"] = "false"
     }
 
     return $msiProps
@@ -907,7 +920,9 @@ function Install-ViaMsi {
 
         [bool] $Clobber,
 
-        [string] $PackagePath
+        [string] $PackagePath,
+
+        [switch] $SkipRegistration
     )
 
     # Convert version to MSI format (dots instead of dashes)
@@ -945,7 +960,7 @@ function Install-ViaMsi {
         -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
         -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
         -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
-        -Clobber $Clobber
+        -Clobber $Clobber -SkipRegistration:$SkipRegistration
 
     [string[]] $msiProperties = @()
     if ($InstallationToken.Length -gt 0) {
@@ -1024,6 +1039,10 @@ try {
 
     if ($Uninstall -and $Upgrade) {
         Write-Error "-Uninstall and -Upgrade cannot be used together" -ErrorAction Stop
+    }
+
+    if ($SkipRegistration -and ($Uninstall -or $Upgrade)) {
+        Write-Warning "-SkipRegistration is only applicable during install. Ignoring."
     }
 
     # Determine winget package ID based on FIPS flag
@@ -1214,14 +1233,14 @@ try {
         if (-not (Test-WingetAvailable)) {
             Write-Warning "Winget is not available on this system. Falling back to MSI installation."
         } else {
-            Write-Host "Attempting installation via winget..."
+            Write-Host "Attempting installation via winget"
 
             # Build MSI properties for winget --custom
             $msiProps = Build-MsiProperties `
                 -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
                 -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
                 -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
-                -Clobber $Clobber
+                -Clobber $Clobber -SkipRegistration:$SkipRegistration
 
             # Convert version to winget format (dots instead of dashes)
             $wingetVersion = ConvertTo-MsiVersion -Version $Version
@@ -1234,6 +1253,9 @@ try {
 
             if ($wingetSuccess) {
                 Write-Host "Installation via winget successful"
+                if ($SkipRegistration) {
+                    Write-Host "Skipping collector service start due to -SkipRegistration flag."
+                }
                 exit 0
             } else {
                 Write-Warning "Winget installation failed (version may not be available). Falling back to MSI installation."
@@ -1261,9 +1283,14 @@ try {
         -Timezone $Timezone `
         -CollectorName $CollectorName `
         -Clobber $Clobber `
-        -PackagePath $PackagePath
+        -PackagePath $PackagePath `
+        -SkipRegistration:$SkipRegistration
 
     Write-Host "Installation successful"
+
+    if ($SkipRegistration) {
+        Write-Host "Skipping collector service start due to -SkipRegistration flag."
+    }
 
 } catch [HttpRequestException] {
     $errorMessage = if ($_.Exception.InnerException -ne $null) {

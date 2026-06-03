@@ -270,6 +270,20 @@ func TestInstallScript(t *testing.T) {
 				checkTokenEnvFileCreated,
 			},
 		},
+		{
+			name: "skip registration",
+			options: installOptions{
+				installToken:     installToken,
+				skipRegistration: true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkConfigCreated,
+				checkTokenEnvFileCreated,
+				checkServiceNotStarted,
+			},
+		},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			if err := runTest(t, &spec); err != nil {
