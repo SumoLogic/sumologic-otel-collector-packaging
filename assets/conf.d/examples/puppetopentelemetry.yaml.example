@@ -64,8 +64,8 @@ service:
         - filelog/puppet/reportlogs/localhost
       processors:
         - memory_limiter
-        - resource/puppet_resource_attributes/localhost
         - resourcedetection/system
+        - resource/puppet_resource_attributes/localhost
         - resource/puppet_resource_attributes/logs/localhost
       exporters:
         - sumologic

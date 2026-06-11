@@ -78,8 +78,8 @@ service:
         - filelog/artifactory/trafficlogs/localhost
       processors:
         - memory_limiter
-        - resource/artifactory_resource_attributes/localhost
         - resourcedetection/system
+        - resource/artifactory_resource_attributes/localhost
         - resource/artifactory_resource_attributes/logs/localhost
       exporters:
         - sumologic
