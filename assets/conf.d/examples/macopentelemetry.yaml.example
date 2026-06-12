@@ -74,8 +74,8 @@ service:
         - hostmetrics/mac/localhost
       processors:
         - memory_limiter
-        - resource/mac_resource_attributes/localhost
         - resourcedetection/system
+        - resource/mac_resource_attributes/localhost
         - resource/mac_resource_attributes/metrics/localhost
       exporters:
         - sumologic
@@ -84,8 +84,8 @@ service:
         - filelog/mac/logs/localhost
       processors:
         - memory_limiter
-        - resource/mac_resource_attributes/localhost
         - resourcedetection/system
+        - resource/mac_resource_attributes/localhost
         - resource/mac_resource_attributes/logs/localhost
       exporters:
         - sumologic

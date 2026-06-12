@@ -96,8 +96,8 @@ service:
         - hostmetrics/linux/localhost
       processors:
         - memory_limiter
-        - resource/linux_resource_attributes/localhost
         - resourcedetection/system
+        - resource/linux_resource_attributes/localhost
         - resource/linux_resource_attributes/metrics/localhost
       exporters:
         - sumologic
@@ -106,8 +106,8 @@ service:
         - filelog/linux/logs/localhost
       processors:
         - memory_limiter
-        - resource/linux_resource_attributes/localhost
         - resourcedetection/system
+        - resource/linux_resource_attributes/localhost
         - resource/linux_resource_attributes/logs/localhost
       exporters:
         - sumologic

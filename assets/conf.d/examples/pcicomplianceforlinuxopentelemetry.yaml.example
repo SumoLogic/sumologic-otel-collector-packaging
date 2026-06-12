@@ -45,8 +45,8 @@ service:
         - filelog/PCILinux/logs/localhost
       processors:
         - memory_limiter
-        - resource/PCILinux_resource_attributes/localhost
         - resourcedetection/system
+        - resource/PCILinux_resource_attributes/localhost
         - resource/PCILinux_resource_attributes/logs/localhost
       exporters:
         - sumologic

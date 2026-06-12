@@ -64,8 +64,8 @@ service:
         - filelog/jira/catalinalogs/localhost
       processors:
         - memory_limiter
-        - resource/jira_resource_attributes/localhost
         - resourcedetection/system
+        - resource/jira_resource_attributes/localhost
         - resource/jira_resource_attributes/logs/localhost
       exporters:
         - sumologic
