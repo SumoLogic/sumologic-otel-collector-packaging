@@ -9,6 +9,8 @@ MemoryHigh=2000M
 MemoryMax=3000M
 TimeoutStopSec=20
 EnvironmentFile=-/etc/otelcol-sumo/env/*.env
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
