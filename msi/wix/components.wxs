@@ -94,9 +94,12 @@
           Description="!(loc.ServiceDescription)" Type="ownProcess" Vital="yes" Start="auto" Account="LocalSystem"
           ErrorControl="normal" Arguments="[SERVICEARGUMENTS]" Interactive="no" LoadOrderGroup="NetworkProvider">
           <util:ServiceConfig FirstFailureActionType="restart" SecondFailureActionType="restart"
-            ThirdFailureActionType="restart" RestartServiceDelayInSeconds="5" ResetPeriodInDays="0"
-            DelayedAutoStart="yes" />
+            ThirdFailureActionType="restart" RestartServiceDelayInSeconds="5" ResetPeriodInDays="0" />
         </ServiceInstall>
+
+        <!-- Configure Automatic (Delayed Start) via registry -->
+        <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\!(loc.ServiceName)"
+          Name="DelayedAutostart" Type="integer" Value="1" />
 
         <!-- Stop/remove always -->
         <ServiceControl Id="ServiceControlLifecycle"
