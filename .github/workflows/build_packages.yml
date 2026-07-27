@@ -297,7 +297,7 @@ jobs:
 
       - name: Setup go
         if: steps.changed-files.outputs.any_changed == 'true' || matrix.fips_runner == true
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: stable
           cache: true
