@@ -21,11 +21,14 @@ fi
 BUILD_NUMBER="${BASH_REMATCH[2]}"
 echo "::notice::Validating version ${VERSION} (Build: ${BUILD_NUMBER})"
 
-# Find packaging workflow by build number
+# Find packaging workflow by build number.
+# Note: we intentionally omit -s success here so that a failed re-run of an
+# already-successful workflow doesn't cause the lookup to fail. The artifacts
+# from the first successful attempt persist and are validated below.
 PKG_RUN=$(gh run list -R SumoLogic/sumologic-otel-collector-packaging \
-  -w build_packages.yml -s success -b main -L 200 \
+  -w build_packages.yml -b main -L 200 \
   --json databaseId,displayTitle,number \
-  -q ".[] | select(.number == ${BUILD_NUMBER}) | {id: .databaseId, title: .displayTitle}")
+  -q ".[] | select(.number == ${BUILD_NUMBER}) | {id: .databaseId, title: .displayTitle}" | head -n1)
 
 if [[ -z "$PKG_RUN" ]]; then
   echo "::error::Packaging workflow not found for build: ${BUILD_NUMBER}"
