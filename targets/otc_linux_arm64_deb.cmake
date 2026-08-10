@@ -18,6 +18,7 @@ ubuntu_bionic()
 ubuntu_focal()
 ubuntu_jammy()
 ubuntu_noble()
+ubuntu_resolute()
 
 # Supported Raspbian versions
 raspbian_bullseye()

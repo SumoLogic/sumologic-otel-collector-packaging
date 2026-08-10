@@ -7,6 +7,25 @@
 # Netboot images: https://cdimage.ubuntu.com/netboot/14.04/
 ##
 
+# Ubuntu 26.04 LTS Resolute Raccoon
+#
+# End of Standard Support: April 2031
+# End of Ubuntu Pro Support: April 2036
+# End of Legacy Support: April 2038
+function(ubuntu_resolute)
+  set(_distro_name "Ubuntu 26.04 Resolute")
+  set(_distro_index_name "ubuntu/resolute")
+  set(_supported_architectures
+    "amd64"
+    "arm64"
+    "armhf"
+    "ppc64el"
+    "riscv64"
+    "s390x"
+  )
+  check_architecture_support()
+endfunction()
+
 # Ubuntu 24.04 LTS Noble Numbat
 #
 # End of Standard Support: April 2029
