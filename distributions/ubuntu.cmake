@@ -7,7 +7,7 @@
 # Netboot images: https://cdimage.ubuntu.com/netboot/14.04/
 ##
 
-# Ubuntu 26.04 LTS Resolute
+# Ubuntu 26.04 LTS Resolute Raccoon
 #
 # End of Standard Support: April 2031
 # End of Ubuntu Pro Support: April 2036
