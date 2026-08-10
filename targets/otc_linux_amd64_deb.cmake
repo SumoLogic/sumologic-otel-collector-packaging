@@ -18,6 +18,7 @@ ubuntu_bionic()
 ubuntu_focal()
 ubuntu_jammy()
 ubuntu_noble()
+ubuntu_resolute()
 
 set_common_settings()
 set_otc_settings()
