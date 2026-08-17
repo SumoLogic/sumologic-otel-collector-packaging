@@ -107,6 +107,12 @@ namespace SumoLogic.wixext
                 sumologic.Children["collector_name"] = config.CollectorName;
             }
 
+            if (!string.IsNullOrEmpty(config.FleetId))
+            {
+                EnsureScalarKey(sumologic, "fleet_id");
+                sumologic.Children["fleet_id"] = new YamlScalarNode(config.FleetId) { Style = YamlDotNet.Core.ScalarStyle.DoubleQuoted };
+            }
+
             if (config.Clobber)
             {
                 EnsureScalarKey(sumologic, "clobber");
