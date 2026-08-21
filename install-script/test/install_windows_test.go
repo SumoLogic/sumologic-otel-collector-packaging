@@ -253,6 +253,41 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "installation token and FleetId",
+			options: installOptions{
+				installToken: installToken,
+				fleetId:      "000000000ABC1234",
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkUserConfigCreated,
+				checkTokenInConfig,
+				checkFleetIdInConfig,
+			},
+		},
+		{
+			name: "installation token, remotely-managed, and FleetId",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				fleetId:         "000000000ABC1234",
+			},
+			preChecks: []checkFunc{checkBinaryNotCreated, checkConfigNotCreated, checkUserConfigNotCreated},
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(localSystemSID),
+				checkRemoteConfigDirectoryCreated,
+				checkTokenInSumoConfig,
+				checkFleetIdInSumoConfig(configPath),
+			},
+		},
+		{
 			name: "purge without uninstall",
 			options: installOptions{
 				purge: true,

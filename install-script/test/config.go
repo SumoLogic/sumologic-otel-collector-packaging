@@ -22,6 +22,7 @@ type sumologicExtension struct {
 	Ephemeral         bool              `yaml:"ephemeral"`
 	Timezone          string            `yaml:"time_zone"`
 	CollectorName     string            `yaml:"collector_name"`
+	FleetId           string            `yaml:"fleet_id"`
 	Clobber           bool              `yaml:"clobber"`
 }
 

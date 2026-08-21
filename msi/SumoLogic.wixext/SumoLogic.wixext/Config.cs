@@ -39,6 +39,7 @@ namespace SumoLogic.wixext
         }
 
         public bool Clobber { get; set; }
+        public string FleetId { get; set; }
 
         public Config() {
             this.CollectorFields = new Dictionary<string, string>();

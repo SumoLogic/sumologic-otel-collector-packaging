@@ -32,6 +32,7 @@ type installOptions struct {
 	packagePath        string
 	clobber            bool
 	collectorName      string
+	fleetId            string
 	configOnly         bool
 	skipRegistration   bool
 }
@@ -94,6 +95,10 @@ func (io *installOptions) string() []string {
 
 	if io.collectorName != "" {
 		opts = append(opts, "--collector-name", io.collectorName)
+	}
+
+	if io.fleetId != "" {
+		opts = append(opts, "--fleet-id", io.fleetId)
 	}
 
 	if io.packagePath != "" {

@@ -23,6 +23,7 @@ type installOptions struct {
 	timezone           string
 	clobber            bool
 	collectorName      string
+	fleetId            string
 	useWinget          bool
 	uninstall          bool
 	upgrade            bool
@@ -57,6 +58,10 @@ func (io *installOptions) string() []string {
 	}
 	if io.collectorName != "" {
 		opts = append(opts, "-CollectorName", io.collectorName)
+	}
+
+	if io.fleetId != "" {
+		opts = append(opts, "-FleetId", io.fleetId)
 	}
 
 	if io.useWinget {

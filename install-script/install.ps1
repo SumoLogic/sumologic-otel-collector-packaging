@@ -33,6 +33,9 @@ param (
     # The CollectorName option is used to specify the name of the collector.
     [string] $CollectorName,
 
+    # The FleetId option is used to assign the collector to a fleet during registration.
+    [string] $FleetId,
+
     # The Clobber option is used to specify whether to overwrite existing
     [bool] $Clobber,
 
@@ -568,6 +571,8 @@ function Build-MsiProperties {
 
         [bool] $Clobber,
 
+        [string] $FleetId,
+
         [switch] $SkipRegistration
     )
 
@@ -609,6 +614,9 @@ function Build-MsiProperties {
     }
     if ($CollectorName.Length -gt 0) {
         $msiProps["COLLECTORNAME"] = $CollectorName
+    }
+    if ($FleetId.Length -gt 0) {
+        $msiProps["FLEETID"] = $FleetId
     }
 
     # Prevent service start when SkipRegistration is set. The WiX ServiceControl
@@ -920,6 +928,8 @@ function Install-ViaMsi {
 
         [bool] $Clobber,
 
+        [string] $FleetId,
+
         [string] $PackagePath,
 
         [switch] $SkipRegistration
@@ -960,7 +970,7 @@ function Install-ViaMsi {
         -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
         -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
         -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
-        -Clobber $Clobber -SkipRegistration:$SkipRegistration
+        -Clobber $Clobber -FleetId $FleetId -SkipRegistration:$SkipRegistration
 
     [string[]] $msiProperties = @()
     if ($InstallationToken.Length -gt 0) {
@@ -1240,7 +1250,7 @@ try {
                 -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
                 -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
                 -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
-                -Clobber $Clobber -SkipRegistration:$SkipRegistration
+                -Clobber $Clobber -FleetId $FleetId -SkipRegistration:$SkipRegistration
 
             # Convert version to winget format (dots instead of dashes)
             $wingetVersion = ConvertTo-MsiVersion -Version $Version
@@ -1283,6 +1293,7 @@ try {
         -Timezone $Timezone `
         -CollectorName $CollectorName `
         -Clobber $Clobber `
+        -FleetId $FleetId `
         -PackagePath $PackagePath `
         -SkipRegistration:$SkipRegistration
 

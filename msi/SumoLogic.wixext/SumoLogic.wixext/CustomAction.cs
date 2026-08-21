@@ -27,6 +27,7 @@ namespace SumoLogic.wixext
         private const string pTimezone = "Timezone";
         private const string pCollectorName = "CollectorName";
         private const string pClobber = "Clobber";
+        private const string pFleetId = "FleetId";
         private const string pConfigFragmentsFolder = "ConfigFragmentsFolder";
 
         // WiX features
@@ -76,6 +77,7 @@ namespace SumoLogic.wixext
             var timezone = session.CustomActionData[pTimezone];
             var collectorName = session.CustomActionData.ContainsKey(pCollectorName) ? session.CustomActionData[pCollectorName] : "";
             var clobber = (session.CustomActionData.ContainsKey(pClobber) && session.CustomActionData[pClobber] == "true");
+            var fleetId = session.CustomActionData.ContainsKey(pFleetId) ? session.CustomActionData[pFleetId] : "";
             var api = session.CustomActionData[pApi];
 
             if (remotelyManaged && string.IsNullOrEmpty(opAmpFolder))
@@ -89,7 +91,7 @@ namespace SumoLogic.wixext
             try
             {
                 Config config = new Config { InstallationToken = installationToken, RemotelyManaged = remotelyManaged, Ephemeral = ephemeral,
-                    OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api, Timezone = timezone, CollectorName = collectorName, Clobber = clobber };
+                    OpAmpFolder = opAmpFolder, OpAmpApi = opAmpApi, Api = api, Timezone = timezone, CollectorName = collectorName, Clobber = clobber, FleetId = fleetId };
                 config.SetCollectorFieldsFromTags(tags);
 
                 ConfigUpdater configUpdater = new ConfigUpdater(new StreamReader(configFile));

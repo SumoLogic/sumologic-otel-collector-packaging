@@ -214,6 +214,33 @@ namespace SumoLogicTests
             }
         }
 
+        public void FleetIdAssertions(Config config, StreamReader sr)
+        {
+            YamlStream ys = new YamlStream();
+            ys.Load(sr);
+            YamlMappingNode root = (YamlMappingNode)ys.Documents[0].RootNode;
+
+            Assert.IsTrue(root.Children.ContainsKey("extensions"));
+            Assert.AreEqual(YamlNodeType.Mapping, root.Children["extensions"].NodeType);
+            var extensions = (YamlMappingNode)root.Children["extensions"];
+
+            Assert.IsTrue(extensions.Children.ContainsKey("sumologic"));
+            Assert.AreEqual(YamlNodeType.Mapping, extensions.Children["sumologic"].NodeType);
+            var sumologic = (YamlMappingNode)extensions.Children["sumologic"];
+
+            if (!string.IsNullOrEmpty(config.FleetId))
+            {
+                Assert.IsTrue(sumologic.Children.ContainsKey("fleet_id"));
+                Assert.AreEqual(YamlNodeType.Scalar, sumologic.Children["fleet_id"].NodeType);
+                var fleetId = (YamlScalarNode)sumologic.Children["fleet_id"];
+                Assert.AreEqual(config.FleetId, fleetId.ToString());
+            }
+            else
+            {
+                Assert.IsFalse(sumologic.Children.ContainsKey("fleet_id"));
+            }
+        }
+
         public void CollectorNameAssertions(Config config, StreamReader sr)
         {
             YamlStream ys = new YamlStream();
@@ -633,6 +660,60 @@ namespace SumoLogicTests
               ms.Seek(0, SeekOrigin.Begin);
 
               CollectorNameAssertions(config, sr);
+          }
+        }
+
+        [TestMethod]
+        public void TestUpdate_FleetId()
+        {
+          var filePath = Path.Combine(testDataPath, "with-extensions-block.yaml");
+          var config = new Config { InstallationToken = "foobar", FleetId = "000000000ABC1234" };
+          config.SetCollectorFieldsFromTags(@"foo=bar,baz=kaz,xaz=yaz");
+
+          using (MemoryStream ms = new MemoryStream())
+          {
+              var configUpdater = new ConfigUpdater(new StreamReader(filePath));
+              configUpdater.Update(config);
+              configUpdater.Save(new StreamWriter(ms));
+
+              ms.Seek(0, SeekOrigin.Begin);
+
+              StreamReader sr = new StreamReader(ms);
+              while (!sr.EndOfStream)
+              {
+                  Console.WriteLine(sr.ReadLine());
+              }
+
+              ms.Seek(0, SeekOrigin.Begin);
+
+              FleetIdAssertions(config, sr);
+          }
+        }
+
+        [TestMethod]
+        public void TestUpdate_NoFleetId()
+        {
+          var filePath = Path.Combine(testDataPath, "with-extensions-block.yaml");
+          var config = new Config { InstallationToken = "foobar", FleetId = "" };
+          config.SetCollectorFieldsFromTags(@"foo=bar,baz=kaz,xaz=yaz");
+
+          using (MemoryStream ms = new MemoryStream())
+          {
+              var configUpdater = new ConfigUpdater(new StreamReader(filePath));
+              configUpdater.Update(config);
+              configUpdater.Save(new StreamWriter(ms));
+
+              ms.Seek(0, SeekOrigin.Begin);
+
+              StreamReader sr = new StreamReader(ms);
+              while (!sr.EndOfStream)
+              {
+                  Console.WriteLine(sr.ReadLine());
+              }
+
+              ms.Seek(0, SeekOrigin.Begin);
+
+              FleetIdAssertions(config, sr);
           }
         }
     }

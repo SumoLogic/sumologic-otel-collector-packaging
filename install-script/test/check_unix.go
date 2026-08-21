@@ -26,6 +26,7 @@ type sumologicExt struct {
 	Ephemeral     bool   `yaml:"ephemeral,omitempty"`
 	Timezone      string `yaml:"timezone,omitempty"`
 	CollectorName string `yaml:"collector-name,omitempty"`
+	FleetId       string `yaml:"fleet_id,omitempty"`
 	Clobber       bool   `yaml:"clobber,omitempty"`
 }
 
@@ -76,6 +77,21 @@ func checkCollectorNameInRemote(p string) func(c check) bool {
 			return false
 		}
 		return config.Extensions.Sumologic.CollectorName != ""
+	}
+}
+
+func checkFleetIdInRemote(p string) func(c check) bool {
+	return func(c check) bool {
+		yamlFile, err := os.ReadFile(p)
+		if !assert.NoError(c.test, err, "sumologic remote config file could not be read") {
+			return false
+		}
+
+		var config configRoot
+		if !assert.NoError(c.test, yaml.Unmarshal(yamlFile, &config), "could not parse yaml") {
+			return false
+		}
+		return config.Extensions.Sumologic.FleetId != ""
 	}
 }
 

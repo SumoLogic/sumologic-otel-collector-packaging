@@ -282,6 +282,25 @@ func TestInstallScriptDarwin(t *testing.T) {
 		},
 
 		{
+			name: "installation token, remotely-managed, and fleet id",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				fleetId:         "000000000ABC1234",
+				timezone:        "UTC",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkRemoteConfigDirectoryCreated,
+				checkFleetIdInRemote(sumoRemotePath),
+			},
+			installCode: 0,
+		},
+
+		{
 			name: "same installation token in launchd config",
 			options: installOptions{
 				installToken: installToken,

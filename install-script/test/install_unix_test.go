@@ -271,6 +271,37 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "installation token and fleet id",
+			options: installOptions{
+				installToken: installToken,
+				fleetId:      "000000000ABC1234",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkFleetIdInConfig,
+				checkTokenEnvFileCreated,
+			},
+		},
+		{
+			name: "installation token, remotely-managed and fleet id",
+			options: installOptions{
+				installToken:    installToken,
+				remotelyManaged: true,
+				fleetId:         "000000000ABC1234",
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkFleetIdInRemote(sumoRemotePath),
+				checkTokenEnvFileCreated,
+			},
+		},
+		{
 			name: "skip registration",
 			options: installOptions{
 				installToken:     installToken,
