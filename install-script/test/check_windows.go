@@ -122,6 +122,20 @@ func checkCollectorNameInSumoConfig(p string) func(c check) bool {
 		return true
 	}
 }
+func checkFleetIdInSumoConfig(p string) func(c check) bool {
+	return func(c check) bool {
+		assert.NotEmpty(c.test, c.installOptions.fleetId, "fleet id was not specified")
+
+		conf, err := getConfig(p)
+		if !assert.NoError(c.test, err, "error while reading configuration") {
+			return false
+		}
+
+		assert.Equal(c.test, c.installOptions.fleetId, conf.Extensions.Sumologic.FleetId, "fleet id is different than expected")
+		return true
+	}
+}
+
 func checkClobberInSumoConfig(p string) func(c check) bool {
 	return func(c check) bool {
 		assert.True(c.test, c.installOptions.clobber, "clobber was not specified")
