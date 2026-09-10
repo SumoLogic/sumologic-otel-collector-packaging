@@ -7,3 +7,7 @@ updates:
 
     labels:
       - skip-changelog
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-patch"
