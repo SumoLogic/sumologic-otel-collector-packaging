@@ -58,7 +58,7 @@ fi
 
 # Find containers workflow by collector ID
 CONTAINERS_ID=$(gh run list -R SumoLogic/sumologic-otel-collector-containers \
-  -w build-and-push.yml -s success -b main -L 200 \
+  -w build-and-push.yml -s success -b main -L 1000 \
   --json databaseId,displayTitle \
   -q ".[] | select(.displayTitle | contains(\"${COLLECTOR_ID}\")) | .databaseId" | head -n1)
 
