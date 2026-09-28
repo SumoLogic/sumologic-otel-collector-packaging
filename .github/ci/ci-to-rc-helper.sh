@@ -23,7 +23,7 @@ echo "::notice::Validating version ${VERSION} (Build: ${BUILD_NUMBER})"
 
 # Find packaging workflow by build number
 PKG_RUN=$(gh run list -R SumoLogic/sumologic-otel-collector-packaging \
-  -w build_packages.yml -s success -b main -L 200 \
+  -w build_packages.yml -s success -b main -L 1000 \
   --json databaseId,displayTitle,number \
   -q ".[] | select(.number == ${BUILD_NUMBER}) | {id: .databaseId, title: .displayTitle}")
 
