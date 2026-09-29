@@ -23,9 +23,9 @@ echo "::notice::Validating version ${VERSION} (Build: ${BUILD_NUMBER})"
 
 # Find packaging workflow by build number
 PKG_RUN=$(gh run list -R SumoLogic/sumologic-otel-collector-packaging \
-  -w build_packages.yml -s success -b main -L 200 \
-  --json databaseId,displayTitle,number \
-  -q ".[] | select(.number == ${BUILD_NUMBER}) | {id: .databaseId, title: .displayTitle}")
+  -L 1000 \
+  --json databaseId,displayTitle,number,conclusion,workflowName,headBranch \
+  -q ".[] | select(.number == ${BUILD_NUMBER} and .workflowName == \"Build packages\" and .headBranch == \"main\" and .conclusion == \"success\") | {id: .databaseId, title: .displayTitle}")
 
 if [[ -z "$PKG_RUN" ]]; then
   echo "::error::Packaging workflow not found for build: ${BUILD_NUMBER}"
@@ -60,9 +60,9 @@ fi
 
 # Find containers workflow by collector ID
 CONTAINERS_ID=$(gh run list -R SumoLogic/sumologic-otel-collector-containers \
-  -w build-and-push.yml -s success -b main -L 200 \
-  --json databaseId,displayTitle \
-  -q ".[] | select(.displayTitle | contains(\"${COLLECTOR_ID}\")) | .databaseId" | head -n1)
+  -L 1000 \
+  --json databaseId,displayTitle,conclusion,workflowName,headBranch \
+  -q ".[] | select(.workflowName == \"Build & Push\" and .headBranch == \"main\" and .conclusion == \"success\" and (.displayTitle | contains(\"${COLLECTOR_ID}\"))) | .databaseId" | head -n1)
 
 if [[ -z "$CONTAINERS_ID" ]]; then
   echo "::error::Containers workflow not found for collector: ${COLLECTOR_ID}"
