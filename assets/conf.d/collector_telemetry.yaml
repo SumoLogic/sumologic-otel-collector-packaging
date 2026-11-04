@@ -1,0 +1,45 @@
+receivers:
+  otlp/sumologic_internal:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:14317
+
+processors:
+  filter/sumologic_internal:
+    error_mode: ignore
+    metrics:
+      metric:
+        # drop everything except the 11 required metrics
+        - 'not IsMatch(name, "^otelcol_(receiver_accepted_(log_records|metric_points|spans)|exporter_sent_(log_records|metric_points|spans)|process_(cpu_seconds|memory_rss|runtime_heap_alloc_bytes))$")'
+  transform/sumologic_internal_attrs:
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - keep_keys(attributes, ["receiver", "exporter", "processor", "otel.component.id", "otelcol.component.id", "otel.pipeline.id", "otelcol.pipeline.id"])
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["_sourceCategory", "_sourceName", "_sourceHost"])
+      - context: scope
+        statements:
+          - delete_matching_keys(attributes, ".*")
+
+exporters:
+  nop:
+
+service:
+  telemetry:
+    metrics:
+      readers:
+        - periodic:
+            interval: 300000
+            exporter:
+              otlp:
+                protocol: grpc
+                endpoint: 127.0.0.1:14317
+                insecure: true
+  pipelines:
+    metrics/internal:
+      receivers: [otlp/sumologic_internal]
+      processors: [filter/sumologic_internal, transform/sumologic_internal_attrs]
+      exporters: [sumologic]

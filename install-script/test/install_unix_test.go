@@ -79,6 +79,32 @@ func TestInstallScript(t *testing.T) {
 			},
 		},
 		{
+			name: "installation token and telemetry reporting",
+			options: installOptions{
+				installToken:             installToken,
+				enableTelemetryReporting: true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkCollectorTelemetryConfigCreated,
+			},
+		},
+		{
+			name: "installation token without telemetry reporting",
+			options: installOptions{
+				installToken: installToken,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkConfigCreated,
+				checkCollectorTelemetryConfigNotCreated,
+			},
+		},
+		{
 			name: "installation token and remotely-managed",
 			options: installOptions{
 				installToken:    installToken,

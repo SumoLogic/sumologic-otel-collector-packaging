@@ -142,6 +142,10 @@
         <ComponentGroupRef Id="HostMetricsComponents" />
       </Feature>
 
+      <Feature Id="TELEMETRYREPORTING" Title="Collector Telemetry Reporting" Level="2" AllowAbsent="yes" AllowAdvertise="yes" TypicalDefault="advertise">
+        <ComponentGroupRef Id="TelemetryReportingComponents" />
+      </Feature>
+
       <Feature Id="REMOTELYMANAGED" Title="Remotely Managed" Level="2" AllowAbsent="yes" AllowAdvertise="no" TypicalDefault="install" >
         <Component Id="RemotelyManagedComponent" Location="local" Directory="INSTALLFOLDER" Guid="5169967a-f9e9-43f7-abb4-6b69273932a3" />
       </Feature>

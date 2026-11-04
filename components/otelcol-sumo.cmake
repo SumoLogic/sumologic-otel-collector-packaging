@@ -10,6 +10,7 @@ macro(default_otc_linux_install)
   install_otc_sumologic_yaml()
   install_otc_linux_hostmetrics_yaml()
   install_otc_ephemeral_yaml()
+  install_otc_collector_telemetry_yaml()
   install_otc_token_env()
   install_otc_binary()
   install_otc_config_binary()
@@ -27,6 +28,8 @@ macro(default_otc_darwin_install)
   install_otc_sumologic_yaml()
   install_otc_darwin_hostmetrics_yaml()
   install_otc_ephemeral_yaml()
+  install_otc_collector_telemetry_yaml()
+  install_otc_collector_telemetry_enabled_yaml()
   install_otc_binary()
   install_otc_config_binary()
   install_otc_uninstall_script()
@@ -41,6 +44,16 @@ macro(create_otc_components)
   cpack_add_component("otelcol-sumo"
     DISPLAY_NAME "Application Files"
     REQUIRED
+    GROUP "otelcol-sumo-group"
+  )
+
+  # Optional, unchecked by default. Selecting it installs the collector
+  # telemetry configuration into conf.d (macOS productbuild only).
+  cpack_add_component("otelcol-sumo-telemetry"
+    DISPLAY_NAME "Collector Telemetry Reporting"
+    DESCRIPTION "Report collector self-metrics to Sumo Logic"
+    DISABLED
+    DEPENDS "otelcol-sumo"
     GROUP "otelcol-sumo-group"
   )
 endmacro()
@@ -336,6 +349,40 @@ macro(install_otc_ephemeral_yaml)
       OWNER_READ OWNER_WRITE
       GROUP_READ GROUP_WRITE
     COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /etc/otelcol-sumo/conf.d-available/collector_telemetry.yaml
+macro(install_otc_collector_telemetry_yaml)
+  require_variables(
+    "ASSETS_DIR"
+    "OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR"
+  )
+  install(
+    FILES "${ASSETS_DIR}/conf.d/collector_telemetry.yaml"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_AVAILABLE_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo
+  )
+endmacro()
+
+# e.g. /etc/otelcol-sumo/conf.d/collector_telemetry.yaml
+# Only installed when the optional "Collector Telemetry Reporting" component is
+# selected in the macOS installer.
+macro(install_otc_collector_telemetry_enabled_yaml)
+  require_variables(
+    "ASSETS_DIR"
+    "OTC_CONFIG_FRAGMENTS_DIR"
+  )
+  install(
+    FILES "${ASSETS_DIR}/conf.d/collector_telemetry.yaml"
+    DESTINATION "${OTC_CONFIG_FRAGMENTS_DIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE
+      GROUP_READ GROUP_WRITE
+    COMPONENT otelcol-sumo-telemetry
   )
 endmacro()
 

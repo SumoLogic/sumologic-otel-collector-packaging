@@ -18,6 +18,10 @@ param (
     # InstallHostMetrics is used to install host metric collection.
     [bool] $InstallHostMetrics,
 
+    # EnableTelemetryReporting is used to enable collector telemetry reporting
+    # (self-metrics scrape). Only supported for locally-managed collectors.
+    [bool] $EnableTelemetryReporting,
+
     # Fips is used to download a fips binary installer.
     [bool] $Fips,
 
@@ -537,6 +541,8 @@ function Build-MsiProperties {
         OpAmp API URL
     .PARAMETER InstallHostMetrics
         Whether to install host metrics
+    .PARAMETER EnableTelemetryReporting
+        Whether to enable (true) or disable (false) collector telemetry reporting
     .PARAMETER RemotelyManaged
         Whether remotely managed
     .PARAMETER Ephemeral
@@ -560,6 +566,8 @@ function Build-MsiProperties {
         [string] $OpAmpApi,
 
         [bool] $InstallHostMetrics,
+
+        [bool] $EnableTelemetryReporting,
 
         [bool] $RemotelyManaged,
 
@@ -592,6 +600,12 @@ function Build-MsiProperties {
     [string[]] $addLocalFeatures = @()
     if ($InstallHostMetrics -eq $true) {
         $addLocalFeatures += "HOSTMETRICS"
+    }
+    if ($EnableTelemetryReporting -eq $true) {
+        if ($RemotelyManaged -eq $true) {
+            throw "EnableTelemetryReporting is not supported for remotely managed collectors"
+        }
+        $addLocalFeatures += "TELEMETRYREPORTING"
     }
     if ($RemotelyManaged -eq $true) {
         $addLocalFeatures += "REMOTELYMANAGED"
@@ -883,6 +897,8 @@ function Install-ViaMsi {
         OpAmp API URL
     .PARAMETER InstallHostMetrics
         Whether to install host metrics
+    .PARAMETER EnableTelemetryReporting
+        Whether to enable (true) or disable (false) collector telemetry reporting
     .PARAMETER RemotelyManaged
         Whether remotely managed
     .PARAMETER Ephemeral
@@ -917,6 +933,8 @@ function Install-ViaMsi {
         [string] $OpAmpApi,
 
         [bool] $InstallHostMetrics,
+
+        [bool] $EnableTelemetryReporting,
 
         [bool] $RemotelyManaged,
 
@@ -968,7 +986,7 @@ function Install-ViaMsi {
     # Build MSI properties
     $props = Build-MsiProperties `
         -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
-        -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
+        -InstallHostMetrics $InstallHostMetrics -EnableTelemetryReporting $EnableTelemetryReporting -RemotelyManaged $RemotelyManaged `
         -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
         -Clobber $Clobber -FleetId $FleetId -SkipRegistration:$SkipRegistration
 
@@ -1248,7 +1266,7 @@ try {
             # Build MSI properties for winget --custom
             $msiProps = Build-MsiProperties `
                 -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
-                -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
+                -InstallHostMetrics $InstallHostMetrics -EnableTelemetryReporting $EnableTelemetryReporting -RemotelyManaged $RemotelyManaged `
                 -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
                 -Clobber $Clobber -FleetId $FleetId -SkipRegistration:$SkipRegistration
 
@@ -1288,6 +1306,7 @@ try {
         -Api $Api `
         -OpAmpApi $OpAmpApi `
         -InstallHostMetrics $InstallHostMetrics `
+        -EnableTelemetryReporting $EnableTelemetryReporting `
         -RemotelyManaged $RemotelyManaged `
         -Ephemeral $Ephemeral `
         -Timezone $Timezone `
