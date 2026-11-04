@@ -18,8 +18,9 @@ param (
     # InstallHostMetrics is used to install host metric collection.
     [bool] $InstallHostMetrics,
 
-    # EnableTelemetryReporting is used to enable collector telemetry reporting
-    # (self-metrics scrape). Only supported for locally-managed collectors.
+    # EnableTelemetryReporting enables collector telemetry reporting (self-metrics
+    # scrape). Only supported for locally-managed collectors. When false or omitted,
+    # the telemetry reporting config is removed if it was previously installed.
     [bool] $EnableTelemetryReporting,
 
     # Fips is used to download a fips binary installer.
@@ -606,6 +607,11 @@ function Build-MsiProperties {
             throw "EnableTelemetryReporting is not supported for remotely managed collectors"
         }
         $addLocalFeatures += "TELEMETRYREPORTING"
+    } else {
+        # Telemetry reporting is off by default. Explicitly request removal of the
+        # feature so an existing collector_telemetry.yaml is removed on re-install
+        # or upgrade. This is a no-op if the feature is not installed.
+        $msiProps["REMOVE"] = "TELEMETRYREPORTING"
     }
     if ($RemotelyManaged -eq $true) {
         $addLocalFeatures += "REMOTELYMANAGED"
