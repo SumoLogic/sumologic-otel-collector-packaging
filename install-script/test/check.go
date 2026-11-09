@@ -127,6 +127,14 @@ func checkHostmetricsConfigNotCreated(c check) bool {
 	return assert.NoFileExists(c.test, hostmetricsConfigPath, "hostmetrics configuration has been created")
 }
 
+func checkCollectorTelemetryConfigCreated(c check) bool {
+	return assert.FileExists(c.test, collectorTelemetryConfigPath, "collector telemetry configuration has not been created properly")
+}
+
+func checkCollectorTelemetryConfigNotCreated(c check) bool {
+	return assert.NoFileExists(c.test, collectorTelemetryConfigPath, "collector telemetry configuration has been created")
+}
+
 func checkRemoteConfigDirectoryCreated(c check) bool {
 	return assert.DirExists(c.test, opampDPath, "remote configuration directory has not been created properly")
 }

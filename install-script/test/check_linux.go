@@ -55,6 +55,14 @@ func checkDownloadTimeout(c check) bool {
 	return assert.Equal(c.test, 6, count)
 }
 
+func checkCollectorTelemetryOwnershipAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
+	return func(c check) bool {
+		PathHasOwner(c.test, collectorTelemetryConfigPath, ownerName, ownerGroup)
+		PathHasPermissions(c.test, collectorTelemetryConfigPath, configPathFilePermissions)
+		return true
+	}
+}
+
 func checkHostmetricsOwnershipAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
 	return func(c check) bool {
 		PathHasOwner(c.test, hostmetricsConfigPath, ownerName, ownerGroup)

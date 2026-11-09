@@ -43,6 +43,7 @@ collector_files=(
   "/etc/otelcol-sumo/sumologic.yaml"
   "/etc/otelcol-sumo/conf.d"
   "/etc/otelcol-sumo/conf.d-available"
+  "/etc/otelcol-sumo/conf.d-available/collector_telemetry.yaml"
   "/etc/otelcol-sumo/conf.d-available/ephemeral.yaml"
   "/etc/otelcol-sumo/conf.d-available/hostmetrics.yaml"
   "/etc/otelcol-sumo"
