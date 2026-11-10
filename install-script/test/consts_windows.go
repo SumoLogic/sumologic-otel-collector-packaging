@@ -10,17 +10,18 @@ const (
 
 	packageName string = "OpenTelemetry Collector"
 
-	binaryPath            string = `C:\Program Files\Sumo Logic\OpenTelemetry Collector\bin\otelcol-sumo.exe`
-	libPath               string = `C:\ProgramData\Sumo Logic\OpenTelemetry Collector\data`
-	fileStoragePath       string = libPath + `\file_storage`
-	etcPath               string = `C:\ProgramData\Sumo Logic\OpenTelemetry Collector\config`
-	scriptPath            string = "../install.ps1"
-	configPath                   = etcPath + `\sumologic.yaml`
-	confDPath                    = etcPath + `\conf.d`
-	opampDPath                   = etcPath + `\opamp.d`
-	userConfigPath               = confDPath + `\common.yaml`
-	hostmetricsConfigPath        = confDPath + `\hostmetrics.yaml`
-	sumoRemotePath               = etcPath + `\sumologic-remote.yaml`
+	binaryPath                   string = `C:\Program Files\Sumo Logic\OpenTelemetry Collector\bin\otelcol-sumo.exe`
+	libPath                      string = `C:\ProgramData\Sumo Logic\OpenTelemetry Collector\data`
+	fileStoragePath              string = libPath + `\file_storage`
+	etcPath                      string = `C:\ProgramData\Sumo Logic\OpenTelemetry Collector\config`
+	scriptPath                   string = "../install.ps1"
+	configPath                          = etcPath + `\sumologic.yaml`
+	confDPath                           = etcPath + `\conf.d`
+	opampDPath                          = etcPath + `\opamp.d`
+	userConfigPath                      = confDPath + `\common.yaml`
+	hostmetricsConfigPath               = confDPath + `\hostmetrics.yaml`
+	collectorTelemetryConfigPath        = confDPath + `\collector_telemetry.yaml`
+	sumoRemotePath                      = etcPath + `\sumologic-remote.yaml`
 
 	installToken    string = "token"
 	installTokenEnv string = "SUMOLOGIC_INSTALLATION_TOKEN"

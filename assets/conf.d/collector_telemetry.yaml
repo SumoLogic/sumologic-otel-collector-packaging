@@ -1,0 +1,57 @@
+receivers:
+  otlp/sumologic_internal:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:24717
+
+processors:
+  filter/sumologic_internal:
+    error_mode: ignore
+    metric_conditions:
+      # drop everything except the 11 required metrics
+      - 'not IsMatch(metric.name, "^otelcol_(receiver_accepted_(log_records|metric_points|spans)|exporter_sent_(log_records|metric_points|spans)|process_(cpu_seconds|memory_rss|runtime_heap_alloc_bytes))$")'
+      # drop series about this monitoring pipeline itself (default: datapoint attributes)
+      - 'datapoint.attributes["receiver"] == "otlp/sumologic_internal"'
+      - 'datapoint.attributes["exporter"] == "sumologic/internal_metrics"'
+      # same, when telemetry.newPipelineTelemetry is enabled (scope attributes)
+      - 'scope.attributes["otelcol.component.id"] == "otlp/sumologic_internal"'
+      - 'scope.attributes["otelcol.component.id"] == "sumologic/internal_metrics"'
+      - 'scope.attributes["otelcol.pipeline.id"] == "metrics/internal"'
+  transform/sumologic_internal_attrs:
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - keep_keys(attributes, ["receiver", "exporter", "processor", "otel.component.id", "otelcol.component.id", "otel.pipeline.id", "otelcol.pipeline.id"])
+      - context: scope
+        statements:
+          - delete_matching_keys(attributes, ".*")
+  resource/sumologic_internal_source:
+    attributes:
+      - key: _sourceCategory
+        value: collector/internal-metrics
+        action: upsert
+exporters:
+  sumologic/internal_metrics:
+    retry_on_failure:
+      max_elapsed_time: 0
+    sending_queue:
+      enabled: true
+      storage: file_storage
+
+service:
+  telemetry:
+    metrics:
+      readers:
+        - periodic:
+            interval: 300000
+            exporter:
+              otlp:
+                protocol: grpc
+                endpoint: 127.0.0.1:24717
+                insecure: true
+  pipelines:
+    metrics/internal:
+      receivers: [otlp/sumologic_internal]
+      processors: [filter/sumologic_internal, transform/sumologic_internal_attrs, resource/sumologic_internal_source]
+      exporters: [sumologic/internal_metrics]

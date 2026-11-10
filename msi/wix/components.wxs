@@ -14,6 +14,16 @@
       </Component>
     </ComponentGroup>
 
+    <ComponentGroup Id="TelemetryReportingComponents" Directory="APPDATAFOLDER">
+      <Component Directory="ConfigFragmentsFolder">
+        <File Id="CollectorTelemetryConfig" Name="collector_telemetry.yaml" Source="!(bindpath.assets)\conf.d\collector_telemetry.yaml" />
+      </Component>
+
+      <Component Id="UninstallCollectorTelemetryConfig" Directory="ConfigFragmentsFolder" Guid="3e96b99d-ef55-4bbc-a082-2445570e715d">
+        <RemoveFile Name="collector_telemetry.yaml" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
     <ComponentGroup Id="AppDataComponents" Directory="APPDATAFOLDER">
       <!-- Add InstallLocation to Registry -->
       <Component>

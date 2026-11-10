@@ -85,6 +85,14 @@ func checkGroupNotExists(c check) bool {
 	return assert.False(c.test, exists, "group has been created")
 }
 
+func checkCollectorTelemetryOwnershipAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
+	return func(c check) bool {
+		PathHasOwner(c.test, collectorTelemetryConfigPath, ownerName, ownerGroup)
+		PathHasPermissions(c.test, collectorTelemetryConfigPath, confDPathFilePermissions)
+		return true
+	}
+}
+
 func checkHostmetricsOwnershipAndPermissions(ownerName string, ownerGroup string) func(c check) bool {
 	return func(c check) bool {
 		PathHasOwner(c.test, hostmetricsConfigPath, ownerName, ownerGroup)

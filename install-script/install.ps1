@@ -18,6 +18,11 @@ param (
     # InstallHostMetrics is used to install host metric collection.
     [bool] $InstallHostMetrics,
 
+    # EnableTelemetryReporting enables collector telemetry reporting (self-metrics
+    # scrape). Only supported for locally-managed collectors. When false or omitted,
+    # the telemetry reporting config is removed if it was previously installed.
+    [bool] $EnableTelemetryReporting,
+
     # Fips is used to download a fips binary installer.
     [bool] $Fips,
 
@@ -524,6 +529,42 @@ function Stop-CollectorService {
     }
 }
 
+function Remove-TelemetryReportingConfig {
+    <#
+    .SYNOPSIS
+        Remove the collector telemetry reporting config unless it is being enabled
+    .DESCRIPTION
+        Must run after the MSI install: the installer restores the config file if the
+        feature was installed by a previous run, so deleting it beforehand has no effect.
+        REMOVE=TELEMETRYREPORTING cannot be used either, since any REMOVE value skips the
+        MSI custom actions that write the token and collector settings.
+    .PARAMETER EnableTelemetryReporting
+        Whether telemetry reporting is being enabled
+    #>
+    param (
+        [bool] $EnableTelemetryReporting
+    )
+
+    if ($EnableTelemetryReporting -eq $true) {
+        return
+    }
+
+    $telemetryConfigPath = "$CONFIG_DIRECTORY\conf.d\collector_telemetry.yaml"
+    if (-not (Test-Path -Path $telemetryConfigPath -PathType Leaf)) {
+        return
+    }
+
+    Write-Host "Removing collector telemetry reporting configuration"
+    Remove-Item -Path $telemetryConfigPath -Force
+
+    # The installer may have started the collector with the config already loaded
+    $service = Get-Service -Name $SERVICE_NAME -ErrorAction SilentlyContinue
+    if ($service -ne $null -and $service.Status -eq 'Running') {
+        Write-Host "Restarting service '$SERVICE_NAME' to apply the change..."
+        Restart-Service -Name $SERVICE_NAME -Force
+    }
+}
+
 function Build-MsiProperties {
     <#
     .SYNOPSIS
@@ -537,6 +578,8 @@ function Build-MsiProperties {
         OpAmp API URL
     .PARAMETER InstallHostMetrics
         Whether to install host metrics
+    .PARAMETER EnableTelemetryReporting
+        Whether to enable (true) or disable (false) collector telemetry reporting
     .PARAMETER RemotelyManaged
         Whether remotely managed
     .PARAMETER Ephemeral
@@ -560,6 +603,8 @@ function Build-MsiProperties {
         [string] $OpAmpApi,
 
         [bool] $InstallHostMetrics,
+
+        [bool] $EnableTelemetryReporting,
 
         [bool] $RemotelyManaged,
 
@@ -592,6 +637,12 @@ function Build-MsiProperties {
     [string[]] $addLocalFeatures = @()
     if ($InstallHostMetrics -eq $true) {
         $addLocalFeatures += "HOSTMETRICS"
+    }
+    if ($EnableTelemetryReporting -eq $true) {
+        if ($RemotelyManaged -eq $true) {
+            throw "EnableTelemetryReporting is not supported for remotely managed collectors"
+        }
+        $addLocalFeatures += "TELEMETRYREPORTING"
     }
     if ($RemotelyManaged -eq $true) {
         $addLocalFeatures += "REMOTELYMANAGED"
@@ -883,6 +934,8 @@ function Install-ViaMsi {
         OpAmp API URL
     .PARAMETER InstallHostMetrics
         Whether to install host metrics
+    .PARAMETER EnableTelemetryReporting
+        Whether to enable (true) or disable (false) collector telemetry reporting
     .PARAMETER RemotelyManaged
         Whether remotely managed
     .PARAMETER Ephemeral
@@ -917,6 +970,8 @@ function Install-ViaMsi {
         [string] $OpAmpApi,
 
         [bool] $InstallHostMetrics,
+
+        [bool] $EnableTelemetryReporting,
 
         [bool] $RemotelyManaged,
 
@@ -968,7 +1023,7 @@ function Install-ViaMsi {
     # Build MSI properties
     $props = Build-MsiProperties `
         -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
-        -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
+        -InstallHostMetrics $InstallHostMetrics -EnableTelemetryReporting $EnableTelemetryReporting -RemotelyManaged $RemotelyManaged `
         -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
         -Clobber $Clobber -FleetId $FleetId -SkipRegistration:$SkipRegistration
 
@@ -1035,6 +1090,8 @@ For more information, visit: https://docs.microsoft.com/en-us/windows/win32/msi/
 "@
         Write-Error $errorMsg -ErrorAction Stop
     }
+
+    Remove-TelemetryReportingConfig -EnableTelemetryReporting $EnableTelemetryReporting
 }
 
 ##
@@ -1248,7 +1305,7 @@ try {
             # Build MSI properties for winget --custom
             $msiProps = Build-MsiProperties `
                 -Tags $Tags -Api $Api -OpAmpApi $OpAmpApi `
-                -InstallHostMetrics $InstallHostMetrics -RemotelyManaged $RemotelyManaged `
+                -InstallHostMetrics $InstallHostMetrics -EnableTelemetryReporting $EnableTelemetryReporting -RemotelyManaged $RemotelyManaged `
                 -Ephemeral $Ephemeral -Timezone $Timezone -CollectorName $CollectorName `
                 -Clobber $Clobber -FleetId $FleetId -SkipRegistration:$SkipRegistration
 
@@ -1263,6 +1320,7 @@ try {
 
             if ($wingetSuccess) {
                 Write-Host "Installation via winget successful"
+                Remove-TelemetryReportingConfig -EnableTelemetryReporting $EnableTelemetryReporting
                 if ($SkipRegistration) {
                     Write-Host "Skipping collector service start due to -SkipRegistration flag."
                 }
@@ -1288,6 +1346,7 @@ try {
         -Api $Api `
         -OpAmpApi $OpAmpApi `
         -InstallHostMetrics $InstallHostMetrics `
+        -EnableTelemetryReporting $EnableTelemetryReporting `
         -RemotelyManaged $RemotelyManaged `
         -Ephemeral $Ephemeral `
         -Timezone $Timezone `
