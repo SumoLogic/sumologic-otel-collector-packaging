@@ -156,6 +156,43 @@ func TestInstallScriptDarwin(t *testing.T) {
 			installCode: 0,
 		},
 		{
+			name: "installation token and telemetry reporting",
+			options: installOptions{
+				installToken:             installToken,
+				enableTelemetryReporting: true,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkConfigFilesOwnershipAndPermissions(systemUser, systemGroup),
+				checkUserConfigCreated,
+				checkLaunchdConfigCreated,
+				checkTokenInLaunchdConfig,
+				checkUserExists,
+				checkGroupExists,
+				checkCollectorTelemetryConfigCreated,
+				checkCollectorTelemetryOwnershipAndPermissions(systemUser, systemGroup),
+				checkHomeDirectoryCreated,
+			},
+			installCode: 0,
+		},
+		{
+			name: "installation token without telemetry reporting",
+			options: installOptions{
+				installToken: installToken,
+			},
+			preChecks: notInstalledChecks,
+			postChecks: []checkFunc{
+				checkBinaryCreated,
+				checkBinaryIsRunning,
+				checkConfigCreated,
+				checkCollectorTelemetryConfigNotCreated,
+			},
+			installCode: 0,
+		},
+		{
 			name: "installation token and remotely-managed",
 			options: installOptions{
 				installToken:    installToken,

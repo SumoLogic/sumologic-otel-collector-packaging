@@ -10,25 +10,26 @@ import (
 )
 
 type installOptions struct {
-	installToken       string
-	tags               map[string]string
-	fips               bool
-	envs               map[string]string
-	apiBaseURL         string
-	installHostmetrics bool
-	packagePath        string
-	remotelyManaged    bool
-	ephemeral          bool
-	version            string
-	timezone           string
-	clobber            bool
-	collectorName      string
-	fleetId            string
-	useWinget          bool
-	uninstall          bool
-	upgrade            bool
-	purge              bool
-	skipRegistration   bool
+	installToken             string
+	tags                     map[string]string
+	fips                     bool
+	envs                     map[string]string
+	apiBaseURL               string
+	installHostmetrics       bool
+	enableTelemetryReporting bool
+	packagePath              string
+	remotelyManaged          bool
+	ephemeral                bool
+	version                  string
+	timezone                 string
+	clobber                  bool
+	collectorName            string
+	fleetId                  string
+	useWinget                bool
+	uninstall                bool
+	upgrade                  bool
+	purge                    bool
+	skipRegistration         bool
 }
 
 func (io *installOptions) string() []string {
@@ -43,6 +44,10 @@ func (io *installOptions) string() []string {
 
 	if io.installHostmetrics {
 		opts = append(opts, "-InstallHostMetrics", "1")
+	}
+
+	if io.enableTelemetryReporting {
+		opts = append(opts, "-EnableTelemetryReporting", "1")
 	}
 
 	if io.remotelyManaged {
