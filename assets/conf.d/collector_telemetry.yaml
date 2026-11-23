@@ -23,6 +23,10 @@ processors:
       - context: datapoint
         statements:
           - keep_keys(attributes, ["receiver", "exporter", "processor", "otel.component.id", "otelcol.component.id", "otel.pipeline.id", "otelcol.pipeline.id"])
+      - context: resource
+        statements:
+          # the collector SDK stamps service.name, service.version and service.instance.id on its own metrics
+          - delete_matching_keys(attributes, "^service\\..*")
       - context: scope
         statements:
           - delete_matching_keys(attributes, ".*")
